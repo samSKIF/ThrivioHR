@@ -2,27 +2,13 @@
   "name": "identity",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "services/identity/src",
-  "projectType": "application",
+  "projectType": "library",
   "targets": {
-    "dev": {
+    "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx src/main.ts",
-        "cwd": "services/identity"
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc -p tsconfig.json",
-        "cwd": "services/identity"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint src",
-        "cwd": "services/identity"
+        "command": "jest --config services/identity/jest.config.ts --coverage",
+        "cwd": "."
       }
     }
   },

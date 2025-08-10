@@ -1,0 +1,62 @@
+Execute this EXACT task. Do not ask questions.
+
+GOAL
+Create the Postgres schema for the Identity domain using Drizzle ORM, generate and run migrations, add a small deterministic seed, and add Jest tests (models/constraints only). Do NOT create any HTTP endpoints.
+
+TOUCH ONLY
+- drizzle.config.ts (root)
+- package.json (scripts + dev deps)
+- services/identity/** (db/, seeds/, tests/)
+- services/identity/project.json (add test target)
+- services/identity/jest.config.ts
+- services/identity/tsconfig.jest.json
+
+PLAN
+1) Install dev deps if missing: drizzle-orm, drizzle-kit, jest, ts-jest, @types/jest.
+2) Create root drizzle.config.ts (points to DATABASE_URL; schema files under services/identity/src/db/schema; migrations out to services/identity/drizzle/migrations).
+3) Create schema files under services/identity/src/db/schema:
+   - core.ts (helpers: id uuid default sql`gen_random_uuid()`, timestamps, citext type)
+   - organizations.ts
+   - users.ts (email citext unique per org)
+   - identities.ts (provider enum 'oidc'|'saml'|'local'|'csv', provider_subject unique scoped by provider)
+   - roles.ts
+   - role_bindings.ts (finance_capability boolean)
+   - sessions.ts
+   - org_units.ts  (type enum 'company'|'department'|'team')
+   - org_membership.ts (primary boolean)
+   - locations.ts  (type enum 'country'|'city'|'site')
+   - employment_events.ts (event_type enum; effective_from/to; payload jsonb)
+   Export a single array of all tables from index.ts.
+4) Create services/identity/src/db/index.ts that creates a pg Client and a drizzle instance (read conn string from env).
+5) Manually add first migration file to services/identity/drizzle/migrations/0000_init_extensions.sql enabling extensions:
+   - CREATE EXTENSION IF NOT EXISTS pgcrypto;
+   - CREATE EXTENSION IF NOT EXISTS citext;
+6) Add package.json scripts (append, don’t overwrite):
+   - "db:generate": "drizzle-kit generate --config=drizzle.config.ts"
+   - "db:migrate":  "drizzle-kit migrate --config=drizzle.config.ts"
+   - "db:seed:identity": "tsx services/identity/src/seeds/identity.seed.ts"
+   - "test:identity": "jest --config services/identity/jest.config.ts --coverage"
+7) Add Jest config files for identity and an Nx test target in services/identity/project.json (run-commands executor calling the script above).
+8) Create deterministic seed at services/identity/src/seeds/identity.seed.ts:
+   - Inserts: one org "Acme", org_units (company, department, team), roles (TenantSuperAdmin, Manager, Employee), three users (admin/manager/employee), identities for each (provider='local'), role_bindings (scoped to org/company/department/team as appropriate), locations (country "US" → city "NYC" → site "HQ").
+9) Create tests in services/identity/test/db/*.test.ts covering:
+   - unique constraints (duplicate user email per org fails)
+   - identity (same provider+subject unique)
+   - cascades: deleting a user cascades identities/sessions/memberships
+   - employment_events check: effective_to > effective_from OR null
+   - sessions partial index sanity (insert with future expires_at and query count)
+10) Append DATABASE_URL placeholder to .env.example if not present.
+
+ACCEPTANCE — run and print outputs
+A) Print an ERD-like summary: list table names and key columns + FKs.
+B) Run: pnpm db:generate  → show created migration filenames.
+C) Run: pnpm db:migrate   → show success message.
+D) Run: pnpm test:identity → tests must pass; print the final coverage summary line.
+E) Run: pnpm db:seed:identity → print inserted row counts per table.
+F) STOP.
+
+NOTES
+- Use `sql\`gen_random_uuid()\`` for UUID defaults (pgcrypto).
+- Use citext for users.email and add a unique index on (organization_id, email).
+- Use ON DELETE CASCADE on identities, sessions, org_membership when referencing users.
+- Keep each schema file under ~150 lines; split if needed.

@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "python-3.11"]
+modules = ["nodejs-20", "python-3.11", "postgresql-16"]
 [agent]
 expertMode = true
 
@@ -25,6 +25,22 @@ args = "main"
 task = "workflow.run"
 args = "snapshot-ui"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "db-generate"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "db-migrate"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "db-seed-identity"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "test-identity"
+
 [[workflows.workflow]]
 name = "Documentation Server"
 author = "agent"
@@ -49,6 +65,50 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "tsx scripts/snapshot-legacy-ui.ts"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "db-generate"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "drizzle-kit generate --config=drizzle.config.ts"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "db-migrate"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "drizzle-kit migrate --config=drizzle.config.ts"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "db-seed-identity"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "tsx services/identity/src/seeds/identity.seed.ts"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "test-identity"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "jest --config services/identity/jest.config.ts --coverage"
 
 [workflows.workflow.metadata]
 outputType = "console"
