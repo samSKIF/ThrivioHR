@@ -1,0 +1,66 @@
+Execute this EXACT task. Fix ESLint “Parsing error on @Controller()” by configuring TypeScript + ESLint to support decorators. Do not touch any files beyond those listed.
+
+PLAN
+1) Install dev deps: @typescript-eslint/parser @typescript-eslint/eslint-plugin
+2) Update tsconfig.base.json: ensure "experimentalDecorators": true and "emitDecoratorMetadata": true
+3) Update .eslintrc.cjs to use @typescript-eslint/parser and allow legacy decorators
+4) Run: pnpm lint and print the result
+5) STOP
+
+FILES TO CHANGE ONLY
+- package.json (devDependencies added if missing)
+- tsconfig.base.json
+- .eslintrc.cjs
+
+REQUIRED CONTENT
+
+A) Add dev deps (skip if already present):
+- @typescript-eslint/parser
+- @typescript-eslint/eslint-plugin
+
+B) tsconfig.base.json — ensure these compilerOptions exist (merge, don’t overwrite others):
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  }
+}
+
+C) .eslintrc.cjs — replace current minimal config with this (keep comments concise):
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    // point at our tsconfigs so the parser sees decorator settings
+    project: [
+      './tsconfig.base.json',
+      './apps/*/tsconfig.json',
+      './services/*/tsconfig.json'
+    ],
+    tsconfigRootDir: __dirname,
+    ecmaFeatures: { legacyDecorators: true }
+  },
+  plugins: ['@typescript-eslint'],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended'
+  ],
+  ignorePatterns: ['dist/', 'build/', '.nx/', 'node_modules/'],
+  rules: {
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+  },
+};
+
+ACCEPTANCE (print outputs)
+1) Show a one-line summary of edits.
+2) Run: pnpm i --silent
+3) Run: pnpm lint  → must finish without the “Parsing error: … decorators” message. Print the last 20 lines of the output.
+4) STOP.
