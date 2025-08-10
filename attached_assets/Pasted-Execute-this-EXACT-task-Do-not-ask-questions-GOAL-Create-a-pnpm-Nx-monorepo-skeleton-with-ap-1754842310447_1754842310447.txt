@@ -1,0 +1,102 @@
+Execute this EXACT task. Do not ask questions.
+
+GOAL
+Create a pnpm + Nx monorepo skeleton with:
+- apps/web (Next.js 14) on :3000
+- apps/bff (NestJS) on :4000
+- services/identity, services/recognition, services/ledger (NestJS minimal) on :5001/:5002/:5003
+No business logic. Keep files small. Avoid Storybook/Docker.
+
+CREATE / MODIFY ONLY
+- package.json
+- pnpm-workspace.yaml
+- nx.json
+- tsconfig.base.json
+- .editorconfig
+- .eslintrc.cjs
+- .prettierrc
+- .gitignore  (append; do not overwrite)
+- scripts/cleanup-dev.sh
+- apps/web/**  (Next.js app router minimal: app/page.tsx, next.config.mjs, tsconfig.json)
+- apps/web/project.json
+- apps/bff/**  (NestJS minimal: src/main.ts, src/app.module.ts, tsconfig.json)
+- apps/bff/project.json
+- services/identity/**  (NestJS minimal: src/main.ts, src/app.module.ts, tsconfig.json)
+- services/recognition/** (NestJS minimal)
+- services/ledger/**     (NestJS minimal)
+- services/**/project.json
+- packages/types/index.ts
+- packages/config/src/env.ts  (zod-based env loader)
+- packages/ui/README.md
+- packages/contracts/{openapi,graphql,events}/.gitkeep
+- packages/testing/README.md
+
+DEPS
+Install (root, hoisted):
+- prod: next, react, react-dom, @nestjs/common, @nestjs/core, @nestjs/platform-express, reflect-metadata, rxjs, zod
+- dev: nx, typescript, tsx, eslint, @types/node, prettier
+
+ROOT CONFIG
+- pnpm-workspace.yaml: packages: ["apps/*","services/*","packages/*"]
+- package.json scripts:
+  "dev": "nx run-many -t dev --parallel",
+  "build": "nx run-many -t build",
+  "lint": "nx run-many -t lint",
+  "e2e": "echo 'e2e placeholder'",
+  "clean": "bash scripts/cleanup-dev.sh"
+- scripts/cleanup-dev.sh removes: .nx/cache dist build coverage .turbo .next .cache tmp test-results playwright-report
+
+NX SETUP
+- nx.json with default runner and workspace layout.
+- Each project has project.json using "run-commands" executor:
+  - web: dev → "next dev -p 3000"; build → "next build"; lint → "eslint ."
+  - bff: dev → "tsx apps/bff/src/main.ts"; build → "tsc -p apps/bff/tsconfig.json"
+  - identity: dev → "tsx services/identity/src/main.ts"
+  - recognition: dev → "tsx services/recognition/src/main.ts"
+  - ledger: dev → "tsx services/ledger/src/main.ts"
+
+LINT/PRETTIER
+- .eslintrc.cjs minimal TS/React config (no unused-vars errors for now).
+- .prettierrc with standard settings.
+- .editorconfig basic UTF-8/2 spaces.
+
+GITIGNORE (append if missing)
+.nx/cache
+dist/
+build/
+coverage/
+.turbo/
+.next/
+.expo/
+.cache/
+playwright-report/
+test-results/
+tmp/
+uploads/
+node_modules/
+.DS_Store
+
+APPS
+- apps/web: Next.js app router with a simple home page that prints "ThrivioHR Web OK".
+- apps/bff: NestJS bootstrap with Express; GET /health returns {"ok":true}; logs "BFF on :4000".
+- services/*: each Nest app with GET /health returning {"ok":true} on its port.
+
+PORTS
+- web :3000
+- bff :4000
+- identity :5001
+- recognition :5002
+- ledger :5003
+
+ACCEPTANCE (run & print outputs)
+1) pnpm i
+2) pnpm lint  → must pass
+3) pnpm dev  → show that web starts on :3000 and bff on :4000 (print the two lines), then terminate all after confirming
+4) pnpm clean → show removed folders
+5) git status --porcelain → list new/modified files
+
+PROCESS
+- Print a PLAN of files you will touch.
+- Make changes.
+- Run acceptance commands and print their outputs.
+- STOP.

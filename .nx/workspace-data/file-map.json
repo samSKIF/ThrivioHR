@@ -1,0 +1,326 @@
+{
+  "version": "6.0",
+  "nxVersion": "21.3.11",
+  "pathMappings": {
+    "@thrivio/types": [
+      "packages/types/src"
+    ],
+    "@thrivio/config": [
+      "packages/config/src"
+    ],
+    "@thrivio/ui": [
+      "packages/ui/src"
+    ],
+    "@thrivio/contracts": [
+      "packages/contracts/src"
+    ],
+    "@thrivio/testing": [
+      "packages/testing/src"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "web": [
+        {
+          "file": "apps/web/app/layout.tsx",
+          "hash": "14018883615711536198"
+        },
+        {
+          "file": "apps/web/app/page.tsx",
+          "hash": "8375698397245260166"
+        },
+        {
+          "file": "apps/web/next.config.mjs",
+          "hash": "4599343179042489853"
+        },
+        {
+          "file": "apps/web/project.json",
+          "hash": "1310357053084746554"
+        },
+        {
+          "file": "apps/web/tsconfig.json",
+          "hash": "15254262727132550022"
+        }
+      ],
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "63426151987760438"
+        }
+      ],
+      "bff": [
+        {
+          "file": "apps/bff/project.json",
+          "hash": "17029334958699950319"
+        },
+        {
+          "file": "apps/bff/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "apps/bff/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "apps/bff/src/main.ts",
+          "hash": "8451179703823111865"
+        },
+        {
+          "file": "apps/bff/tsconfig.json",
+          "hash": "63426151987760438"
+        }
+      ],
+      "identity": [
+        {
+          "file": "services/identity/project.json",
+          "hash": "5012614329457985250"
+        },
+        {
+          "file": "services/identity/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/identity/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/identity/src/main.ts",
+          "hash": "12110202960230799724"
+        },
+        {
+          "file": "services/identity/tsconfig.json",
+          "hash": "63426151987760438"
+        }
+      ],
+      "recognition": [
+        {
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
+        },
+        {
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
+        },
+        {
+          "file": "services/recognition/tsconfig.json",
+          "hash": "63426151987760438"
+        }
+      ]
+    },
+    "nonProjectFiles": [
+      {
+        "file": ".editorconfig",
+        "hash": "17170511304021938394"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "3598179961535417078"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_16d90923d9ca0fc2e235f467e4a9c975eb45befd.bin",
+        "hash": "12952712704282455738"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_44e793c39b69a5cdf621219b13a74afbba1b796c.bin",
+        "hash": "13724657783777498449"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_87afe95684d6775f42152d7a9f1e750626bda790.bin",
+        "hash": "7871114732066639605"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_9cf78dd7e5c4692738ee73ab7eed99bc17a358c9.bin",
+        "hash": "17461561037649109620"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_f3add75c692b265d218564ef9fbcc85d98b27f01.bin",
+        "hash": "4696797517709528098"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_f3d06606404dbb71a3929e53e1f39ea1f4e3728f.bin",
+        "hash": "6982840446750464150"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_f8468aa7b73cd6c57ee5dbb1cf81cfc6f4f911b5.bin",
+        "hash": "909618866059672052"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_fdb47d2f5d0624d5221e34da1599fa29c0a43b94.bin",
+        "hash": "18277396023538221608"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_main.bin",
+        "hash": "14340036006389792145"
+      },
+      {
+        "file": ".local/state/replit/agent/.latest.json",
+        "hash": "3688231244080053223"
+      },
+      {
+        "file": ".local/state/replit/agent/rapid_build_started",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": ".local/state/replit/agent/repl_state.bin",
+        "hash": "3560805179785022215"
+      },
+      {
+        "file": ".prettierrc",
+        "hash": "15935444842222616236"
+      },
+      {
+        "file": ".replit",
+        "hash": "9849913762139546949"
+      },
+      {
+        "file": ".upm/store.json",
+        "hash": "15214988755298676962"
+      },
+      {
+        "file": "architecture.md",
+        "hash": "17940926654156079970"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-Do-not-modify-or-create-any-other-files-Task-Cr-1754839026826_1754839026829.txt",
+        "hash": "5237327533574395066"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-Do-not-modify-or-create-any-other-files-Task-Cr-1754840119964_1754840119965.txt",
+        "hash": "6989488372871096855"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-Do-not-modify-or-create-any-other-files-Task-Creat-1754841784564_1754841784564.txt",
+        "hash": "17496913994659897045"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-Do-not-modify-or-create-any-other-files-Task-Creat-1754841930820_1754841930820.txt",
+        "hash": "16233137679352653366"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-Do-not-modify-or-create-any-other-files-Task-Creat-1754842081725_1754842081725.txt",
+        "hash": "14718598058552828048"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-ask-questions-GOAL-Create-a-pnpm-Nx-monorepo-skeleton-with-ap-1754842310447_1754842310447.txt",
+        "hash": "8662225546234815409"
+      },
+      {
+        "file": "context/coding-standards.md",
+        "hash": "2204816226261142426"
+      },
+      {
+        "file": "context/guardrails.md",
+        "hash": "6264988155003040800"
+      },
+      {
+        "file": "context/mission.md",
+        "hash": "15637367611044654364"
+      },
+      {
+        "file": "context/prompt-templates/PROMPT-01—Bootstrap-Monorepo.txt",
+        "hash": "15737073465773736381"
+      },
+      {
+        "file": "context/prompt-templates/PROMPT-02—Legacy-UI-Snapshot.txt",
+        "hash": "13319036017047417156"
+      },
+      {
+        "file": "context/prompt-templates/PROMPT-03—Identity-Schema-And-Migrations.txt",
+        "hash": "13632228594120343463"
+      },
+      {
+        "file": "context/review-checklist.md",
+        "hash": "15728897337466828995"
+      },
+      {
+        "file": "docs/adr/0001-architecture-decisions.md",
+        "hash": "4870192609463366338"
+      },
+      {
+        "file": "eslint.config.js",
+        "hash": "4852490485811882938"
+      },
+      {
+        "file": "nx.json",
+        "hash": "13525571869695138706"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "1172210406832311525"
+      },
+      {
+        "file": "package.json",
+        "hash": "4529243013562615294"
+      },
+      {
+        "file": "packages/config/src/env.ts",
+        "hash": "1294566218572905722"
+      },
+      {
+        "file": "packages/contracts/events/.gitkeep",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "packages/contracts/graphql/.gitkeep",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "packages/contracts/openapi/.gitkeep",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "packages/testing/README.md",
+        "hash": "3571543540235149565"
+      },
+      {
+        "file": "packages/types/index.ts",
+        "hash": "14497515896331436133"
+      },
+      {
+        "file": "packages/ui/README.md",
+        "hash": "12175351898042468681"
+      },
+      {
+        "file": "pnpm-workspace.yaml",
+        "hash": "16404401544893679582"
+      },
+      {
+        "file": "replit.md",
+        "hash": "7932153985744779218"
+      },
+      {
+        "file": "scripts/cleanup-dev.sh",
+        "hash": "4475325169975548237"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "3163636921110161887"
+      }
+    ]
+  }
+}

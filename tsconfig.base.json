@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@thrivio/types": ["packages/types/src"],
+      "@thrivio/config": ["packages/config/src"],
+      "@thrivio/ui": ["packages/ui/src"],
+      "@thrivio/contracts": ["packages/contracts/src"],
+      "@thrivio/testing": ["packages/testing/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build"]
+}

@@ -1,0 +1,512 @@
+{
+  "apps/bff": {
+    "root": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "apps/web": {
+    "root": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "services/identity": {
+    "root": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "services/ledger": {
+    "root": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "services/ledger/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  "services/recognition": {
+    "root": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.cwd": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.cwd": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.cwd": [
+      "services/recognition/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  }
+}

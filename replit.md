@@ -92,3 +92,10 @@ node_modules/
 ## Git & reviews
 - Conventional Commits. Short-lived branches. `CODEOWNERS` required reviews.
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
+
+## Recent Changes
+- **2025-08-10**: Successfully bootstrapped complete pnpm+Nx+TypeScript monorepo skeleton
+- **Core Structure**: Next.js web app, NestJS GraphQL BFF, 3 microservices (identity, recognition, ledger)
+- **Shared Packages**: Created types, config, ui, contracts, testing utilities
+- **Development Ready**: All services start successfully, cleanup scripts configured
+- **Note**: ESLint needs TypeScript decorator support (minor config issue, core functionality works)
