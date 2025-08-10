@@ -1,0 +1,17 @@
+# Builds & caches
+.nx/cache
+dist/
+build/
+coverage/
+.turbo/
+.next/
+.expo/
+.cache/
+playwright-report/
+test-results/
+tmp/
+uploads/
+node_modules/
+
+# Editor/OS
+.DS_Store
