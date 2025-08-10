@@ -1,0 +1,77 @@
+PROMPT TITLE: Scaffold Identity DB schema + migrations (Drizzle) — service ONLY
+
+GOAL
+Create the database schema, migrations, and seed for **/services/identity** using **Drizzle ORM** with **Postgres (Neon)**. No API endpoints yet. 100% test coverage for models/constraints only.
+
+CREATE / MODIFY ONLY
+- services/identity/drizzle/*
+- services/identity/src/db/schema/*.ts
+- services/identity/src/db/index.ts
+- services/identity/src/seeds/identity.seed.ts
+- services/identity/test/db/*.test.ts
+- drizzle.config.ts (root)  ← if not present, create minimal config pointing at Neon using env
+- package.json scripts (append): "db:migrate", "db:generate", "db:seed:identity"
+- .env.example (append placeholders): DATABASE_URL
+
+SCHEMA (tables + key fields)
+1) organizations
+   - id (uuid pk), slug (unique), name, region, created_at
+2) users
+   - id (uuid pk), organization_id (fk), email (citext unique per org), given_name, family_name, locale, status ('active','inactive','terminated'), created_at
+3) identities   (SSO/local links)
+   - id (uuid pk), user_id (fk), provider ('oidc','saml','local','csv'), provider_subject (unique with provider), created_at
+4) roles
+   - id (uuid pk), name (enum-like), description, is_platform_role (bool)
+5) role_bindings
+   - id (uuid pk), user_id (fk), role_id (fk), organization_id (fk), 
+     scope_org_unit_id (nullable fk), scope_location_id (nullable fk), 
+     finance_capability (bool default false), created_at
+6) sessions
+   - id (uuid pk), user_id (fk), issued_at, expires_at, ip, user_agent
+7) org_units     (org tree)
+   - id (uuid pk), organization_id (fk), type ('company','department','team'), name, parent_id (nullable fk), created_at
+8) org_membership
+   - id (uuid pk), user_id (fk), primary (bool), org_unit_id (fk), created_at
+9) locations     (location tree)
+   - id (uuid pk), organization_id (fk), type ('country','city','site'), name, parent_id (nullable fk), created_at
+10) employment_events (effective-dated)
+   - id (uuid pk), user_id (fk), event_type ('hire','transfer','manager_change','title_change','terminate','rehire'), 
+     effective_from (timestamptz), effective_to (nullable), payload (jsonb)
+
+INDEXES & CONSTRAINTS
+- Unique: organizations.slug; users(email, organization_id); identities(provider, provider_subject)
+- FK cascades: delete user → cascade identities/sessions/org_membership; restrict deletion on org_units/locations if referenced
+- Tree helpers: indexes on parent_id for org_units/locations
+- Partial index: sessions(expires_at) where expires_at > now()
+- Check: employment_events effective_to IS NULL OR effective_to > effective_from
+
+DRIZZLE SETUP
+- Use Drizzle Postgres driver; enable UUID, CITEXT, and JSONB.
+- `drizzle.config.ts` points to `process.env.DATABASE_URL`; migrations in `/services/identity/drizzle/migrations`.
+
+SEED (small, deterministic)
+- One organization "Acme", one company-level org_unit, one department, one team.
+- One admin user + one manager + one employee with identities (provider='local').
+- One role per: TenantSuperAdmin, Manager, Employee, and three role_bindings.
+
+TESTS (Jest)
+- Create an ephemeral schema (e.g., `identity_test_<random>`) on Neon; run migrations against it.
+- Insert seed and assert constraints (unique keys, cascades, event date checks).
+- Coverage target **100%** lines/branches for schema utilities.
+
+SCRIPTS to append to package.json
+- "db:generate": "drizzle-kit generate --config=drizzle.config.ts"
+- "db:migrate":  "drizzle-kit migrate --config=drizzle.config.ts"
+- "db:seed:identity": "tsx services/identity/src/seeds/identity.seed.ts"
+
+ACCEPTANCE (show outputs)
+1) Print ERD-like summary (tables + key columns + fks).
+2) Run db:generate → migrations created; show file list.
+3) Run db:migrate against Neon (DATABASE_URL must be set) → success message.
+4) Run tests → green; coverage for identity db tests = 100%.
+5) Run seed → inserts succeed; print counts per table.
+
+RULES
+- Do NOT touch other services or apps.
+- Keep files small; split schema across files if >500 lines.
+- No business endpoints/controllers here; DB layer + tests only.
