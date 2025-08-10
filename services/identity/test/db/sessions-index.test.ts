@@ -1,34 +1,9 @@
-import { describe, beforeAll, afterAll, beforeEach, test, expect } from '@jest/globals';
-import { Client } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { describe, test, expect } from '@jest/globals';
+import { db } from '../jest.setup.db';
 import { sql } from 'drizzle-orm';
 import * as schema from '../../src/db/schema';
 
-const TEST_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test';
-
 describe('Sessions Partial Index', () => {
-  let client: Client;
-  let db: ReturnType<typeof drizzle>;
-
-  beforeAll(async () => {
-    client = new Client({
-      connectionString: TEST_DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    });
-    await client.connect();
-    db = drizzle(client, { schema });
-  });
-
-  afterAll(async () => {
-    await client.end();
-  });
-
-  beforeEach(async () => {
-    // Clean up tables before each test in correct order
-    await db.delete(schema.sessions);
-    await db.delete(schema.users);
-    await db.delete(schema.organizations);
-  });
 
   test('sessions index exists and can query active sessions', async () => {
     const [org] = await db

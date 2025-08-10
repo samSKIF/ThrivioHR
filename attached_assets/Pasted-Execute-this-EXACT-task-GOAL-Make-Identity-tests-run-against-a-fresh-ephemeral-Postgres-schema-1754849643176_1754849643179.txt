@@ -1,0 +1,141 @@
+Execute this EXACT task.
+
+GOAL
+Make Identity tests run against a fresh, ephemeral Postgres schema (not public), apply migrations programmatically, and drop the schema after tests. Then run tests in-band and target 100% coverage for the identity package.
+
+TOUCH ONLY
+- services/identity/jest.config.ts
+- services/identity/tsconfig.jest.json (create if missing)
+- services/identity/test/jest.setup.db.ts (new)
+- services/identity/test/schema-import.test.ts (new tiny file to ensure schema modules are covered)
+- package.json ("test:identity" script only)
+
+PLAN
+1) Create services/identity/test/jest.setup.db.ts with:
+   - Create a random schema name: identity_test_<timestamp>_<rand>
+   - Connect using process.env.DATABASE_URL
+   - CREATE SCHEMA "<name>"; SET search_path TO "<name>"
+   - Use drizzle migrator to run migrations from services/identity/drizzle/migrations into that schema
+   - Expose a helper to run TRUNCATE ALL TABLES between tests, or just run TRUNCATE in afterEach
+   - After all tests: DROP SCHEMA "<name>" CASCADE
+2) Update services/identity/jest.config.ts to:
+   - testEnvironment: 'node'
+   - setupFilesAfterEnv: ['<rootDir>/test/jest.setup.db.ts']
+   - coverageThreshold: { global: { statements: 100, branches: 100, functions: 100, lines: 100 } }
+   - transform for TS via ts-jest
+3) Ensure services/identity/tsconfig.jest.json exists (extends tsconfig + includes test files).
+4) Add a minimal services/identity/test/schema-import.test.ts that imports all schema modules (organizations, users, identities, roles, role_bindings, sessions, org_units, org_membership, locations, employment_events) and asserts they’re defined. This helps reach 100% coverage of schema definitions.
+5) Update package.json script "test:identity" to run in-band: "jest --config services/identity/jest.config.ts --runInBand --coverage"
+
+CONTENT
+
+A) services/identity/test/jest.setup.db.ts
+// jest.setup.db.ts — ephemeral schema + programmatic migrations for Identity
+import { Client } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import * as crypto from 'crypto';
+
+let client: Client;
+export let db: ReturnType<typeof drizzle>;
+let schemaName = '';
+
+function rand(n=6){ return crypto.randomBytes(n).toString('hex'); }
+
+beforeAll(async () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL missing');
+  client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  await client.connect();
+  schemaName = `identity_test_${Date.now()}_${rand(3)}`;
+  await client.query(`CREATE SCHEMA "${schemaName}";`);
+  await client.query(`SET search_path TO "${schemaName}";`);
+  db = drizzle(client);
+  // Programmatic migrations into the current search_path
+  await migrate(db, { migrationsFolder: 'services/identity/drizzle/migrations' });
+});
+
+afterEach(async () => {
+  // Truncate all tables created by the migrations; this is safe because search_path is scoped
+  const res = await client.query(`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = $1 AND table_type='BASE TABLE'
+  `, [schemaName]);
+  const tables = res.rows.map(r => `"${schemaName}"."${r.table_name}"`).join(', ');
+  if (tables) {
+    await client.query(`TRUNCATE ${tables} RESTART IDENTITY CASCADE;`);
+  }
+});
+
+afterAll(async () => {
+  try {
+    await client.query(`SET search_path TO public;`);
+    await client.query(`DROP SCHEMA "${schemaName}" CASCADE;`);
+  } finally {
+    await client.end();
+  }
+});
+
+B) services/identity/jest.config.ts
+module.exports = {
+  rootDir: __dirname,
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.db.ts'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+  collectCoverageFrom: [
+    '<rootDir>/src/**/*.{ts,tsx}',
+    '!<rootDir>/src/**/*.d.ts',
+  ],
+  coverageThreshold: {
+    global: { statements: 100, branches: 100, functions: 100, lines: 100 },
+  },
+};
+
+C) services/identity/tsconfig.jest.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ]
+}
+
+D) services/identity/test/schema-import.test.ts
+// Ensures schema modules are loaded and covered
+import * as org from '../src/db/schema/organizations';
+import * as users from '../src/db/schema/users';
+import * as ids from '../src/db/schema/identities';
+import * as roles from '../src/db/schema/roles';
+import * as rbs from '../src/db/schema/role_bindings';
+import * as sess from '../src/db/schema/sessions';
+import * as ous from '../src/db/schema/org_units';
+import * as mem from '../src/db/schema/org_membership';
+import * as loc from '../src/db/schema/locations';
+import * as ee from '../src/db/schema/employment_events';
+
+test('schema modules load', () => {
+  expect(org).toBeDefined();
+  expect(users).toBeDefined();
+  expect(ids).toBeDefined();
+  expect(roles).toBeDefined();
+  expect(rbs).toBeDefined();
+  expect(sess).toBeDefined();
+  expect(ous).toBeDefined();
+  expect(mem).toBeDefined();
+  expect(loc).toBeDefined();
+  expect(ee).toBeDefined();
+});
+
+E) package.json (script change only)
+"test:identity": "jest --config services/identity/jest.config.ts --runInBand --coverage"
+
+ACCEPTANCE — print:
+1) A one-line summary of files changed.
+2) Run: pnpm test:identity  → tests must pass; print the final 5 lines (coverage summary must show 100%).
+3) STOP.

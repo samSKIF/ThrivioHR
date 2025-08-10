@@ -1,27 +1,16 @@
-import type { Config } from 'jest';
-
-const config: Config = {
-  displayName: 'Identity Service',
-  preset: 'ts-jest',
+module.exports = {
+  rootDir: __dirname,
   testEnvironment: 'node',
-  roots: ['<rootDir>/test'],
-  testMatch: ['**/*.test.ts'],
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/index.ts',
-  ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  coverageThreshold: {
-    global: {
-      branches: 90,
-      functions: 90,
-      lines: 90,
-      statements: 90,
-    },
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.db.ts'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
   },
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+  collectCoverageFrom: [
+    '<rootDir>/src/**/*.{ts,tsx}',
+    '!<rootDir>/src/**/*.d.ts',
+  ],
+  coverageThreshold: {
+    global: { statements: 100, branches: 100, functions: 100, lines: 100 },
+  },
 };
-
-export default config;

@@ -41,6 +41,10 @@ args = "db-seed-identity"
 task = "workflow.run"
 args = "test-identity"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "test-identity-final"
+
 [[workflows.workflow]]
 name = "Documentation Server"
 author = "agent"
@@ -109,6 +113,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "jest --config services/identity/jest.config.ts --coverage"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "test-identity-final"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "jest --config services/identity/jest.config.ts --runInBand --coverage"
 
 [workflows.workflow.metadata]
 outputType = "console"
