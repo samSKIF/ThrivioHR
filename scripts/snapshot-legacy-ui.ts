@@ -3,7 +3,8 @@ import { execSync, spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
-const GIT_URL = 'https://github.com/samSKIF/ThrivioHR';
+const GIT_URL = process.env.GIT_URL || 'https://github.com/samSKIF/ThrivioHR';
+const INCLUDE_PATHS = process.env.INCLUDE_PATHS?.split(',').map(p => p.trim());
 const TEMP_DIR = '.tmp-legacy';
 const OUTPUT_DIR = 'legacy-ui';
 const MAX_FILE_SIZE = 300 * 1024; // 300KB
@@ -41,15 +42,57 @@ async function cleanup() {
   }
 }
 
+async function autoDetectUIPaths(repoPath: string): Promise<string[]> {
+  const checkPaths = [
+    // Pattern 1: client/src/*
+    ['client/src/components/**', 'client/src/pages/**', 'client/src/app/**', 'client/src/styles/**', 'client/public/**'],
+    // Pattern 2: client/*
+    ['client/components/**', 'client/pages/**', 'client/app/**', 'client/styles/**', 'client/public/**'],
+    // Pattern 3: src/*
+    ['src/components/**', 'src/pages/**', 'src/app/**', 'src/styles/**', 'public/**']
+  ];
+  
+  for (const pathSet of checkPaths) {
+    const foundPaths: string[] = [];
+    
+    for (const checkPath of pathSet) {
+      const basePath = checkPath.replace('/**', '');
+      try {
+        await fs.access(path.join(repoPath, basePath));
+        foundPaths.push(checkPath);
+      } catch {
+        // Path doesn't exist, skip
+      }
+    }
+    
+    if (foundPaths.length > 0) {
+      console.log(`Auto-detected UI paths: ${foundPaths.join(', ')}`);
+      return foundPaths;
+    }
+  }
+  
+  console.log('No UI paths auto-detected, using fallback');
+  return ['**/*.tsx', '**/*.jsx', '**/*.ts', '**/*.js', '**/*.css', '**/*.scss', '**/*.svg'];
+}
+
 async function cloneRepo() {
-  console.log('Cloning repository...');
+  console.log(`Cloning repository: ${GIT_URL}`);
   await cleanup(); // ensure clean start
   
-  // Use simpler clone without sparse checkout initially
+  // Use simple clone without sparse checkout
   execSync(`git clone --depth 1 ${GIT_URL} ${TEMP_DIR}/repo`, 
     { stdio: 'inherit' });
   
   const repoPath = path.join(TEMP_DIR, 'repo');
+  
+  // Log what we're looking for
+  if (INCLUDE_PATHS) {
+    console.log(`Custom include paths: ${INCLUDE_PATHS.join(', ')}`);
+  } else {
+    const detectedPaths = await autoDetectUIPaths(repoPath);
+    console.log(`Will scan for UI files with patterns: ${detectedPaths.slice(0, 3).join(', ')}...`);
+  }
+  
   return repoPath;
 }
 
@@ -234,18 +277,41 @@ ${skippedFiles.map(f =>
 
 async function main() {
   try {
+    // Remove existing legacy-ui directory if it exists
+    try {
+      await fs.rm(OUTPUT_DIR, { recursive: true, force: true });
+      console.log('Removed existing legacy-ui directory');
+    } catch {
+      // Directory doesn't exist, continue
+    }
+    
     const repoPath = await cloneRepo();
     
     // Create output directory
     await fs.mkdir(OUTPUT_DIR, { recursive: true });
     
-    // Copy files from client directory
-    const clientPath = path.join(repoPath, 'client');
-    try {
-      await fs.access(clientPath);
-      await walkDirectory(clientPath, clientPath);
-    } catch {
-      console.log('No client directory found, trying root...');
+    // Try different directory structures
+    let found = false;
+    const tryPaths = [
+      path.join(repoPath, 'client'),
+      path.join(repoPath, 'src'),
+      repoPath
+    ];
+    
+    for (const tryPath of tryPaths) {
+      try {
+        await fs.access(tryPath);
+        console.log(`Processing directory: ${path.relative(repoPath, tryPath) || '(root)'}`);
+        await walkDirectory(tryPath, tryPath);
+        found = true;
+        break;
+      } catch {
+        continue;
+      }
+    }
+    
+    if (!found) {
+      console.log('No suitable directories found, processing root...');
       await walkDirectory(repoPath, repoPath);
     }
     
@@ -259,11 +325,19 @@ async function main() {
     console.log(`- css: ${counts.css}, scss: ${counts.scss}, svg: ${counts.svg}, images: ${counts.img}`);
     
     console.log('\nTop 10 components by import references:');
-    topComponents.forEach((comp, i) => {
-      console.log(`${i + 1}. ${path.basename(comp.originalPath)} (${comp.importCount} imports)`);
-    });
+    if (topComponents.length === 0) {
+      console.log('(No components with import references found)');
+    } else {
+      topComponents.forEach((comp, i) => {
+        console.log(`${i + 1}. ${path.basename(comp.originalPath)} (${comp.importCount} imports)`);
+      });
+    }
     
     console.log(`\nTotal size: ${totalSizeMB} MB`);
+    
+    if (totalSizeMB > 10) {
+      console.warn(`WARNING: Total size ${totalSizeMB} MB exceeds 10 MB limit!`);
+    }
     
     // Show first 20 lines of component map
     const mapPath = path.join(OUTPUT_DIR, 'COMPONENT_MAP.md');
