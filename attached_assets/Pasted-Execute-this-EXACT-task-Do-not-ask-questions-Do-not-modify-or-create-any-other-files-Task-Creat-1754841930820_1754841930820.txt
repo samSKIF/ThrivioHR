@@ -1,0 +1,59 @@
+Execute this EXACT task. Do not ask questions. Do not modify or create any other files.
+
+Task:
+Create or overwrite the file:
+/context/prompt-templates/PROMPT-02—Legacy-UI-Snapshot.txt
+with the content below.
+
+Process:
+1) Print a PLAN stating you will write only that single file.
+2) Ensure parent folders exist.
+3) Write the file with the exact content.
+4) Run: git status --porcelain (show output)
+5) Print: path, line count, and the first 6 lines of the file.
+6) STOP.
+
+----- CONTENT FOR /context/prompt-templates/PROMPT-02—Legacy-UI-Snapshot.txt -----
+PROMPT TITLE: Snapshot Legacy UI into /legacy-ui (no business logic)
+
+GOAL
+Bring a READ-ONLY copy of the legacy UI from Git into /legacy-ui for reference and reuse. Do NOT touch apps/services. Do NOT overwrite existing files.
+
+INPUTS (I will provide when running this prompt later)
+- GIT_URL: https://github.com/samSKIF/ThrivioHR
+- INCLUDE PATHS (sparse):
+  - client/src/components/**
+  - client/src/pages/** (or client/src/app/** if exists)
+  - client/src/styles/**
+  - client/public/**  (ONLY SVG + images < 300 KB)
+
+CREATE / MODIFY ONLY (during the snapshot run this template describes)
+- /legacy-ui/**              (copied files, preserving relative structure)
+- /legacy-ui/COMPONENT_MAP.md
+- /scripts/snapshot-legacy-ui.ts   (Node script that does shallow sparse clone → copy → report)
+- package.json: add script "snapshot:ui": "tsx scripts/snapshot-legacy-ui.ts"
+
+COPY RULES
+- Include: .tsx/.jsx/.ts/.js, .css/.scss, *.module.css, .svg, small images (< 300 KB).
+- Exclude: node_modules, builds, storybook-static, large assets (≥ 300 KB), any file ≥ 500 lines.
+- Do NOT copy environment files or server code.
+- Preserve relative paths under /legacy-ui; never overwrite existing files.
+
+OUTPUTS
+- Console summary: counts by filetype; top 10 components by import references; total /legacy-ui size (must be < 10 MB).
+- /legacy-ui/COMPONENT_MAP.md: list each component with:
+  - original path → new path
+  - LOC
+  - “used by” import graph (component name → count)
+  - skipped files (with reason: too large / excluded type)
+- No temp folders left behind.
+
+ACCEPTANCE (when running the snapshot later)
+1) `pnpm snapshot:ui` completes without errors.
+2) /legacy-ui size < 10 MB.
+3) Printed summary shows counts + top 10 refs.
+4) COMPONENT_MAP.md generated and includes the skipped files list.
+
+IMPORTANT
+- This template does not perform the snapshot now. It only creates the instructions and will be used in a later step.
+----- END CONTENT -----
