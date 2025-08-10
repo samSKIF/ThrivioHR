@@ -1,0 +1,35 @@
+Execute this EXACT task.
+
+GOAL
+Refactor Identity DB tests to use the shared ephemeral schema from jest.setup.db.ts, stop opening new DB clients, and scope coverage to the DB layer. Then run all Identity tests and show 100% coverage for the DB layer.
+
+TOUCH ONLY
+- services/identity/jest.config.ts
+- services/identity/test/db/*.test.ts
+- services/identity/test/helpers.ts (new)
+
+PLAN
+1) Update services/identity/jest.config.ts:
+   - Set collectCoverageFrom to ONLY DB layer:
+     collectCoverageFrom: ['<rootDir>/src/db/**/*.ts']
+   - Keep existing config (testEnvironment, setupFilesAfterEnv, thresholds at 100%).
+
+2) Create services/identity/test/helpers.ts with small factory helpers that rely on the shared `db` exported by jest.setup.db.ts and the table objects from schema modules.
+   - Expose: createOrg(), createUser(orgId, email), createIdentity(userId, provider, sub), createOrgUnit(), createMembership(), createSession(), createEmploymentEvent()
+
+3) Rewrite tests in services/identity/test/db/*.test.ts to:
+   - Import { db } from '../jest.setup.db' (relative path)
+   - Import needed tables from src/db/schema/*
+   - Use helpers to insert rows; DO NOT create new pg Clients or set search_path.
+   - Implement the following tests:
+     a) Unique email per org: insert org, user A; inserting user B with same email in same org should reject; in a different org, same email succeeds.
+     b) Identity uniqueness: same provider+subject for two users rejects; different provider same subject allowed.
+     c) Cascade delete: insert user + session + identity + membership; delete user; counts for those child tables become 0.
+     d) Employment event check: inserting with effective_to <= effective_from should reject; valid range inserts and can be queried.
+     e) Sessions partial index sanity: insert one with future expires_at and one with past; query count of future (where expires_at > now()) returns 1.
+
+4) Do not change any production code. Do not seed from the global seed; tests must build their own minimal data using helpers.
+
+5) Run: pnpm test:identity  and print the LAST 20 LINES of output (must show 100% statements/branches/functions/lines for the DB layer).
+
+STOP after printing results.
