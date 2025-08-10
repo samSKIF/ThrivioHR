@@ -1,0 +1,62 @@
+Execute this EXACT task. Do not ask questions. Do not modify or create any other files.
+
+Task:
+Create or overwrite the file:
+  /context/prompt-templates/PROMPT-01—Bootstrap-Monorepo.txt
+with the content below.
+
+Process:
+1) Print a PLAN stating you will write only that single file.
+2) Ensure parent folders exist.
+3) Write the file with the exact content.
+4) Run: git status --porcelain  (show output)
+5) Print: path, line count, and the first 5 lines of the file.
+6) STOP.
+
+----- CONTENT FOR /context/prompt-templates/PROMPT-01—Bootstrap-Monorepo.txt -----
+PROMPT TITLE: Bootstrap pnpm+Nx Monorepo (skeleton only)
+
+GOAL
+Initialize a pnpm + Nx monorepo skeleton for Next.js (web), NestJS GraphQL BFF, and empty service folders. NO business logic. NO external integrations. Keep it runnable with strict hygiene and cleanup.
+
+CREATE / MODIFY ONLY
+- package.json
+- pnpm-workspace.yaml
+- nx.json
+- tsconfig.base.json
+- .gitignore (append, do not overwrite)
+- .editorconfig
+- .eslintrc.cjs
+- .prettierrc
+- scripts/cleanup-dev.sh
+- apps/web  (Next.js 14, App Router, Tailwind, shadcn/ui installed; i18n scaffold only)
+- apps/bff  (NestJS GraphQL Apollo; no resolvers)
+- services/identity (NestJS empty)
+- services/recognition (NestJS empty)
+- services/ledger (NestJS empty)
+- packages/types (shared TS types, empty index.ts)
+- packages/config (env loader using zod)
+- packages/ui (design tokens + shadcn/ui wrapper boilerplate; no pages)
+- packages/contracts (empty folders for openapi/, graphql/, events/)
+- packages/testing (test utils placeholder)
+
+RULES
+- Use pnpm. Configure Nx targets: dev, build, test, lint, e2e for apps/services.
+- Ports: web 3000, bff 4000, services 5001–5003.
+- .gitignore must include caches/build/temp (do not wipe existing).
+- Add scripts:
+  - "dev": nx run-many -t dev --parallel
+  - "clean": bash scripts/cleanup-dev.sh
+- ESLint + TypeScript strict; Jest preconfigured (no tests yet).
+- Do NOT add Storybook, Docker, or CI here.
+- Print a summary of files created and the exact commands to run.
+
+ACCEPTANCE (run and show outputs)
+1) pnpm i
+2) pnpm lint  → no errors
+3) pnpm dev  → show web starting on :3000 and bff on :4000 (then stop)
+4) pnpm clean → temp folders removed
+5) git status — should only show the files listed above as new/modified
+
+If anything fails, revert and STOP.
+----- END CONTENT -----
