@@ -21,6 +21,10 @@ args = "Documentation Server"
 task = "workflow.run"
 args = "main"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "snapshot-ui"
+
 [[workflows.workflow]]
 name = "Documentation Server"
 author = "agent"
@@ -37,6 +41,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "find . -type f -name \"*.md\" | head -10 && echo \"--- File structure ---\" && tree -I 'node_modules|.git' || ls -la"
+
+[[workflows.workflow]]
+name = "snapshot-ui"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "tsx scripts/snapshot-legacy-ui.ts"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 5000

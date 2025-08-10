@@ -1,0 +1,50 @@
+Execute this EXACT task. Do not ask questions.
+
+GOAL
+Copy ONLY legacy UI assets from the Git repo into /legacy-ui (read-only reference). Do NOT touch apps/services. Skip large files. Generate a component map. Clean up temp files.
+
+SOURCE REPO (fixed for this run)
+GIT_URL=https://github.com/samSKIF/ThrivioHR
+
+INCLUDE PATHS (sparse)
+- client/src/components/**
+- client/src/pages/**   (or client/src/app/** if present)
+- client/src/styles/**
+- client/public/**      (ONLY SVGs + images < 300 KB)
+
+PLAN
+1) Create scripts/snapshot-legacy-ui.ts (Node/TS). It must:
+   - create a temp dir .tmp-legacy
+   - run: git clone --depth 1 --filter=blob:none --sparse $GIT_URL .tmp-legacy/repo
+   - cd into repo and run: git sparse-checkout set <include paths> (choose pages or app, whichever exists)
+   - copy allowed files into /legacy-ui, preserving relative structure
+   - filters:
+     • include .tsx/.jsx/.ts/.js, .css/.scss, *.module.css, .svg
+     • include images < 300 KB (png/jpg/webp); skip ≥ 300 KB
+     • skip any source file ≥ 500 lines
+     • never overwrite an existing file in /legacy-ui (log as “skipped: exists”)
+   - build an import graph for components: count how many files import each component (simple static regex on `from '.../Component'` and relative paths)
+   - write /legacy-ui/COMPONENT_MAP.md with:
+       original path → new path, LOC, bytes, import count
+       Top 10 by import count
+       Skipped files with reason (too large, too long, existing, excluded type)
+       Total size of /legacy-ui in MB
+   - delete the temp dir before exit (even on error)
+
+2) Add script to package.json:
+   "snapshot:ui": "tsx scripts/snapshot-legacy-ui.ts"
+
+3) Run: pnpm snapshot:ui
+
+ACCEPTANCE — print these:
+- Counts by file type copied (ts/tsx/js/jsx/css/scss/svg/img-other)
+- Top 10 components by import references
+- /legacy-ui total size in MB (must be < 10 MB)
+- Path to COMPONENT_MAP.md and the first 20 lines
+- Confirm “temp cleaned”
+
+STOP afterwards.
+
+Constraints
+- Modify ONLY: scripts/snapshot-legacy-ui.ts, package.json, and the /legacy-ui/** outputs.
+- Do not install extra packages unless absolutely required; prefer built-in `child_process` + `fs/promises`.
