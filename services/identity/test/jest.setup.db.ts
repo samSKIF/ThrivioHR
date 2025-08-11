@@ -67,3 +67,5 @@ afterAll(async () => {
     await client.end();
   }
 });
+
+export { client };
