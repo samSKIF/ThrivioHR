@@ -79,6 +79,12 @@ node_modules/
 - Respect **data residency**; no cross-pod PII.
 
 ## Prompting rules (Agent)
+- **MANDATORY FIRST STEP**: Before ANY work, check these files for context:
+  1. `architecture.md` - System architecture, domains, regions, tenancy
+  2. `context/coding-standards.md` - File limits, patterns, stack versions  
+  3. `context/guardrails.md` - Security rules, what to avoid
+  4. `context/mission.md` - Product goals, markets, deployment modes
+  5. `replit.md` - User preferences and recent changes
 - **One small change per prompt.**
 - **Print a PLAN** with exact files to touch. Do not touch outside files.
 - After edits, run acceptance checks (lint/tests/dev port up/etc.) and print results.
