@@ -73,7 +73,7 @@ async function createOrganization(name?: string, region?: string) {
 // Public helpers (auto-prereqs in correct order)
 export async function createOrg(name?: string) {
   const id = await createOrganization(name);
-  return id; // legacy: plain id string
+  return { id }; // legacy: return object with id property
 }
 
 export async function ensureCompanyOrgUnit(orgId: string) {
@@ -111,17 +111,15 @@ export async function createTeam(orgId: string, name='Team', parentDeptId?: stri
 
 // Preserve the schema-aware implementation under a private name
 async function _createUserImpl(opts?: { orgId?: string; email?: string; given_name?: string; family_name?: string; locale?: string; status?: string }) {
-  const orgId = opts?.orgId ?? await createOrg();
+  const orgId = opts?.orgId ?? (await createOrg()).id;
   const email = (opts?.email ?? uniqueEmail('user')).toLowerCase();
   const id = await dynamicInsert('users', {
     organization_id: orgId,
     email,
-    given_name: opts?.given_name ?? 'Test',
-    family_name: opts?.family_name ?? 'User',
-    locale: opts?.locale ?? 'en',
-    status: opts?.status ?? 'active'
+    first_name: opts?.given_name ?? 'Test',
+    last_name: opts?.family_name ?? 'User'
   });
-  return { userId: id, orgId };
+  return { userId: id, orgId, email };
 }
 
 // Overload-style wrapper for legacy + new
@@ -131,8 +129,8 @@ export async function createUser(arg1?: any, arg2?: any) {
     const orgId = typeof arg1 === 'string' ? arg1 : undefined;
     const email = typeof arg2 === 'string' ? arg2 : undefined;
     const res = await _createUserImpl({ orgId, email });
-    // legacy: return string userId
-    return res.userId;
+    // legacy: return object with legacy structure 
+    return { id: res.userId, email: res.email, organizationId: res.orgId };
   }
   // new: return rich object { userId, orgId }
   return await _createUserImpl(arg1);
@@ -168,14 +166,15 @@ export async function createMembership(userId?: string) {
   return { id, userId: uid, orgId, teamId };
 }
 
-export async function createEmploymentEvent(userId?: string, event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire') {
+export async function createEmploymentEvent(userId?: string, orgId?: string, effectiveFrom?: Date, effectiveTo?: Date, event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire') {
   const u = userId ? { userId } : await createUser();
   const uid = u.userId ?? u;
   const id = await dynamicInsert('employment_events', {
     user_id: uid,
     event_type: event,
-    effective_from: new Date(),
-    metadata: JSON.stringify({ note: 'test' })
+    effective_from: effectiveFrom ?? new Date(),
+    effective_to: effectiveTo,
+    payload: JSON.stringify({ note: 'test' })
   });
   return { id, userId: uid };
 }
