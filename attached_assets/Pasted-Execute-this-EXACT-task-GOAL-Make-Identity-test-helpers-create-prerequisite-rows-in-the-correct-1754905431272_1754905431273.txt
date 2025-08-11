@@ -1,0 +1,143 @@
+Execute this EXACT task.
+
+GOAL
+Make Identity test helpers create prerequisite rows in the correct order so tests stop hitting FK violations. Do NOT touch production code.
+
+TOUCH ONLY
+- services/identity/test/helpers.ts
+
+PLAN
+1) Replace helpers.ts with implementations that:
+   - use the shared ephemeral connection from jest.setup.db.ts (import { db } and also export client from there as pg if needed)
+   - rely on current search_path (no schema prefix)
+   - auto-create prerequisites when args are missing
+   - return IDs for chaining
+
+2) After replacing, run: pnpm test:identity and print the last 20 lines (should pass).
+
+CONTENT for services/identity/test/helpers.ts
+------------------------------------------------
+import { randomUUID } from 'crypto';
+// we exported `db` in jest.setup.db.ts already; also export the raw pg client:
+import { db } from './jest.setup.db';
+// Use raw SQL via the db client by reaching into the underlying client.
+// If `db` does not expose a client, import { Client } export from jest.setup.db.ts instead and call `client.query(...)`.
+const clientAny: any = (db as any);
+const client = clientAny?.client ?? (clientAny._client ?? null);
+
+function uniqueEmail(prefix='user'){ return `${prefix}+${Date.now()}_${Math.random().toString(36).slice(2,6)}@example.com`; }
+function slug(prefix='org'){ return `${prefix}_${Math.random().toString(36).slice(2,8)}`; }
+
+export async function createOrganization(name?: string) {
+  const s = slug('org');
+  const n = name ?? `Test ${s}`;
+  const region = 'eu-west-1';
+  const res = await client.query(
+    `INSERT INTO organizations (slug, name, region) VALUES ($1,$2,$3) RETURNING id`,
+    [s, n, region]
+  );
+  return res.rows[0].id as string;
+}
+
+export async function ensureCompanyOrgUnit(orgId: string) {
+  // returns the company-level org_unit id; create if missing
+  const r0 = await client.query(
+    `SELECT id FROM org_units WHERE organization_id=$1 AND type='company' LIMIT 1`,
+    [orgId]
+  );
+  if (r0.rowCount > 0) return r0.rows[0].id as string;
+  const r1 = await client.query(
+    `INSERT INTO org_units (organization_id, type, name, parent_id) VALUES ($1,'company','Company',NULL) RETURNING id`,
+    [orgId]
+  );
+  return r1.rows[0].id as string;
+}
+
+export async function createDepartment(orgId: string, name='Dept') {
+  const companyId = await ensureCompanyOrgUnit(orgId);
+  const r = await client.query(
+    `INSERT INTO org_units (organization_id, type, name, parent_id) VALUES ($1,'department',$2,$3) RETURNING id`,
+    [orgId, name, companyId]
+  );
+  return r.rows[0].id as string;
+}
+
+export async function createTeam(orgId: string, name='Team', parentDeptId?: string) {
+  const deptId = parentDeptId ?? await createDepartment(orgId, 'Dept');
+  const r = await client.query(
+    `INSERT INTO org_units (organization_id, type, name, parent_id) VALUES ($1,'team',$2,$3) RETURNING id`,
+    [orgId, name, deptId]
+  );
+  return r.rows[0].id as string;
+}
+
+export async function createUser(opts?: { orgId?: string; email?: string; givenName?: string; familyName?: string; locale?: string; status?: 'active'|'inactive'|'terminated' }) {
+  const orgId = opts?.orgId ?? await createOrganization();
+  const email = (opts?.email ?? uniqueEmail('user')).toLowerCase();
+  const given = opts?.givenName ?? 'Test';
+  const family = opts?.familyName ?? 'User';
+  const locale = opts?.locale ?? 'en';
+  const status = opts?.status ?? 'active';
+  const r = await client.query(
+    `INSERT INTO users (organization_id, email, given_name, family_name, locale, status) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+    [orgId, email, given, family, locale, status]
+  );
+  return { userId: r.rows[0].id as string, orgId };
+}
+
+export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
+  const u = userId ? { userId } : await createUser();
+  const sub = subject ?? randomUUID();
+  const r = await client.query(
+    `INSERT INTO identities (user_id, provider, provider_subject) VALUES ($1,$2,$3) RETURNING id`,
+    [u.userId, provider, sub]
+  );
+  return { identityId: r.rows[0].id as string, userId: u.userId, orgId: (u as any).orgId };
+}
+
+export async function createSession(userId?: string, expiresMinutes = 60) {
+  const u = userId ? { userId } : await createUser();
+  const now = new Date();
+  const exp = new Date(now.getTime() + expiresMinutes * 60_000);
+  const r = await client.query(
+    `INSERT INTO sessions (user_id, issued_at, expires_at, ip, user_agent) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+    [u.userId, now, exp, '127.0.0.1', 'jest']
+  );
+  return { sessionId: r.rows[0].id as string, userId: u.userId };
+}
+
+export async function ensureMembership(userId?: string) {
+  const u = userId ? { userId } : await createUser();
+  // find the user org
+  const orgRow = await client.query(`SELECT organization_id FROM users WHERE id=$1`, [u.userId]);
+  const orgId: string = orgRow.rows[0].organization_id;
+  const teamId = await createTeam(orgId, 'Team');
+  const r = await client.query(
+    `INSERT INTO org_membership (user_id, primary, org_unit_id) VALUES ($1,true,$2) RETURNING id`,
+    [u.userId, teamId]
+  );
+  return { membershipId: r.rows[0].id as string, userId: u.userId, orgId, teamId };
+}
+
+export async function createEmploymentEvent(userId?: string, event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire') {
+  const u = userId ? { userId } : await createUser();
+  const from = new Date();
+  const r = await client.query(
+    `INSERT INTO employment_events (user_id, event_type, effective_from, effective_to, payload) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+    [u.userId, event, from, null, { note: 'test' }]
+  );
+  return { employmentEventId: r.rows[0].id as string, userId: u.userId };
+}
+
+// tiny util for tests
+export async function tableCount(table: string): Promise<number> {
+  const r = await client.query(`SELECT COUNT(*)::int AS c FROM ${table}`);
+  return r.rows[0].c as number;
+}
+------------------------------------------------
+
+RUN
+- pnpm test:identity
+- Print the LAST 20 LINES of output.
+
+STOP.

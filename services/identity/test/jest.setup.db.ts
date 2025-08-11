@@ -8,6 +8,7 @@ import path from 'node:path';
 
 let client: Client;
 export let db: ReturnType<typeof drizzle>;
+export { client };
 let schemaName = '';
 
 function rand(n=6){ return crypto.randomBytes(n).toString('hex'); }
