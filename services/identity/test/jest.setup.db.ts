@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from '../src/db/schema';
 import * as crypto from 'crypto';
+import path from 'node:path';
 
 let client: Client;
 export let db: ReturnType<typeof drizzle>;
@@ -23,7 +24,9 @@ beforeAll(async () => {
   await client.query(`SET search_path TO "${schemaName}";`);
   db = drizzle(client, { schema });
   // Programmatic migrations into the current search_path
-  await migrate(db, { migrationsFolder: 'services/identity/drizzle/migrations' });
+  const migrationsFolder = path.resolve(__dirname, '../drizzle/migrations');
+  console.log('Migrations folder resolved to:', migrationsFolder);
+  await migrate(db, { migrationsFolder });
   // Log tables created in schema
   const res = await client.query(`
     SELECT table_name FROM information_schema.tables
