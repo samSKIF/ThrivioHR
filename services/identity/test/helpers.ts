@@ -73,7 +73,7 @@ async function createOrganization(name?: string, region?: string) {
 // Public helpers (auto-prereqs in correct order)
 export async function createOrg(name?: string) {
   const id = await createOrganization(name);
-  return id; // legacy: plain id string
+  return { id };
 }
 
 export async function ensureCompanyOrgUnit(orgId: string) {
@@ -109,33 +109,53 @@ export async function createTeam(orgId: string, name='Team', parentDeptId?: stri
   });
 }
 
-// Preserve the schema-aware implementation under a private name
-async function _createUserImpl(opts?: { orgId?: string; email?: string; given_name?: string; family_name?: string; locale?: string; status?: string }) {
-  const orgId = opts?.orgId ?? await createOrg();
-  const email = (opts?.email ?? uniqueEmail('user')).toLowerCase();
-  const id = await dynamicInsert('users', {
-    organization_id: orgId,
-    email,
-    given_name: opts?.given_name ?? 'Test',
-    family_name: opts?.family_name ?? 'User',
-    locale: opts?.locale ?? 'en',
-    status: opts?.status ?? 'active'
-  });
-  return { userId: id, orgId };
-}
-
-// Overload-style wrapper for legacy + new
 export async function createUser(arg1?: any, arg2?: any) {
-  const isLegacy = typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 === undefined && arg2 === undefined);
-  if (isLegacy) {
-    const orgId = typeof arg1 === 'string' ? arg1 : undefined;
-    const email = typeof arg2 === 'string' ? arg2 : undefined;
-    const res = await _createUserImpl({ orgId, email });
-    // legacy: return string userId
-    return res.userId;
+  // Accept legacy shapes:
+  //  - createUser(orgId?: string, email?: string) -> returns userId (string)
+  //  - createUser({ orgId?, email?, given_name?, family_name?, locale?, status? }) -> returns { userId, orgId }
+  let orgId: string | undefined;
+  let email: string | undefined;
+
+  // Handle legacy calls first: createUser(orgId, email) or createUser(orgObj, email)
+  if (typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 && typeof arg1 === 'object' && 'id' in arg1)) {
+    // Legacy format
+    if (typeof arg1 === 'string') {
+      orgId = arg1;
+    } else if (arg1 && typeof arg1 === 'object' && 'id' in arg1) {
+      orgId = arg1.id;  // support createOrg() result
+      if (!email && 'email' in arg1 && typeof arg1.email === 'string') {
+        email = arg1.email;
+      }
+    }
+    
+    if (typeof arg2 === 'string') {
+      email = arg2;
+    }
+
+    if (!orgId) orgId = await createOrganization();
+    const id = await dynamicInsert('users', {
+      organization_id: orgId,
+      email: (email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+      given_name: 'Test',
+      family_name: 'User',
+      locale: 'en',
+      status: 'active'
+    });
+    return id; // legacy return: string userId
   }
-  // new: return rich object { userId, orgId }
-  return await _createUserImpl(arg1);
+
+  // New object form
+  const opts = arg1 ?? {};
+  if (!opts.orgId) opts.orgId = await createOrganization();
+  const userId = await dynamicInsert('users', {
+    organization_id: opts.orgId,
+    email: (opts.email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+    given_name: opts.given_name ?? 'Test',
+    family_name: opts.family_name ?? 'User',
+    locale: opts.locale ?? 'en',
+    status: opts.status ?? 'active'
+  });
+  return { userId, orgId: opts.orgId };
 }
 
 export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
