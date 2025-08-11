@@ -1,0 +1,68 @@
+Execute this EXACT task. Do not touch ANY file except: services/identity/test/helpers.ts.
+Do not refactor other files, do not install deps, do not modify config. If the file is missing, PRINT "helpers.ts missing" and STOP.
+
+GOAL
+Eliminate FK errors by ensuring createUser ALWAYS uses a real organizations.id that exists in the CURRENT test schema.
+
+TOUCH ONLY
+- services/identity/test/helpers.ts
+
+CHANGES
+1) ADD this function near the top (below imports), without removing anything else:
+
+// Resolve or create a real organization id in the current schema
+export async function ensureOrganizationId(input?: string | { id?: string } | { orgId?: string }): Promise<string> {
+  // 1) Extract candidate id if provided
+  let candidate: string | undefined;
+  if (typeof input === 'string') candidate = input;
+  else if (input && typeof input === 'object') candidate = (input as any).id ?? (input as any).orgId;
+
+  // 2) If candidate provided, verify it exists; otherwise create one
+  if (candidate) {
+    const check = await client.query(`SELECT 1 FROM organizations WHERE id = $1 LIMIT 1`, [candidate]);
+    if (check.rowCount === 1) return candidate;
+  }
+  // Create a new org (reuse your existing createOrganization implementation)
+  const createdId = await createOrganization();
+  return createdId;
+}
+
+2) UPDATE ONLY the exported createUser function to use ensureOrganizationId, keeping all other logic as-is. Replace its first lines with:
+
+export async function createUser(arg1?: any, arg2?: any) {
+  // Legacy/new resolution for org + email
+  const legacyShape = (typeof arg1 === 'string') || (typeof arg2 === 'string') || (arg1 && typeof arg1 === 'object');
+  if (legacyShape) {
+    const orgId = await ensureOrganizationId(arg1);
+    const email = (typeof arg2 === 'string')
+      ? arg2
+      : (arg1 && typeof arg1 === 'object' && typeof arg1.email === 'string' ? arg1.email : undefined);
+    const id = await dynamicInsert('users', {
+      organization_id: orgId,
+      email: (email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+      given_name: 'Test',
+      family_name: 'User',
+      locale: 'en',
+      status: 'active'
+    });
+    return id; // legacy return: plain userId
+  }
+  // New object path
+  const opts = arg1 ?? {};
+  const orgId = await ensureOrganizationId(opts.orgId);
+  const userId = await dynamicInsert('users', {
+    organization_id: orgId,
+    email: (opts.email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+    given_name: opts.given_name ?? 'Test',
+    family_name: opts.family_name ?? 'User',
+    locale: opts.locale ?? 'en',
+    status: opts.status ?? 'active'
+  });
+  return { userId, orgId };
+}
+
+3) Do NOT change any other exports. Keep createOrg() wrapper as you already have.
+
+RUN & PRINT
+- npx jest --config services/identity/jest.config.ts --runInBand --coverage=false --bail=1
+Print the FULL output, then STOP.

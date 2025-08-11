@@ -3,6 +3,23 @@ import { randomUUID } from 'crypto';
 
 type Col = { name: string; isNullable: boolean; hasDefault: boolean; dataType: string };
 
+// Resolve or create a real organization id in the current schema
+export async function ensureOrganizationId(input?: string | { id?: string } | { orgId?: string }): Promise<string> {
+  // 1) Extract candidate id if provided
+  let candidate: string | undefined;
+  if (typeof input === 'string') candidate = input;
+  else if (input && typeof input === 'object') candidate = (input as any).id ?? (input as any).orgId;
+
+  // 2) If candidate provided, verify it exists; otherwise create one
+  if (candidate) {
+    const check = await client.query(`SELECT 1 FROM organizations WHERE id = $1 LIMIT 1`, [candidate]);
+    if (check.rowCount === 1) return candidate;
+  }
+  // Create a new org (reuse your existing createOrganization implementation)
+  const createdId = await createOrganization();
+  return createdId;
+}
+
 async function getColumns(table: string): Promise<Col[]> {
   const r = await client.query(
     `SELECT column_name AS name,
@@ -110,20 +127,13 @@ export async function createTeam(orgId: string, name='Team', parentDeptId?: stri
 }
 
 export async function createUser(arg1?: any, arg2?: any) {
-  // Legacy: createUser(orgId?: string, email?: string) or createUser({ id?: string, orgId?: string, email?: string })
-  let orgId: string | undefined;
-  let email: string | undefined;
-
-  if (typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 && typeof arg1 === 'object')) {
-    if (typeof arg1 === 'string') orgId = arg1;
-    else if (arg1 && typeof arg1 === 'object') {
-      if (typeof arg1.id === 'string') orgId = arg1.id;       // supports createOrg() result
-      if (!orgId && typeof arg1.orgId === 'string') orgId = arg1.orgId;
-      if (!email && typeof arg1.email === 'string') email = arg1.email;
-    }
-    if (typeof arg2 === 'string') email = arg2;
-
-    if (!orgId) orgId = await createOrganization();
+  // Legacy/new resolution for org + email
+  const legacyShape = (typeof arg1 === 'string') || (typeof arg2 === 'string') || (arg1 && typeof arg1 === 'object');
+  if (legacyShape) {
+    const orgId = await ensureOrganizationId(arg1);
+    const email = (typeof arg2 === 'string')
+      ? arg2
+      : (arg1 && typeof arg1 === 'object' && typeof arg1.email === 'string' ? arg1.email : undefined);
     const id = await dynamicInsert('users', {
       organization_id: orgId,
       email: (email ?? `user+${Date.now()}@example.com`).toLowerCase(),
@@ -134,19 +144,18 @@ export async function createUser(arg1?: any, arg2?: any) {
     });
     return id; // legacy return: plain userId
   }
-
-  // New object shape
+  // New object path
   const opts = arg1 ?? {};
-  if (!opts.orgId) opts.orgId = await createOrganization();
+  const orgId = await ensureOrganizationId(opts.orgId);
   const userId = await dynamicInsert('users', {
-    organization_id: opts.orgId,
+    organization_id: orgId,
     email: (opts.email ?? `user+${Date.now()}@example.com`).toLowerCase(),
     given_name: opts.given_name ?? 'Test',
     family_name: opts.family_name ?? 'User',
     locale: opts.locale ?? 'en',
     status: opts.status ?? 'active'
   });
-  return { userId, orgId: opts.orgId };
+  return { userId, orgId };
 }
 
 export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
