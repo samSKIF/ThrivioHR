@@ -1,0 +1,55 @@
+Execute this EXACT task.
+
+GOAL
+Make services/identity/test/helpers.ts backward-compatible:
+- Provide legacy names (createOrg).
+- Allow createUser to accept EITHER (opts object) OR (orgId, email) legacy signature.
+- Return shape matches legacy expectations when legacy signature is used (string userId), otherwise return the richer object.
+Then run all Identity tests.
+
+TOUCH ONLY
+- services/identity/test/helpers.ts
+
+PLAN
+1) Refactor current helpers: keep the schema-aware internals but expose wrappers:
+   - export async function createOrg(name?) → returns the organization id (string)
+   - export async function createUser(...): 
+       * if called as createUser(orgId?: string, email?: string) → return userId (string)
+       * if called as createUser(opts?: { orgId?; email?; ... }) → return { userId, orgId }
+   - keep existing createOrganization, createIdentity, ensureMembership, etc. as they are
+2) Do NOT change any other files.
+3) Run: pnpm test:identity and print the LAST 30 LINES of output.
+
+REPLACEMENT PATCH (helpers.ts additions/changes only)
+----------------------------------------------------------------
+/* keep all existing imports and schema-aware implementations above this line */
+export async function createOrg(name?: string) {
+  const id = await createOrganization(name);
+  return id; // legacy: plain id string
+}
+
+// Preserve the schema-aware implementation under a private name
+async function _createUserImpl(opts?: { orgId?: string; email?: string; given_name?: string; family_name?: string; locale?: string; status?: string }) {
+  // reuse your existing createUser implementation body here:
+  return await createUser(opts as any);
+}
+
+// Overload-style wrapper for legacy + new
+export async function createUser(arg1?: any, arg2?: any) {
+  const isLegacy = typeof arg1 === 'string' || typeof arg2 === 'string';
+  if (isLegacy) {
+    const orgId = typeof arg1 === 'string' ? arg1 : undefined;
+    const email = typeof arg2 === 'string' ? arg2 : undefined;
+    const res = await _createUserImpl({ orgId, email });
+    // legacy: return string userId
+    return (res as any).userId ?? res;
+  }
+  // new: return rich object { userId, orgId }
+  return await _createUserImpl(arg1);
+}
+----------------------------------------------------------------
+
+RUN & PRINT
+- pnpm test:identity
+- Print the LAST 30 LINES of output.
+- STOP.
