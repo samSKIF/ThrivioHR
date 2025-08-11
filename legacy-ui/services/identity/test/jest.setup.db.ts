@@ -25,7 +25,7 @@ beforeAll(async () => {
   await client.query(`SET search_path TO "${schemaName}", public`);
   db = drizzle(client, { schema });
   // Programmatic migrations into the current search_path
-  const migrationsFolder = path.resolve(__dirname, '../drizzle/migrations');
+  const migrationsFolder = path.resolve(__dirname, '../drizzle');
   console.log('TEST using migrations folder:', migrationsFolder);
   await migrate(db, { migrationsFolder });
   console.log('TEST search_path after migrate:', (await client.query('SHOW search_path')).rows[0].search_path);
