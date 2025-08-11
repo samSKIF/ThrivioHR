@@ -127,35 +127,30 @@ export async function createTeam(orgId: string, name='Team', parentDeptId?: stri
 }
 
 export async function createUser(arg1?: any, arg2?: any) {
-  // Legacy/new resolution for org + email
-  const legacyShape = (typeof arg1 === 'string') || (typeof arg2 === 'string') || (arg1 && typeof arg1 === 'object');
-  if (legacyShape) {
-    const orgId = await ensureOrganizationId(arg1);
-    const email = (typeof arg2 === 'string')
-      ? arg2
-      : (arg1 && typeof arg1 === 'object' && typeof arg1.email === 'string' ? arg1.email : undefined);
-    const id = await dynamicInsert('users', {
-      organization_id: orgId,
-      email: (email ?? `user+${Date.now()}@example.com`).toLowerCase(),
-      given_name: 'Test',
-      family_name: 'User',
-      locale: 'en',
-      status: 'active'
-    });
-    return id; // legacy return: plain userId
+  // Legacy shapes: (orgId, email) OR ({ id/orgId/email })
+  let orgRef = arg1;
+  let email: string | undefined = typeof arg2 === 'string' ? arg2 : undefined;
+
+  // Normalize orgId (string or object) → ensure exists in current schema
+  const orgId = await ensureOrganizationId(orgRef);
+
+  // If email not provided, try arg1.email; else synthesize
+  if (!email && arg1 && typeof arg1 === 'object' && typeof arg1.email === 'string') {
+    email = arg1.email;
   }
-  // New object path
-  const opts = arg1 ?? {};
-  const orgId = await ensureOrganizationId(opts.orgId);
+  const finalEmail = (email ?? `user+${Date.now()}@example.com`).toLowerCase();
+
   const userId = await dynamicInsert('users', {
     organization_id: orgId,
-    email: (opts.email ?? `user+${Date.now()}@example.com`).toLowerCase(),
-    given_name: opts.given_name ?? 'Test',
-    family_name: opts.family_name ?? 'User',
-    locale: opts.locale ?? 'en',
-    status: opts.status ?? 'active'
+    email: finalEmail,
+    given_name: 'Test',
+    family_name: 'User',
+    locale: 'en',
+    status: 'active'
   });
-  return { userId, orgId };
+
+  // ALWAYS return object, even in legacy mode
+  return { userId, organizationId: orgId, orgId, email: finalEmail };
 }
 
 export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
@@ -168,14 +163,23 @@ export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'
   return { id, userId: u.userId ?? u };
 }
 
-export async function createSession(userId?: string, minutes=60) {
-  const u = userId ? { userId } : await createUser();
-  const exp = new Date(Date.now() + minutes * 60_000);
+export async function createSession(userRef?: any, minutes = 60) {
+  let userId: string | undefined;
+  if (typeof userRef === 'string') userId = userRef;
+  else if (userRef && typeof userRef === 'object' && typeof userRef.userId === 'string') userId = userRef.userId;
+  else userId = (await createUser()).userId;
+
+  const now = new Date();
+  const exp = new Date(now.getTime() + minutes * 60_000);
+
   const id = await dynamicInsert('sessions', {
-    user_id: u.userId ?? u,
-    expires_at: exp
+    user_id: userId,
+    issued_at: now,
+    expires_at: exp,
+    ip: '127.0.0.1',
+    user_agent: 'jest'
   });
-  return { id, userId: u.userId ?? u };
+  return { sessionId: id, userId };
 }
 
 export async function createMembership(userId?: string) {
@@ -188,16 +192,29 @@ export async function createMembership(userId?: string) {
   return { id, userId: uid, orgId, teamId };
 }
 
-export async function createEmploymentEvent(userId?: string, event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire') {
-  const u = userId ? { userId } : await createUser();
-  const uid = u.userId ?? u;
+export async function createEmploymentEvent(
+  userRef?: any,
+  event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire',
+  effective_from?: Date,
+  effective_to?: Date
+) {
+  // Resolve/ensure a user
+  let userId: string;
+  if (typeof userRef === 'string') userId = userRef;
+  else if (userRef && typeof userRef === 'object' && typeof userRef.userId === 'string') userId = userRef.userId;
+  else userId = (await createUser()).userId;
+
+  const from = effective_from ?? new Date();
+  const to = (effective_to === undefined) ? null : effective_to;
+
   const id = await dynamicInsert('employment_events', {
-    user_id: uid,
+    user_id: userId,
     event_type: event,
-    effective_from: new Date(),
-    metadata: JSON.stringify({ note: 'test' })
+    effective_from: from,
+    effective_to: to,
+    payload: { note: 'test' }
   });
-  return { id, userId: uid };
+  return { employmentEventId: id, userId };
 }
 
 export async function tableCount(table: string): Promise<number> {

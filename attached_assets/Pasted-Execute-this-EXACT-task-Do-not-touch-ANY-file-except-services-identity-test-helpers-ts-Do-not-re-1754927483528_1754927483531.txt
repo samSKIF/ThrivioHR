@@ -1,0 +1,94 @@
+Execute this EXACT task. Do not touch ANY file except: services/identity/test/helpers.ts.
+Do not refactor other files, install deps, or modify configs. If the file is missing, PRINT "helpers.ts missing" and STOP.
+
+GOAL
+Make helpers deterministic and compatible with tests:
+1) createUser always returns an OBJECT: { userId, orgId, email }, even in legacy call shapes.
+2) createEmploymentEvent accepts and forwards effective_from/effective_to so date CHECK constraints are exercised.
+3) createSession accepts string OR object user refs and always inserts a real user_id.
+
+TOUCH ONLY
+- services/identity/test/helpers.ts
+
+CHANGES
+In services/identity/test/helpers.ts, REPLACE ONLY the bodies/exports of these three functions with the EXACT implementations below (keep other code unchanged, including dynamicInsert and createOrganization):
+
+1) createUser
+export async function createUser(arg1?: any, arg2?: any) {
+  // Legacy shapes: (orgId, email) OR ({ id/orgId/email })
+  let orgRef = arg1;
+  let email: string | undefined = typeof arg2 === 'string' ? arg2 : undefined;
+
+  // Normalize orgId (string or object) → ensure exists in current schema
+  const orgId = await ensureOrganizationId(orgRef);
+
+  // If email not provided, try arg1.email; else synthesize
+  if (!email && arg1 && typeof arg1 === 'object' && typeof arg1.email === 'string') {
+    email = arg1.email;
+  }
+  const finalEmail = (email ?? `user+${Date.now()}@example.com`).toLowerCase();
+
+  const userId = await dynamicInsert('users', {
+    organization_id: orgId,
+    email: finalEmail,
+    given_name: 'Test',
+    family_name: 'User',
+    locale: 'en',
+    status: 'active'
+  });
+
+  // ALWAYS return object, even in legacy mode
+  return { userId, orgId, email: finalEmail };
+}
+
+2) createEmploymentEvent
+export async function createEmploymentEvent(
+  userRef?: any,
+  event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire',
+  effective_from?: Date,
+  effective_to?: Date
+) {
+  // Resolve/ensure a user
+  let userId: string;
+  if (typeof userRef === 'string') userId = userRef;
+  else if (userRef && typeof userRef === 'object' && typeof userRef.userId === 'string') userId = userRef.userId;
+  else userId = (await createUser()).userId;
+
+  const from = effective_from ?? new Date();
+  const to = (effective_to === undefined) ? null : effective_to;
+
+  const id = await dynamicInsert('employment_events', {
+    user_id: userId,
+    event_type: event,
+    effective_from: from,
+    effective_to: to,
+    payload: { note: 'test' }
+  });
+  return { employmentEventId: id, userId };
+}
+
+3) createSession
+export async function createSession(userRef?: any, minutes = 60) {
+  let userId: string | undefined;
+  if (typeof userRef === 'string') userId = userRef;
+  else if (userRef && typeof userRef === 'object' && typeof userRef.userId === 'string') userId = userRef.userId;
+  else userId = (await createUser()).userId;
+
+  const now = new Date();
+  const exp = new Date(now.getTime() + minutes * 60_000);
+
+  const id = await dynamicInsert('sessions', {
+    user_id: userId,
+    issued_at: now,
+    expires_at: exp,
+    ip: '127.0.0.1',
+    user_agent: 'jest'
+  });
+  return { sessionId: id, userId };
+}
+
+RUN & PRINT
+- npx jest --config services/identity/jest.config.ts --runInBand --coverage=false --bail=1
+(Print FULL output.)
+
+STOP.
