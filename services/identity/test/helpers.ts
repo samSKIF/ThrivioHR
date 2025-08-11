@@ -110,27 +110,18 @@ export async function createTeam(orgId: string, name='Team', parentDeptId?: stri
 }
 
 export async function createUser(arg1?: any, arg2?: any) {
-  // Accept legacy shapes:
-  //  - createUser(orgId?: string, email?: string) -> returns userId (string)
-  //  - createUser({ orgId?, email?, given_name?, family_name?, locale?, status? }) -> returns { userId, orgId }
+  // Legacy: createUser(orgId?: string, email?: string) or createUser({ id?: string, orgId?: string, email?: string })
   let orgId: string | undefined;
   let email: string | undefined;
 
-  // Handle legacy calls first: createUser(orgId, email) or createUser(orgObj, email)
-  if (typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 && typeof arg1 === 'object' && 'id' in arg1)) {
-    // Legacy format
-    if (typeof arg1 === 'string') {
-      orgId = arg1;
-    } else if (arg1 && typeof arg1 === 'object' && 'id' in arg1) {
-      orgId = arg1.id;  // support createOrg() result
-      if (!email && 'email' in arg1 && typeof arg1.email === 'string') {
-        email = arg1.email;
-      }
+  if (typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 && typeof arg1 === 'object')) {
+    if (typeof arg1 === 'string') orgId = arg1;
+    else if (arg1 && typeof arg1 === 'object') {
+      if (typeof arg1.id === 'string') orgId = arg1.id;       // supports createOrg() result
+      if (!orgId && typeof arg1.orgId === 'string') orgId = arg1.orgId;
+      if (!email && typeof arg1.email === 'string') email = arg1.email;
     }
-    
-    if (typeof arg2 === 'string') {
-      email = arg2;
-    }
+    if (typeof arg2 === 'string') email = arg2;
 
     if (!orgId) orgId = await createOrganization();
     const id = await dynamicInsert('users', {
@@ -141,10 +132,10 @@ export async function createUser(arg1?: any, arg2?: any) {
       locale: 'en',
       status: 'active'
     });
-    return id; // legacy return: string userId
+    return id; // legacy return: plain userId
   }
 
-  // New object form
+  // New object shape
   const opts = arg1 ?? {};
   if (!opts.orgId) opts.orgId = await createOrganization();
   const userId = await dynamicInsert('users', {

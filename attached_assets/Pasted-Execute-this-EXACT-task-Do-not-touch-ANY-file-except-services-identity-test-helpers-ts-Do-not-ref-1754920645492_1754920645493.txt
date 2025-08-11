@@ -1,0 +1,68 @@
+Execute this EXACT task. Do not touch ANY file except: services/identity/test/helpers.ts.
+Do not refactor, scaffold, install, or change configs. If the file is missing, PRINT "helpers.ts missing" and STOP.
+
+GOAL
+Make createUser always insert with a real organization_id (create org if needed) and support legacy call shapes.
+Add createOrg() wrapper that returns { id } for legacy tests.
+
+TOUCH ONLY
+- services/identity/test/helpers.ts
+
+CHANGES
+1) Ensure a function exists that inserts into organizations and returns the string id:
+   async function createOrganization(name?: string): Promise<string>
+   If it already exists, KEEP it unchanged.
+
+2) ADD this legacy wrapper (do not remove createOrganization):
+   export async function createOrg(name?: string) {
+     const id = await createOrganization(name);
+     return { id };
+   }
+
+3) REPLACE the exported createUser with this wrapper (keep any internal helpers like dynamicInsert as-is):
+
+   export async function createUser(arg1?: any, arg2?: any) {
+     // Legacy: createUser(orgId?: string, email?: string) or createUser({ id?: string, orgId?: string, email?: string })
+     let orgId: string | undefined;
+     let email: string | undefined;
+
+     if (typeof arg1 === 'string' || typeof arg2 === 'string' || (arg1 && typeof arg1 === 'object')) {
+       if (typeof arg1 === 'string') orgId = arg1;
+       else if (arg1 && typeof arg1 === 'object') {
+         if (typeof arg1.id === 'string') orgId = arg1.id;       // supports createOrg() result
+         if (!orgId && typeof arg1.orgId === 'string') orgId = arg1.orgId;
+         if (!email && typeof arg1.email === 'string') email = arg1.email;
+       }
+       if (typeof arg2 === 'string') email = arg2;
+
+       if (!orgId) orgId = await createOrganization();
+       const id = await dynamicInsert('users', {
+         organization_id: orgId,
+         email: (email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+         given_name: 'Test',
+         family_name: 'User',
+         locale: 'en',
+         status: 'active'
+       });
+       return id; // legacy return: plain userId
+     }
+
+     // New object shape
+     const opts = arg1 ?? {};
+     if (!opts.orgId) opts.orgId = await createOrganization();
+     const userId = await dynamicInsert('users', {
+       organization_id: opts.orgId,
+       email: (opts.email ?? `user+${Date.now()}@example.com`).toLowerCase(),
+       given_name: opts.given_name ?? 'Test',
+       family_name: opts.family_name ?? 'User',
+       locale: opts.locale ?? 'en',
+       status: opts.status ?? 'active'
+     });
+     return { userId, orgId: opts.orgId };
+   }
+
+RUN & PRINT
+- npx jest --config services/identity/jest.config.ts --runInBand --coverage=false --bail=1
+(Print the full output.)
+
+STOP.
