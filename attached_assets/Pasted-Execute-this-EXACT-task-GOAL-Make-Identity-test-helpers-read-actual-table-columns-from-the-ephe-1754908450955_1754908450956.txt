@@ -1,0 +1,189 @@
+Execute this EXACT task.
+
+GOAL
+Make Identity test helpers read actual table columns from the ephemeral schema and build INSERTs that only include existing, required fields (with safe defaults). Ensure helpers auto-create prerequisites in correct order to avoid FK violations. Then run all Identity tests.
+
+TOUCH ONLY
+- services/identity/test/jest.setup.db.ts  (export the pg client)
+- services/identity/test/helpers.ts        (replace with schema-aware helpers)
+
+PLAN
+1) In services/identity/test/jest.setup.db.ts, add at the bottom:
+   export { client };
+
+2) Replace services/identity/test/helpers.ts with the content below.
+
+3) Run: pnpm test:identity and print the LAST 30 LINES of output.
+
+----- NEW CONTENT: services/identity/test/helpers.ts -----
+import { client } from './jest.setup.db';
+import { randomUUID } from 'crypto';
+
+type Col = { name: string; isNullable: boolean; hasDefault: boolean; dataType: string };
+
+async function getColumns(table: string): Promise<Col[]> {
+  const r = await client.query(
+    `SELECT column_name AS name,
+            is_nullable = 'YES' AS "isNullable",
+            column_default IS NOT NULL AS "hasDefault",
+            data_type AS "dataType"
+       FROM information_schema.columns
+      WHERE table_schema = current_schema()
+        AND table_name = $1
+      ORDER BY ordinal_position`,
+    [table]
+  );
+  return r.rows;
+}
+
+function pick<T extends object>(obj: T, keys: string[]) {
+  const out: any = {};
+  for (const k of keys) if (k in obj && obj[k as keyof T] !== undefined) out[k] = (obj as any)[k];
+  return out;
+}
+
+function defaultFor(col: Col): any {
+  switch (col.dataType) {
+    case 'boolean': return false;
+    case 'integer': return 0;
+    case 'numeric': return 0;
+    case 'timestamp with time zone':
+    case 'timestamp without time zone': return new Date();
+    case 'json': case 'jsonb': return {};
+    default: return 'x'; // text-like fallback; emails handled explicitly
+  }
+}
+
+async function dynamicInsert(table: string, provided: Record<string, any>) {
+  const cols = await getColumns(table);
+  // Required = NOT NULL and no default and not the PK id
+  const required = cols.filter(c => !c.isNullable && !c.hasDefault && c.name !== 'id').map(c => c.name);
+  // Only include provided keys that exist
+  const allowed = cols.map(c => c.name);
+  const base = pick(provided, allowed);
+  // Fill any missing required fields with safe defaults
+  for (const c of cols) {
+    if (required.includes(c.name) && base[c.name] === undefined) {
+      base[c.name] = defaultFor(c);
+    }
+  }
+  const keys = Object.keys(base);
+  if (keys.length === 0) throw new Error(`No columns to insert for ${table}`);
+  const placeholders = keys.map((_, i) => `$${i + 1}`);
+  const vals = keys.map(k => base[k]);
+  const sql = `INSERT INTO ${table} (${keys.join(',')}) VALUES (${placeholders.join(',')}) RETURNING id`;
+  const res = await client.query(sql, vals);
+  return res.rows[0].id as string;
+}
+
+// Utilities
+function uniqueEmail(prefix='user'){ return `${prefix}+${Date.now()}_${Math.random().toString(36).slice(2,6)}@example.com`; }
+
+// Public helpers (auto-prereqs in correct order)
+export async function createOrganization(name?: string, region?: string) {
+  const cols = await getColumns('organizations');
+  const hasSlug = cols.some(c => c.name === 'slug');
+  const payload: Record<string, any> = {
+    name: name ?? `Org ${Math.random().toString(36).slice(2,8)}`,
+    region: region ?? 'eu-west-1',
+  };
+  if (hasSlug) payload.slug = `org_${Math.random().toString(36).slice(2,8)}`;
+  const id = await dynamicInsert('organizations', payload);
+  return id;
+}
+
+export async function ensureCompanyOrgUnit(orgId: string) {
+  const r0 = await client.query(
+    `SELECT id FROM org_units WHERE organization_id=$1 AND type='company' LIMIT 1`, [orgId]
+  );
+  if (r0.rowCount > 0) return r0.rows[0].id as string;
+  return await dynamicInsert('org_units', {
+    organization_id: orgId,
+    type: 'company',
+    name: 'Company',
+    parent_id: null
+  });
+}
+
+export async function createDepartment(orgId: string, name='Dept') {
+  const companyId = await ensureCompanyOrgUnit(orgId);
+  return await dynamicInsert('org_units', {
+    organization_id: orgId,
+    type: 'department',
+    name,
+    parent_id: companyId
+  });
+}
+
+export async function createTeam(orgId: string, name='Team', parentDeptId?: string) {
+  const deptId = parentDeptId ?? await createDepartment(orgId, 'Dept');
+  return await dynamicInsert('org_units', {
+    organization_id: orgId,
+    type: 'team',
+    name,
+    parent_id: deptId
+  });
+}
+
+export async function createUser(opts?: { orgId?: string; email?: string; given_name?: string; family_name?: string; locale?: string; status?: string }) {
+  const orgId = opts?.orgId ?? await createOrganization();
+  const email = (opts?.email ?? uniqueEmail('user')).toLowerCase();
+  // Include optional fields only if present/required is handled by dynamicInsert
+  const id = await dynamicInsert('users', {
+    organization_id: orgId,
+    email,
+    given_name: opts?.given_name ?? 'Test',
+    family_name: opts?.family_name ?? 'User',
+    locale: opts?.locale ?? 'en',
+    status: opts?.status ?? 'active'
+  });
+  return { userId: id, orgId };
+}
+
+export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
+  const u = userId ? { userId } : await createUser();
+  const id = await dynamicInsert('identities', {
+    user_id: u.userId,
+    provider,
+    provider_subject: subject ?? randomUUID()
+  });
+  return { identityId: id, userId: u.userId, orgId: (u as any).orgId };
+}
+
+export async function createSession(userId?: string, minutes=60) {
+  const u = userId ? { userId } : await createUser();
+  const now = new Date();
+  const exp = new Date(now.getTime() + minutes * 60_000);
+  const id = await dynamicInsert('sessions', {
+    user_id: u.userId, issued_at: now, expires_at: exp, ip: '127.0.0.1', user_agent: 'jest'
+  });
+  return { sessionId: id, userId: u.userId };
+}
+
+export async function ensureMembership(userId?: string) {
+  const u = userId ? { userId } : await createUser();
+  const orgRow = await client.query(`SELECT organization_id FROM users WHERE id=$1`, [u.userId]);
+  const orgId: string = orgRow.rows[0].organization_id;
+  const teamId = await createTeam(orgId, 'Team');
+  const id = await dynamicInsert('org_membership', { user_id: u.userId, primary: true, org_unit_id: teamId });
+  return { membershipId: id, userId: u.userId, orgId, teamId };
+}
+
+export async function createEmploymentEvent(userId?: string, event: 'hire'|'transfer'|'manager_change'|'title_change'|'terminate'|'rehire' = 'hire') {
+  const u = userId ? { userId } : await createUser();
+  const id = await dynamicInsert('employment_events', {
+    user_id: u.userId, event_type: event, effective_from: new Date(), effective_to: null, payload: { note: 'test' }
+  });
+  return { employmentEventId: id, userId: u.userId };
+}
+
+export async function tableCount(table: string): Promise<number> {
+  const r = await client.query(`SELECT COUNT(*)::int AS c FROM ${table}`);
+  return r.rows[0].c as number;
+}
+----- END CONTENT -----
+
+RUN & PRINT
+- pnpm test:identity
+- Print the LAST 30 LINES of output.
+- STOP.
