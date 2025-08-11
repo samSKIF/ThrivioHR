@@ -1,9 +1,9 @@
 // jest.setup.db.ts — ephemeral schema + programmatic migrations for Identity
 import { Client } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as schema from '../src/db/schema';
 import * as crypto from 'crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 
 let client: Client;
@@ -24,16 +24,26 @@ beforeAll(async () => {
   console.log('TEST search_path before migrate:', (await client.query('SHOW search_path')).rows[0].search_path);
   await client.query(`SET search_path TO "${schemaName}", public`);
   db = drizzle(client, { schema });
-  // Programmatic migrations into the current search_path
-  const migrationsFolder = path.resolve(__dirname, '../drizzle/migrations');
-  console.log('TEST using migrations folder:', migrationsFolder);
-  await migrate(db, { migrationsFolder });
-  console.log('TEST search_path after migrate:', (await client.query('SHOW search_path')).rows[0].search_path);
-  const t = await client.query(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND table_type='BASE TABLE' ORDER BY table_name`,
+  // --- begin manual migrations runner ---
+  const migrationsDir = path.resolve(__dirname, '../drizzle/migrations');
+  const files = fs.readdirSync(migrationsDir, { withFileTypes: true })
+    .filter(d => d.isFile() && d.name.endsWith('.sql'))
+    .map(d => d.name)
+    .sort();
+
+  console.log('TEST using migrations folder (manual):', migrationsDir, 'files:', files.length);
+  for (const f of files) {
+    const sqlText = fs.readFileSync(path.join(migrationsDir, f), 'utf8');
+    await client.query(sqlText); // applies into current search_path
+  }
+  const tables = await client.query(
+    `SELECT table_name FROM information_schema.tables
+     WHERE table_schema = $1 AND table_type='BASE TABLE'
+     ORDER BY table_name`,
     [schemaName]
   );
-  console.log('TEST_SCHEMA_TABLES:', t.rows.map(r => r.table_name).join(','));
+  console.log('TEST_SCHEMA_TABLES:', tables.rows.map(r => r.table_name).join(','));
+  // --- end manual migrations runner ---
 });
 
 afterEach(async () => {
