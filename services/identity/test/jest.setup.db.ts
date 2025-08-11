@@ -34,7 +34,10 @@ beforeAll(async () => {
 
   console.log('TEST using migrations folder (manual):', migrationsDir, 'files:', files.length);
   for (const f of files) {
-    const sqlText = fs.readFileSync(path.join(migrationsDir, f), 'utf8');
+    let sqlText = fs.readFileSync(path.join(migrationsDir, f), 'utf8');
+    // Strip schema qualifiers so FKs point to ephemeral schema instead of "public"
+    sqlText = sqlText.replaceAll('"public".', '');
+    sqlText = sqlText.replaceAll('public.', '');
     await client.query(sqlText); // applies into current search_path
   }
   const tables = await client.query(
