@@ -17,11 +17,21 @@ beforeAll(async () => {
   client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
   await client.connect();
   schemaName = `identity_test_${Date.now()}_${rand(3)}`;
+  await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
+  await client.query(`CREATE EXTENSION IF NOT EXISTS citext;`);
   await client.query(`CREATE SCHEMA "${schemaName}";`);
   await client.query(`SET search_path TO "${schemaName}";`);
   db = drizzle(client, { schema });
   // Programmatic migrations into the current search_path
   await migrate(db, { migrationsFolder: 'services/identity/drizzle/migrations' });
+  // Log tables created in schema
+  const res = await client.query(`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = $1 AND table_type='BASE TABLE'
+    ORDER BY table_name
+  `, [schemaName]);
+  const tableNames = res.rows.map(r => r.table_name);
+  console.log('TEST_SCHEMA_TABLES:', tableNames.join(','));
 });
 
 afterEach(async () => {
