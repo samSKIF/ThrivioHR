@@ -21,20 +21,19 @@ beforeAll(async () => {
   await client.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
   await client.query(`CREATE EXTENSION IF NOT EXISTS citext;`);
   await client.query(`CREATE SCHEMA "${schemaName}";`);
-  await client.query(`SET search_path TO "${schemaName}";`);
+  console.log('TEST search_path before migrate:', (await client.query('SHOW search_path')).rows[0].search_path);
+  await client.query(`SET search_path TO "${schemaName}", public`);
   db = drizzle(client, { schema });
   // Programmatic migrations into the current search_path
-  const migrationsFolder = path.resolve(__dirname, '../drizzle/migrations');
-  console.log('Migrations folder resolved to:', migrationsFolder);
+  const migrationsFolder = path.resolve(__dirname, '../drizzle');
+  console.log('TEST using migrations folder:', migrationsFolder);
   await migrate(db, { migrationsFolder });
-  // Log tables created in schema
-  const res = await client.query(`
-    SELECT table_name FROM information_schema.tables
-    WHERE table_schema = $1 AND table_type='BASE TABLE'
-    ORDER BY table_name
-  `, [schemaName]);
-  const tableNames = res.rows.map(r => r.table_name);
-  console.log('TEST_SCHEMA_TABLES:', tableNames.join(','));
+  console.log('TEST search_path after migrate:', (await client.query('SHOW search_path')).rows[0].search_path);
+  const t = await client.query(
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = $1 AND table_type='BASE TABLE' ORDER BY table_name`,
+    [schemaName]
+  );
+  console.log('TEST_SCHEMA_TABLES:', t.rows.map(r => r.table_name).join(','));
 });
 
 afterEach(async () => {
