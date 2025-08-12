@@ -33,171 +33,227 @@ RUN & PRINT
 STOP.
 ```
 
-## Big 1 — Infrastructure & Repo (Foundations) ✅ COMPLETE
+Multi-tenant, org-isolated by design. Status labels: **DONE**, **IN PROGRESS**, **NEXT**, **PHASE 2**.
 
-### 1.1 Monorepo + Tooling ✅
-**Technical:** pnpm+Nx workspace, ESLint w/ decorators, TypeScript strict, shared packages.
-**Plain English:** Repo is organized, consistent code style, ready for teams.
-**DoD:** pnpm -w lint + pnpm -w build pass locally.
-**Status:** Complete - Monorepo established with full TypeScript setup
+## Modules (overview)
+Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed · Engagement · Recognition · HR Core · Analytics & Reporting · Integrations & SSO · Leave Management (Phase 2) · Performance Management (Phase 2)
 
-### 1.2 Managed Postgres + Secrets ✅
-**Technical:** Replit Managed PG (Neon), DATABASE_URL in secrets, healthcheck.
-**Plain English:** We have a real database ready for dev/tests.
-**DoD:** pnpm db:check prints DB OK.
-**Status:** Complete - PostgreSQL connected and operational
+## Big 1 — Infrastructure & Repo **DONE**
 
-### 1.3 CI Quickstart ✅
-**Technical:** GitHub Actions: lint → identity tests → build; Postgres service; nx caches.
-**Plain English:** Every push/PR runs checks in the cloud automatically.
-**DoD:** CI passes on PR to main.
-**Status:** Complete - CI workflow established
+### Sub-features
+- Monorepo setup, CI scripts, local dev runners, logging scaffolds.
+- Environment config, secrets, shared utils.
 
-## Big 2 — Database & Migrations (Dev/Test Strategy) ✅ COMPLETE
+### DoD
+- Repo boots locally with one command; CI green on main.
+- Linting/formatting/typecheck enforced in CI.
+- Envs documented; logs visible for all services.
 
-### 2.1 Drizzle ORM + Migrations ✅
-**Technical:** Drizzle schemas, drizzle out folder, journal committed.
-**Plain English:** DB structure is code-first and versioned.
-**DoD:** pnpm db:generate && pnpm db:migrate succeeds.
-**Status:** Complete - Drizzle ORM configured and operational
+## Big 2 — Database & Migrations **DONE**
 
-### 2.2 Ephemeral Test Schemas ✅
-**Technical:** Jest runs manual SQL migration runner that strips "public". to bind FKs to the current test schema.
-**Plain English:** Each test run uses a fresh, isolated schema, so tests don't trip over each other.
-**DoD:** Identity tests green from a clean DB.
-**Status:** Complete - Test isolation working
+### Sub-features
+- Postgres + Drizzle ORM baseline; migration pipeline.
+- Core tables: organizations, users, roles, sessions (baseline).
 
-## Big 3 — Identity (People, Orgs, Access) 🔄 IN PROGRESS
+### DoD
+- One-shot migration command sets up a clean DB.
+- Roll forward/backward works; schema doc generated.
 
-### 3.1 Identity Data Layer ✅ COMPLETE
-**Technical:** 10 tables (organizations, users, identities, sessions, roles, role_bindings, org_units, org_membership, locations, employment_events); constraints & cascades; camel↔snake mapping fixed.
-**Plain English:** We can represent orgs, employees, logins, and org charts in the database safely.
-**DoD:** 4 test suites green (constraints, cascades, sessions index, schema import). 100% statements/branches/lines on schema.
-**Status:** ✅ COMPLETE - All schemas implemented with 100% test coverage
+## Big 3 — Identity & JWT Auth **DONE**
 
-### 3.2 Identity REST (BFF) ✅ COMPLETE (CURRENT ACHIEVEMENT)
-**Technical:** NestJS module: POST/GET /orgs, POST/GET /users, DTO validation, Drizzle repo.
-**Plain English:** Admin tools (and later the UI) can create/list orgs and users via a clean API.
-**DoD:**
-- npx nx build bff passes ✅
-- Local smoke with curl returns JSON objects for orgs/users ✅
-- No auth yet; read/write works against DB ✅
+### Sub-features
+- Login by org/email; sessions persisted.
+- JWT access/refresh; guard-protected routes.
+- HS256 signing; 15m access / 7d refresh.
 
-**Status:** ✅ COMPLETE - BFF REST API fully operational with:
-- Organizations endpoints (POST/GET)
-- Users endpoints (POST/GET)  
-- Complete NestJS structure with Controllers, Services, Repository
-- DTO validation with class-validator
-- Database integration via Drizzle ORM
-- API documentation page
-- All endpoints tested and working
+### DoD
+- /auth/login, /auth/refresh, /auth/me pass smoke tests.
+- Guarded endpoints reject anonymous calls.
+- Tokens scoped to org; sessions recorded.
 
-### 3.3 Sessions/JWT Auth (BFF) 🔜 NEXT
-**Technical:** Minimal POST /auth/login { email } issues a session & JWT; guard protects /users.
-**Plain English:** You can log in and only see protected routes when authenticated.
-**DoD:** curl demo: login → get token → access protected endpoint.
-**Status:** 🔜 READY TO START
+## Big 4 — Directory & Org Structure **IN PROGRESS**
 
-## Big 4 — Directory (Org data ingestion) ⏳ PENDING
+### Sub-features
+- CSV import pipeline: validate → plan → dry-run → approval session → approve (writes).
+- User create/update; department creation via org_units (type department); membership linking via org_membership.
+- Location detection/creation via locations (user link planned).
+- Manager resolution (by managerEmail) validation (**NEXT**).
+- 3 creation paths for departments & locations: Manage screen · Mass upload · Single employee create.
 
-### 4.1 CSV/JIT Imports (MVP)
-**Technical:** Ingest endpoints + validation; map to users, org_units, org_membership; idempotency.
-**Plain English:** HR can upload a CSV or let users appear via SSO (JIT).
-**DoD:** Sample CSV imports 50 users & department tree with zero duplicates.
+### DoD
+- Protected endpoints for validate/plan/commit/session.
+- Dry-run returns creates/updates/skips, newDepartments/newLocations, duplicates, manager resolution notes.
+- Approve creates/updates users; creates departments; links memberships; creates locations.
+- Idempotent on re-approve (no dupes); counters accurate; audit log entry added.
 
-### 4.2 SSO (OIDC + SAML) wiring
-**Technical:** OIDC & SAML providers (authN), JIT user creation; per-tenant config.
-**Plain English:** Companies can log in with Okta/Azure AD/Google; new users appear automatically.
-**DoD:** Test tenant logs in via OIDC; user appears in users + identities.
+## Big 4b — Org Chart **NEXT**
 
-## Big 5 — Recognition (Non-monetary first) ⏳ PENDING
+### Sub-features
+- Read-only Org Chart built from org_units + org_membership.
+- Search/jump; expand/collapse; lazy rendering for 1k+ users.
+- Optional manager overlay (from CSV manager resolution; later users.managerId).
+- Filters (department/location); PNG/PDF export.
 
-### 5.1 Recognition Data Layer (MVP)
-**Technical:** Tables: recognitions, reactions, optional values[]; FK to org/users; constraints & cascades; ephemeral tests.
-**Plain English:** Employees can post appreciations; others can react.
-**DoD:** pnpm test:recognition green (constraints, cascades, feed order).
+### DoD
+- Loads 1k+ nodes in <2s with virtualization.
+- Permissioning: HR full org; managers see their subtree; members see public org view.
+- Export works; no PII leaks across orgs.
 
-### 5.2 Recognition REST (BFF)
-**Technical:** POST /recognitions {from,to,message,values}; GET /feed?orgId.
-**Plain English:** Create an appreciation and read a feed.
-**DoD:** curl demo creates + lists recognitions.
+## Big 5 — Profiles & Media **NEXT**
 
-## Big 6 — Budgets & Ledger (Points later) ⏳ PENDING
+### Sub-features
+- FB-style profile header: avatar + cover.
+- Defaults: gender-based avatar; org-themed cover.
+- Uploads from device or mobile camera (presigned PUT).
+- Private storage; versioned cache-busting; EXIF strip; thumbnails.
+- Data model: user_media (one row per user × {avatar|cover}).
 
-### 6.1 Ledger Core
-**Technical:** Double-entry tables (wallets, entries, postings); consistent invariants; FX/PMV hooks.
-**Plain English:** Money-like points are recorded transparently and immutably.
-**DoD:** Unit tests that prove debits=credits; reversal works.
+### DoD
+- New user shows defaults; upload replaces with user media.
+- Signed URLs (read/write) expire; originals private; thumbs generated.
+- Multi-tenant isolation in object keys; rate limits & size/type caps enforced.
 
-### 6.2 Budgets & Allowances
-**Technical:** Tenant → Dept → Team allocations; P2P monthly by count; defaults: carryover OFF; overage BLOCK.
-**Plain English:** Finance/HR can allocate and cap recognition budgets.
-**DoD:** Allocation tests + policy checks pass.
+## Big 6 — Social Feed **NEXT**
 
-## Big 7 — Marketplace (API-ready, empty catalog) ⏳ PENDING
+### Sub-features
+- Posts: text, photo, video (single media per post v1).
+- Likes & comments; basic moderation (author delete, admin hide/restore).
+- In-app notifications for likes/comments; keyset pagination.
+- Media storage via presigned URLs; poster image for video.
 
-### 7.1 Marketplace Skeleton
-**Technical:** Catalog, Offers, Orders, Fulfillment; ProviderAdapter interface; webhooks; audit.
-**Plain English:** Shop shell exists; we can plug providers later without changing core.
-**DoD:** Create a "mock card" order; lifecycle moves to fulfilled with a stub adapter.
+### DoD
+- Create/list/delete post; like/unlike; add/delete comment.
+- Media uploads succeed; playback via signed URLs.
+- Feed scoped to org; pagination stable; moderation actions audited.
 
-## Big 8 — Notifications ⏳ PENDING
+## Big 7 — Engagement **NEXT**
 
-**Technical:** Outbox → worker; email/push channels; templates & i18n.
-**Plain English:** People actually get notified on recognizes, allocations, invites.
-**DoD:** Local dev SMTP prints emails; test proves send & idempotency.
+### Sub-features
+- Pulses (1–3 Q check-ins) with scheduler & templates.
+- Quick polls; instant results.
+- Announcements pinned to feed; read receipts.
+- Celebrations (birthdays/anniversaries) surfaced in feed/profile badges.
 
-## Big 9 — Insights & AI Foundation ⏳ PENDING
+### DoD
+- Pulse send/collect; exports; response rate visible.
+- Poll create/vote/results; no duplicate votes.
+- Announcement reach/ack metrics; celebrations auto-generated.
 
-**Technical:** Event capture; simple rules engine; AIAdapter interface; privacy guardrails.
-**Plain English:** "Nudges" like "X hasn't logged in in 10 days" or "Y took 5 leaves in 20 days".
-**DoD:** 3 sample insights generated from seeded data; endpoint returns them.
+## Big 8 — Recognition (Peer-to-Peer tied to Company Values) **NEXT**
 
-## Big 10 — i18n & White-Label ⏳ PENDING
+### Sub-features
+- Company-values-tagged kudos (employee → employee).
+- Points per kudos; monthly leaderboard.
+- Optional manager approval toggle (per org).
+- Feed cards for kudos; export/audit.
 
-**Technical:** next-intl/i18next; locale packs (en, fr, es, de, it, nl, ar/RTL); brand theming.
-**Plain English:** UI changes language; tenants can brand colors/logo.
-**DoD:** Language switcher works; RTL verified; tenant theme applies.
+### DoD
+- HR CRUD for Company Values (name/color/weight/order/status).
+- Kudos create/list; points ledger updates; leaderboard accurate.
+- Approval flow (if enabled) gates visibility.
+- Exports available; audit trail complete.
 
-## Big 11 — Security & Observability ⏳ PENDING
+## Big 9 — HR Core **NEXT**
 
-**Technical:** RBAC+ABAC (policies), audit logs, rate limits, OpenTelemetry, Sentry.
-**Plain English:** Access is correct, everything is trackable, issues are visible.
-**DoD:** Policy tests pass; traces visible locally; error captured.
+### Sub-features
+- Company Values management (feeds Recognition & onboarding).
+- Org Settings (media limits, cover theme, approvals).
+- Policies/handbook repository (uploads/links).
+- Departments/Teams CRUD; Locations CRUD.
+- Single employee create (with default avatar/cover, dept, location).
+- Audit log for sensitive actions and imports.
 
-## Big 12 — Deployment (AWS) & Data Residency ⏳ PENDING
+### DoD
+- Values available system-wide; changes reflected in Recognition UI.
+- Settings enforced on uploads; policy docs accessible with permissions.
+- Admin can create/edit/delete departments, teams, locations.
+- Single create writes user, links department/location, assigns defaults.
+- Audits list who/when/what for org-level changes.
 
-**Technical:** IaC (CDK/Terraform); ECS/EKS, RDS; regions: EU, UAE+GCC, Morocco; rollout strategy.
-**Plain English:** We can deploy to customer-compliant regions.
-**DoD:** One region live (staging); smoke tests green.
+## Big 10 — Analytics & Reporting **NEXT**
 
-## Big 13 — Compliance & DR ⏳ PENDING
+### Sub-features
+- Adoption: profile completion, active users, upload rates.
+- Feed: posts/user, comments/post, like rates.
+- Engagement: pulse results, eNPS (if enabled), celebrations reach.
+- Recognition: kudos volume/spread; value distribution; leaderboards.
+- Exports (CSV); org/department/location breakdowns.
 
-**Technical:** Backups, PITR, anonymized dumps; DPIA; incident response doc.
-**Plain English:** If something breaks, we can restore; we know our obligations.
-**DoD:** Restore drill succeeds; docs in /docs/security/.
+### DoD
+- Dashboards load under 2s on 12-month windows.
+- Key metrics accurate vs sample datasets; CSV export works.
+- Access restricted by role; no cross-org leakage.
 
-## Big 14 — Launch Readiness ⏳ PENDING
+## Big 11 — Integrations & SSO **NEXT**
 
-**Technical:** SLOs (availability/latency), error budgets; on-call; runbooks; pricing toggles; entitlements.
-**Plain English:** We're ready to sell, monitor, and support.
-**DoD:** Pilot tenant onboarded end-to-end.
+### Sub-features
+- OIDC + SAML SSO; optional JIT user provision.
+- Slack/Teams webhooks for kudos/announcements.
+- Pluggable S3-compatible storage.
 
----
+### DoD
+- At least one OIDC & one SAML provider verified.
+- Webhook toggle per org; messages post correctly.
+- Storage adapter passes upload/download/rotate tests.
 
-## Current Status Summary
+## Big 12 — Leave Management **PHASE 2**
 
-**✅ COMPLETED:** Big 1 (Infrastructure), Big 2 (Database), Big 3.1-3.2 (Identity Data + REST API)
+### Sub-features (MVP)
+- Leave types/policies: accrual, carry-over, proration.
+- Balances per user/type; opening balances import.
+- Requests/approvals: employee → manager; HR override.
+- Holidays by org/location; team calendar; ICS export.
+- Blackouts & rules; notifications; full audit; CSV export.
 
-**🔜 NEXT:** Big 3.3 (Sessions/JWT Auth)
+### DoD
+- Policy engine passes unit tests for common rules.
+- Request → approve/deny lifecycle works; balances adjust; calendar updates.
+- Holiday calendars by location; ICS subscribable.
+- All actions audited; exports correct.
 
-**📊 Progress:** 5 out of 16 major milestones complete (31%)
+## Big 13 — Performance Management **PHASE 2**
 
-## File Map (Docs)
+### Sub-features (MVP)
+- Review cycles (e.g., H1/H2); participant scoping; timelines.
+- Templates (ratings/rubrics/free-text); per-role variants.
+- Self + manager reviews; confidential manager notes.
+- Calibration view; lock/freeze; sign-off & PDF record.
 
-- `/context/ROADMAP.md` - This master plan
-- `/context/prompt-templates/SURGICAL-PROMPT.md` - Template from Big 0
-- `/docs/DEFINITION_OF_DONE.md` - Global DoD + per-domain checklists
-- `/docs/OPERATIONS.md` - Local dev, seed, reset DB, scripts
-- `/docs/SECURITY.md` - RBAC/ABAC, auth flows, secrets, retention
-- `/docs/ADR/0001-....md` - Architecture Decision Records
+### DoD
+- Cycle creation & launch works; participants notified.
+- Reviewer UIs save/submit; rubric scoring consistent.
+- Calibration changes tracked; sign-off locks packets; PDFs generated.
+- History retained per employee/cycle.
+
+## Cross-cutting: Locations Linking **NEXT decision**
+
+### Sub-features
+- Model: one primary location per user (users.locationId) for v1. (Multi-location via join table in future.)
+- CSV approve creates missing locations and links users.
+
+### DoD
+- Migration adds users.locationId; approve path links users; UI shows location on profile/org chart.
+- Idempotent relinking; permissions enforced.
+
+## Cross-cutting: Manager Resolution (Directory) **NEXT**
+
+### Sub-features
+- Resolve managerEmail in CSV to user; detect missing/cyclic relationships.
+- (Future) add users.managerId and keep in sync with CSV.
+
+### DoD
+- Planner flags unresolved managers & cycles; approve rejects unsafe sets (configurable).
+- When enabled, writes users.managerId; org chart overlay shows manager lines.
+
+## KPIs (selected)
+- % profiles with custom avatar/cover in 14 days.
+- Feed DAU/WAU; posts/user; comments/post; like rate.
+- Kudos/month; value distribution; leaderboard participation.
+- Pulse response rate; announcement reach; celebrations engagement.
+- Import approval throughput; error rates.
+
+## Notes
+- Multi-tenant isolation: all data & storage keys scoped by orgId.
+- 3 creation paths for departments/locations: manage screen, CSV, single employee create.
+- Media: private storage, presigned URLs, EXIF strip, size/type caps.
+- Video: store originals + poster in v1; background transcode later.
