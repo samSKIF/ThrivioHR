@@ -49,9 +49,10 @@ export class DirectoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('import/session/approve')
-  approve(@Body() dto: ImportSessionApproveDto) {
+  async approve(@Body() dto: ImportSessionApproveDto, @Req() req: any) {
     if (!dto?.token) throw new BadRequestException('token is required');
-    throw new BadRequestException('Writes not implemented yet; approval will apply changes in the next slice.');
+    const orgId = req.user?.orgId;
+    return this.svc.applyImportSession(dto.token, orgId);
   }
 
   @UseGuards(JwtAuthGuard)

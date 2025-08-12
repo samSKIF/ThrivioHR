@@ -3,6 +3,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import * as schema from '../../../../../services/identity/src/db/schema';
 import { orgUnits } from '../../../../../services/identity/src/db/schema/org_units';
+import { orgMembership } from '../../../../../services/identity/src/db/schema/org_membership';
 import { organizations } from '../../../../../services/identity/src/db/schema/organizations';
 import { DRIZZLE_DB } from '../db/db.module';
 
@@ -28,23 +29,6 @@ export class IdentityRepository {
       })
       .from(schema.organizations)
       .limit(limit);
-  }
-
-  async createUser(orgId: string, email: string, givenName?: string, familyName?: string) {
-    const [user] = await this.db
-      .insert(schema.users)
-      .values({
-        organizationId: orgId,
-        email,
-        firstName: givenName || '',
-        lastName: familyName || '',
-      })
-      .returning({
-        id: schema.users.id,
-        orgId: schema.users.organizationId,
-        email: schema.users.email,
-      });
-    return user;
   }
 
   async getUsersByOrg(orgId: string, limit = 20) {
@@ -78,5 +62,57 @@ export class IdentityRepository {
       if (d) set.add(d);
     }
     return Array.from(set.values());
+  }
+
+  async createUser(orgId: string, email: string, firstName: string, lastName: string) {
+    const displayName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    const [row] = await this.db.insert(schema.users).values({
+      organizationId: orgId,
+      email,
+      firstName,
+      lastName,
+      displayName,
+      isActive: true,
+    }).returning();
+    return row;
+  }
+
+  async updateUserNames(userId: string, firstName: string|null|undefined, lastName: string|null|undefined) {
+    const patch: any = {};
+    if (firstName != null) patch.firstName = firstName;
+    if (lastName != null) patch.lastName = lastName;
+    if ('firstName' in patch || 'lastName' in patch) {
+      const displayName = [patch.firstName, patch.lastName].filter(Boolean).join(' ').trim();
+      if (displayName) patch.displayName = displayName;
+    }
+    if (Object.keys(patch).length === 0) return null;
+    const [row] = await this.db.update(schema.users).set(patch).where(eq(schema.users.id, userId)).returning();
+    return row;
+  }
+
+  async findOrCreateDepartment(orgId: string, name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return null;
+    const existing = await this.db.select().from(orgUnits)
+      .where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department'), eq(orgUnits.name, trimmed)))
+      .limit(1);
+    if (existing[0]) return existing[0];
+    const [created] = await this.db.insert(orgUnits).values({
+      organizationId: orgId,
+      type: 'department',
+      name: trimmed,
+    }).returning();
+    return created;
+  }
+
+  async ensureMembership(userId: string, orgUnitId: string) {
+    const existing = await this.db.select().from(orgMembership)
+      .where(and(eq(orgMembership.userId, userId), eq(orgMembership.orgUnitId, orgUnitId)))
+      .limit(1);
+    if (existing[0]) return existing[0];
+    const [created] = await this.db.insert(orgMembership).values({
+      userId, orgUnitId
+    }).returning();
+    return created;
   }
 }

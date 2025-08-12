@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { IdentityRepository } from '../identity/identity.repository';
 import crypto from 'crypto';
@@ -37,6 +37,26 @@ type CommitOverview = {
 type CommitResponse = {
   overview: CommitOverview;
   records: CommitRecord[];
+};
+
+type ApplyResultRow = {
+  email: string|null;
+  action: 'created'|'updated'|'skipped'|'error';
+  userId?: string;
+  department?: string|null;
+  departmentCreated?: boolean;
+  membershipLinked?: boolean;
+  ignoredFields?: string[];
+  message?: string;
+};
+type ApplyReport = {
+  createdUsers: number;
+  updatedUsers: number;
+  skipped: number;
+  errors: number;
+  departmentsCreated: number;
+  membershipsLinked: number;
+  rows: ApplyResultRow[];
 };
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -525,5 +545,126 @@ export class DirectoryService {
   previewImportSession(token: string) {
     const { overview, records } = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
     return { overview, records };
+  }
+
+  async applyImportSession(token: string, orgIdFromJwt: string): Promise<ApplyReport> {
+    let payload: any;
+    try {
+      payload = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+    } catch (e: any) {
+      throw new BadRequestException(`Invalid or expired session token: ${e?.message || 'unknown'}`);
+    }
+    if (!payload?.orgId || payload.orgId !== orgIdFromJwt) {
+      throw new BadRequestException('Session/org mismatch.');
+    }
+
+    const rows: ApplyResultRow[] = [];
+    let createdUsers = 0, updatedUsers = 0, skipped = 0, errors = 0, departmentsCreated = 0, membershipsLinked = 0;
+
+    for (const rec of payload.records as any[]) {
+      const email = rec?.incoming?.email ?? null;
+      const deptName = rec?.incoming?.department ?? null;
+
+      const ignoredFields: string[] = [];
+      // These fields are not in the users schema yet; mark as ignored:
+      ['jobTitle','location','employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
+        .forEach(f => { if (rec?.incoming?.[f] != null) ignoredFields.push(f); });
+
+      try {
+        if (!email || !rec?.action) {
+          skipped++; rows.push({ email, action: 'skipped', ignoredFields, message: 'Missing email or action' });
+          continue;
+        }
+
+        // Determine create/update from planner's decision.
+        if (rec.action === 'create') {
+          const user = await this.identity.findUserByEmailOrg(email, payload.orgId);
+          const firstName = rec.incoming?.givenName ?? null;
+          const lastName  = rec.incoming?.familyName ?? null;
+
+          const u = user ?? await this.identity.createUser(payload.orgId, email, firstName || '', lastName || '');
+          if (!user) createdUsers++; else updatedUsers++; // if user existed, treat as update via name sync below
+
+          if (user) {
+            await this.identity.updateUserNames(user.id, firstName, lastName);
+          }
+
+          let departmentCreated = false;
+          let membershipLinkedFlag = false;
+          if (deptName) {
+            const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            if (dept) {
+              if (dept.name?.trim() === deptName.trim()) {
+                // we can infer creation by re-fetch + equality; simpler: if not found earlier, it was created
+              }
+              // naive heuristic: if membership didn't exist, ensureMembership will create one
+              const m = await this.identity.ensureMembership(u.id, dept.id);
+              membershipLinkedFlag = !!m;
+              // we can't perfectly know if dept was just created; count by comparing against planner's overview.newDepartments if needed.
+            }
+          }
+
+          rows.push({
+            email, action: user ? 'updated' : 'created',
+            userId: (user ? user.id : u.id),
+            department: deptName,
+            membershipLinked: membershipLinkedFlag,
+            ignoredFields
+          });
+        } else if (rec.action === 'update') {
+          const user = await this.identity.findUserByEmailOrg(email, payload.orgId);
+          if (!user) {
+            // Safety: if planner said update but user disappeared, create now.
+            const firstName = rec.incoming?.givenName ?? '';
+            const lastName  = rec.incoming?.familyName ?? '';
+            const u = await this.identity.createUser(payload.orgId, email, firstName, lastName);
+            createdUsers++;
+            let membershipLinkedFlag = false;
+            if (deptName) {
+              const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+              if (dept) {
+                await this.identity.ensureMembership(u.id, dept.id);
+                membershipLinkedFlag = true;
+              }
+            }
+            rows.push({ email, action: 'created', userId: u.id, department: deptName, membershipLinked: membershipLinkedFlag, ignoredFields });
+            continue;
+          }
+
+          const firstName = rec.incoming?.givenName ?? null;
+          const lastName  = rec.incoming?.familyName ?? null;
+          await this.identity.updateUserNames(user.id, firstName, lastName);
+          updatedUsers++;
+
+          let membershipLinkedFlag = false;
+          if (deptName) {
+            const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            if (dept) {
+              await this.identity.ensureMembership(user.id, dept.id);
+              membershipLinkedFlag = true;
+            }
+          }
+
+          rows.push({ email, action: 'updated', userId: user.id, department: deptName, membershipLinked: membershipLinkedFlag, ignoredFields });
+        } else {
+          skipped++; rows.push({ email, action: 'skipped', department: deptName, ignoredFields });
+        }
+      } catch (e: any) {
+        errors++;
+        rows.push({ email, action: 'error', department: deptName, ignoredFields, message: e?.message || 'unknown error' });
+      }
+    }
+
+    // departmentsCreated is hard to know precisely without diffing; approximate with overview.newDepartments length if present
+    if (Array.isArray(payload?.overview?.newDepartments)) {
+      departmentsCreated = payload.overview.newDepartments.length;
+    }
+
+    return {
+      createdUsers, updatedUsers, skipped, errors,
+      departmentsCreated,
+      membershipsLinked,
+      rows,
+    };
   }
 }
