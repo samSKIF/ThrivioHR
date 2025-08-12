@@ -12,4 +12,10 @@ export class DirectoryController {
   validate(@Body() dto: ImportValidateDto) {
     return this.svc.validate(dto.csv);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('import/plan')
+  plan(@Body() dto: ImportValidateDto) {
+    return this.svc.plan(dto.csv);
+  }
 }

@@ -1,0 +1,102 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Extend CSV schema to support new optional fields: birthDate, nationality, gender, phone.
+Update /directory/import/validate and /directory/import/plan to parse, validate, and include these fields in preview/proposedUsers. No DB writes.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/directory.controller.ts
+
+CHANGES
+// apps/bff/src/modules/directory/directory.service.ts
+// 1) Update header sets at the top of file (keep existing REQUIRED as-is)
+const REQUIRED = ['email', 'givenName', 'familyName'];
+const OPTIONAL = [
+'jobTitle','department','managerEmail','location','employeeId','startDate',
+'birthDate','nationality','gender','phone'
+];
+
+// 2) In validate(csv: string), add validations AFTER required checks:
+//
+// - email: already validated
+// - managerEmail: if present, validate like email
+// - birthDate: if present, must be YYYY-MM-DD, not in the future, age >= 14
+// - nationality: if present, must be ISO 3166-1 alpha-2 (A–Z, length 2)
+// - gender: if present, accept (case-insensitive) one of:
+// male, female, non-binary, other, prefer-not-to-say, or short forms m/f
+// Normalize to lowercase canonical: 'male'|'female'|'non-binary'|'other'|'prefer-not-to-say'
+// - phone: if present, must be E.164: ^\+[1-9]\d{7,14}$
+//
+// Add rowErrors when a field is present but invalid.
+// Also add normalization in preview: gender normalized as above; nationality uppercased; phone left as-is if valid; birthDate unchanged if valid.
+//
+// 3) Ensure preview includes the new fields:
+// preview row shape should be:
+// {
+// email, givenName, familyName,
+// department, managerEmail, location, jobTitle,
+// employeeId, startDate,
+// birthDate, nationality, gender, phone
+// }
+//
+// 4) In the existing plan(csv: string) method, include the same fields in
+// preview and in proposedUsers objects with the same normalization behavior.
+
+// apps/bff/src/modules/directory/directory.controller.ts
+// No route changes. Keep endpoints as they are.
+// (Only ensure imports/types stay valid after service edits.)
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Get ACCESS token
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+echo "ORG_ID: $ORG_ID"
+echo "ACCESS_LEN=$(echo -n $ACCESS | wc -c)"
+
+Validate sample CSV (contains intentional errors to prove validation)
+echo "=== VALIDATE CSV ==="
+curl -s -X POST http://localhost:5000/directory/import/validate
+-H "content-type: application/json"
+-H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON' | python3 -m json.tool | head -120
+{
+"csv": "email,givenName,familyName,department,managerEmail,location,jobTitle,startDate,employeeId,birthDate,nationality,gender,phone
+auth1@example.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567
+bad-email,Jamie,Lee,Engineering,lead@example.com,UAE,Engineer,2024-11-15,E002,2008-01-01,US,F,+12025550123
+auth2@example.com,Maria,Gomez,Finance,cfo@example.com,ES,Accountant,2023-03-12,E003,1985-12-31,ESP,Female,0205550123
+,NoEmail,Person,HR,hrlead@example.com,UAE,Specialist,2025-01-08,E004,2030-01-01,GB,other,+447911123456
+auth3@example.com,Khalid,Ben,Operations,opslead@example.com,MA,Supervisor,2022-07-19,E005,1990-09-09,ma,Prefer-Not-To-Say,+212612345678"
+}
+JSON
+
+Plan sample CSV (same content)
+echo "=== PLAN CSV ==="
+curl -s -X POST http://localhost:5000/directory/import/plan
+-H "content-type: application/json"
+-H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON' | python3 -m json.tool | head -140
+{
+"csv": "email,givenName,familyName,department,managerEmail,location,jobTitle,startDate,employeeId,birthDate,nationality,gender,phone
+auth1@example.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567
+bad-email,Jamie,Lee,Engineering,lead@example.com,UAE,Engineer,2024-11-15,E002,2008-01-01,US,F,+12025550123
+auth2@example.com,Maria,Gomez,Finance,cfo@example.com,ES,Accountant,2023-03-12,E003,1985-12-31,ESP,Female,0205550123
+,NoEmail,Person,HR,hrlead@example.com,UAE,Specialist,2025-01-08,E004,2030-01-01,GB,other,+447911123456
+auth3@example.com,Khalid,Ben,Operations,opslead@example.com,MA,Supervisor,2022-07-19,E005,1990-09-09,ma,Prefer-Not-To-Say,+212612345678"
+}
+JSON
+
+Protected sanity check
+curl -s -H "Authorization: Bearer $ACCESS" http://localhost:5000/auth/me | python3 -m json.tool | head -40
+
+Status confirmation for roadmap/regressions
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: Where are we vs the roadmap after extending CSV fields, and is there any regression in previously working features?"
+
+STOP.
