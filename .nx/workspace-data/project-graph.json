@@ -2265,6 +2265,15 @@
         "hash": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="
       }
     },
+    "npm:csv-parse": {
+      "type": "npm",
+      "name": "npm:csv-parse",
+      "data": {
+        "version": "6.1.0",
+        "packageName": "csv-parse",
+        "hash": "sha512-CEE+jwpgLn+MmtCpVcPtiCZpVtB6Z2OKPTr34pycYYoL7sxdOkXDdQ4lRiw6ioC0q6BLqhc6cKweCVvral8yhw=="
+      }
+    },
     "npm:debug": {
       "type": "npm",
       "name": "npm:debug",
@@ -12142,5 +12151,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1754991048744
+  "computedAt": 1754992459634
 }

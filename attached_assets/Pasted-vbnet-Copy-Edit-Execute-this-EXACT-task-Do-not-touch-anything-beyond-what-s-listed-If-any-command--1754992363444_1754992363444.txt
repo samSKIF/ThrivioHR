@@ -1,0 +1,206 @@
+vbnet
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add a protected read-only CSV validator endpoint for Directory: POST /directory/import/validate.
+Accept JSON { csv: string }, parse + validate CSV (no DB writes), return summary + preview + errors.
+
+TOUCH ONLY
+apps/bff/src/app.module.ts
+apps/bff/src/modules/directory/directory.module.ts
+apps/bff/src/modules/directory/directory.controller.ts
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+package.json
+pnpm-lock.yaml
+
+CHANGES
+// apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+export class ImportValidateDto {
+// CSV content as a raw string in JSON body
+csv!: string;
+}
+
+// apps/bff/src/modules/directory/directory.service.ts
+import { Injectable } from '@nestjs/common';
+import { parse } from 'csv-parse/sync';
+
+type ValidationResult = {
+rows: number;
+valid: number;
+invalid: number;
+requiredHeaders: string[];
+missingHeaders: string[];
+inferredHeaders: string[];
+preview: any[]; // first 3 normalized rows
+sampleErrors: { row: number; message: string }[];
+};
+
+const REQUIRED = ['email', 'givenName', 'familyName'];
+const OPTIONAL = ['jobTitle', 'department', 'managerEmail', 'location', 'employeeId', 'startDate'];
+
+@Injectable()
+export class DirectoryService {
+validate(csv: string): ValidationResult {
+if (!csv?.trim()) {
+return {
+rows: 0, valid: 0, invalid: 0,
+requiredHeaders: REQUIRED, missingHeaders: REQUIRED,
+inferredHeaders: [], preview: [], sampleErrors: [{ row: 0, message: 'CSV body is empty' }]
+};
+}
+
+php
+Copy
+Edit
+const records = parse(csv, {
+  columns: true,
+  skip_empty_lines: true,
+  trim: true
+}) as Record<string, string>[];
+
+const headers = records.length > 0 ? Object.keys(records[0]) : [];
+const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
+
+const errors: { row: number; message: string }[] = [];
+let valid = 0;
+
+records.forEach((r, idx) => {
+  const rowNum = idx + 2; // header is line 1
+  const rowErrors: string[] = [];
+
+  // Required fields
+  REQUIRED.forEach(h => {
+    const val = (r[h] ?? '').toString().trim();
+    if (!val) rowErrors.push(`Missing required field: ${h}`);
+  });
+
+  // Basic email check
+  if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) {
+    rowErrors.push('Invalid email format');
+  }
+
+  if (rowErrors.length) {
+    errors.push({ row: rowNum, message: rowErrors.join('; ') });
+  } else {
+    valid += 1;
+  }
+});
+
+const preview = records.slice(0, 3).map(r => {
+  // normalize a few common fields
+  return {
+    email: r.email ?? null,
+    givenName: r.givenName ?? null,
+    familyName: r.familyName ?? null,
+    department: r.department ?? null,
+    managerEmail: r.managerEmail ?? null,
+    location: r.location ?? null,
+    jobTitle: r.jobTitle ?? null,
+    employeeId: r.employeeId ?? null,
+    startDate: r.startDate ?? null
+  };
+});
+
+return {
+  rows: records.length,
+  valid,
+  invalid: errors.length,
+  requiredHeaders: REQUIRED,
+  missingHeaders,
+  inferredHeaders: headers,
+  preview,
+  sampleErrors: errors.slice(0, 5)
+};
+}
+}
+
+// apps/bff/src/modules/directory/directory.controller.ts
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { DirectoryService } from './directory.service';
+import { ImportValidateDto } from './dtos/import-validate.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+@Controller('directory')
+export class DirectoryController {
+constructor(private readonly svc: DirectoryService) {}
+
+@UseGuards(JwtAuthGuard)
+@Post('import/validate')
+validate(@Body() dto: ImportValidateDto) {
+return this.svc.validate(dto.csv);
+}
+}
+
+// apps/bff/src/modules/directory/directory.module.ts
+import { Module } from '@nestjs/common';
+import { DirectoryController } from './directory.controller';
+import { DirectoryService } from './directory.service';
+
+@Module({
+controllers: [DirectoryController],
+providers: [DirectoryService],
+})
+export class DirectoryModule {}
+
+// apps/bff/src/app.module.ts (add DirectoryModule import)
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { IdentityModule } from './modules/identity/identity.module';
+import { DirectoryModule } from './modules/directory/directory.module';
+
+@Module({
+imports: [AuthModule, IdentityModule, DirectoryModule],
+controllers: [AppController],
+providers: [AppService],
+})
+export class AppModule {}
+
+RUN & PRINT
+
+1) Add CSV parser dependency
+pnpm add -w csv-parse
+
+2) Build BFF
+npx nx build bff && echo "=== BUILD OK ==="
+
+3) Smoke: get or create org, create a user, login to get ACCESS
+echo "=== PREP ORG/USER ===" &&
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4) &&
+if [ -z "$ORG_ID" ]; then
+ORG_ID=$(curl -s -X POST http://localhost:5000/orgs -H 'content-type: application/json' -d '{"name":"CSV Demo Org"}' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4);
+fi &&
+curl -s -X POST http://localhost:5000/users -H 'content-type: application/json'
+-d "{"orgId":"$ORG_ID","email":"csvdemo@example.com","givenName":"CSV","familyName":"Demo"}" >/dev/null &&
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}") &&
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4) &&
+echo "ORG_ID: $ORG_ID" && echo "ACCESS_TKN_LEN=$(echo -n $ACCESS | wc -c)"
+
+4) Validate sample CSV (includes one bad row for error demo)
+echo "=== VALIDATE CSV ===" &&
+curl -s -X POST http://localhost:5000/directory/import/validate
+-H "content-type: application/json"
+-H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON' | python3 -m json.tool | head -80
+{
+"csv": "email,givenName,familyName,department,managerEmail,location,jobTitle,startDate,employeeId
+auth1@example.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001
+bad-email,Jamie,Lee,Engineering,lead@example.com,UAE,Engineer,2024-11-15,E002
+auth2@example.com,Maria,Gomez,Finance,cfo@example.com,Spain,Accountant,2023-03-12,E003
+,NoEmail,Person,HR,hrlead@example.com,UAE,Specialist,2025-01-08,E004
+auth3@example.com,Khalid,Ben,Operations,opslead@example.com,Morocco,Supervisor,2022-07-19,E005"
+}
+JSON
+
+5) Quick protected route check
+echo "=== PROTECTED CHECK ===" &&
+curl -s -H "Authorization: Bearer $ACCESS" http://localhost:5000/auth/me | python3 -m json.tool | head -40
+
+STOP.
+
