@@ -1,8 +1,9 @@
-import { Body, Controller, Post, UseGuards, Req, BadRequestException, Inject } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards, BadRequestException, Inject } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DirectoryService } from './directory.service';
 import { ImportValidateDto } from './dtos/import-validate.dto';
 import { ImportCommitDto } from './dtos/import-commit.dto';
+import { ImportSessionCreateDto, ImportSessionApproveDto, ImportSessionRejectDto } from './dtos/import-session.dto';
 
 @Controller('directory')
 export class DirectoryController {
@@ -28,5 +29,35 @@ export class DirectoryController {
     }
     const orgId = req.user?.orgId;
     return this.svc.commitPlan(dto.csv, orgId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('import/session')
+  async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: any) {
+    const orgId = req.user?.orgId; 
+    const userId = req.user?.sub;
+    if (!dto?.csv) throw new BadRequestException('csv is required');
+    return this.svc.createImportSession(dto.csv, orgId, userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('import/session/preview')
+  preview(@Query('token') token: string) {
+    if (!token) throw new BadRequestException('token is required');
+    return this.svc.previewImportSession(token);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('import/session/approve')
+  approve(@Body() dto: ImportSessionApproveDto) {
+    if (!dto?.token) throw new BadRequestException('token is required');
+    throw new BadRequestException('Writes not implemented yet; approval will apply changes in the next slice.');
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('import/session/reject')
+  reject(@Body() dto: ImportSessionRejectDto) {
+    if (!dto?.token) throw new BadRequestException('token is required');
+    return { status: 'rejected' };
   }
 }

@@ -1,0 +1,154 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add a stateless approval “session” so admins can review the CSV plan before writes.
+Endpoints (JWT-protected):
+
+POST /directory/import/session -> body { csv } -> returns { token, overview }
+
+GET /directory/import/session/preview -> query ?token=... -> returns { overview, records }
+
+POST /directory/import/session/approve -> body { token } -> 400 "Writes not implemented yet"
+
+POST /directory/import/session/reject -> body { token } -> { status: "rejected" }
+No DB writes in this slice.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/dtos/import-session.dto.ts
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/directory.controller.ts
+
+CHANGES
+// apps/bff/src/modules/directory/dtos/import-session.dto.ts
+export class ImportSessionCreateDto { csv!: string; }
+export class ImportSessionApproveDto { token!: string; }
+export class ImportSessionRejectDto { token!: string; }
+
+// apps/bff/src/modules/directory/directory.service.ts
+// Append the following additions (keep existing imports/methods):
+import crypto from 'crypto';
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+function signPayload(payload: object, secret: string) {
+const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+const sig = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+return ${data}.${sig};
+}
+function verifyToken(token: string, secret: string) {
+const [data, sig] = token.split('.');
+if (!data || !sig) throw new Error('Malformed token');
+const expected = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+if (expected !== sig) throw new Error('Bad signature');
+const json = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+if (Date.now() > json.exp) throw new Error('Expired token');
+return json;
+}
+
+export class DirectoryService {
+// ...keep existing constructor + methods...
+
+async createImportSession(csv: string, orgId: string, userId: string) {
+const plan = await this.commitPlan(csv, orgId); // reuses dry-run planner
+const payload = {
+v: 1,
+orgId,
+userId,
+createdAt: Date.now(),
+exp: Date.now() + SESSION_TTL_MS,
+sha256: crypto.createHash('sha256').update(csv, 'utf8').digest('hex'),
+overview: plan.overview,
+records: plan.records, // embed records for preview
+};
+const token = signPayload(payload, process.env.JWT_SECRET || 'dev-secret');
+return { token, overview: plan.overview };
+}
+
+previewImportSession(token: string) {
+const { overview, records } = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+return { overview, records };
+}
+}
+
+// apps/bff/src/modules/directory/directory.controller.ts
+// Add endpoints below existing ones:
+import { Body, Controller, Get, Post, Query, Req, UseGuards, BadRequestException, Inject } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { DirectoryService } from './directory.service';
+import { ImportSessionCreateDto, ImportSessionApproveDto, ImportSessionRejectDto } from './dtos/import-session.dto';
+
+@Controller('directory')
+export class DirectoryController {
+constructor(@Inject(DirectoryService) private readonly svc: DirectoryService) {}
+
+@UseGuards(JwtAuthGuard)
+@Post('import/session')
+async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: any) {
+const orgId = req.user?.orgId; const userId = req.user?.sub;
+if (!dto?.csv) throw new BadRequestException('csv is required');
+return this.svc.createImportSession(dto.csv, orgId, userId);
+}
+
+@UseGuards(JwtAuthGuard)
+@Get('import/session/preview')
+preview(@Query('token') token: string) {
+if (!token) throw new BadRequestException('token is required');
+return this.svc.previewImportSession(token);
+}
+
+@UseGuards(JwtAuthGuard)
+@Post('import/session/approve')
+approve(@Body() dto: ImportSessionApproveDto) {
+if (!dto?.token) throw new BadRequestException('token is required');
+throw new BadRequestException('Writes not implemented yet; approval will apply changes in the next slice.');
+}
+
+@UseGuards(JwtAuthGuard)
+@Post('import/session/reject')
+reject(@Body() dto: ImportSessionRejectDto) {
+if (!dto?.token) throw new BadRequestException('token is required');
+return { status: 'rejected' };
+}
+}
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Auth token
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+echo "ORG_ID: $ORG_ID"
+echo "ACCESS_LEN=$(echo -n $ACCESS | wc -c)"
+
+1) Create session
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON'
+{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering\nmaria@demo.com,Maria,Gomez,Finance"}
+JSON
+)
+echo "$SESSION" | python3 -m json.tool | head -60
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+2) Preview session
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | python3 -m json.tool | head -120
+
+3) Approve -> expect 400
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -80
+
+4) Reject -> expect { status: "rejected" }
+curl -s -X POST http://localhost:5000/directory/import/session/reject
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | python3 -m json.tool | head -20
+
+5) Roadmap status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: After adding import sessions (stateless), where are we vs the roadmap, and any regression in previous features?"
+
+STOP.

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { IdentityRepository } from '../identity/identity.repository';
+import crypto from 'crypto';
 
 type ValidationResult = {
   rows: number;
@@ -37,6 +38,24 @@ type CommitResponse = {
   overview: CommitOverview;
   records: CommitRecord[];
 };
+
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+function signPayload(payload: object, secret: string) {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  return `${data}.${sig}`;
+}
+
+function verifyToken(token: string, secret: string) {
+  const [data, sig] = token.split('.');
+  if (!data || !sig) throw new Error('Malformed token');
+  const expected = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  if (expected !== sig) throw new Error('Bad signature');
+  const json = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+  if (Date.now() > json.exp) throw new Error('Expired token');
+  return json;
+}
 
 const REQUIRED = ['email', 'givenName', 'familyName'];
 const OPTIONAL = [
@@ -485,5 +504,26 @@ export class DirectoryService {
       },
       records: out
     };
+  }
+
+  async createImportSession(csv: string, orgId: string, userId: string) {
+    const plan = await this.commitPlan(csv, orgId); // reuses dry-run planner
+    const payload = {
+      v: 1,
+      orgId,
+      userId,
+      createdAt: Date.now(),
+      exp: Date.now() + SESSION_TTL_MS,
+      sha256: crypto.createHash('sha256').update(csv, 'utf8').digest('hex'),
+      overview: plan.overview,
+      records: plan.records, // embed records for preview
+    };
+    const token = signPayload(payload, process.env.JWT_SECRET || 'dev-secret');
+    return { token, overview: plan.overview };
+  }
+
+  previewImportSession(token: string) {
+    const { overview, records } = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+    return { overview, records };
   }
 }
