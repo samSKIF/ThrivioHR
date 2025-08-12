@@ -1,0 +1,166 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Enhance the CSV commit planner with manager graph diagnostics:
+
+Resolve managerEmail to a user within the same org using:
+• existing DB users, and
+• emails that will be created in THIS CSV (intra-batch resolution).
+
+Detect issues per row: missing manager, self-manager, cross-email not in batch/DB.
+
+Detect cycles in the manager graph formed by the CSV (e.g., A→B, B→C, C→A).
+
+Return new fields in the dry-run plan (no writes change yet).
+
+TOUCH ONLY
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// apps/bff/src/modules/directory/directory.service.ts
+// 1) Augment commitPlan() to compute manager resolution + cycles.
+// a) Build a map of incoming rows by normalized email.
+// b) Build edges (employeeEmail -> managerEmail) only for rows that have managerEmail.
+// c) Consider DB users as possible managers if not found in CSV batch.
+// d) Per-record flags: managerResolved (bool), managerUserId (string|null), managerIssues: string[].
+// e) Overview counters: managerMissing, managerSelf, managerCycles (count of strongly connected components >1 or self-loop).
+
+// Pseudocode snippet to insert inside commitPlan(), after normalized is built and before return:
+const emailToRow = new Map<string, any>();
+for (const r of normalized) {
+const e = (r.email ?? '').trim().toLowerCase();
+if (e) emailToRow.set(e, r);
+}
+
+// Resolve function (DB + batch)
+const resolveManager = async (mEmail: string): Promise<{userId: string|null, from: 'db'|'csv'|null}> => {
+const key = (mEmail ?? '').trim().toLowerCase();
+if (!key) return { userId: null, from: null };
+// 1) Try DB
+const u = await this.identity.findUserByEmailOrg(key, orgId);
+if (u) return { userId: (u as any).id ?? null, from: 'db' };
+// 2) Try batch: if the manager will be created in this CSV, mark as 'csv' with null userId (to be created)
+if (emailToRow.has(key)) return { userId: null, from: 'csv' };
+return { userId: null, from: null };
+};
+
+// Build graph edges from CSV batch only (for cycle detection)
+const edges: Array<[string,string]> = [];
+for (const r of normalized) {
+const e = (r.email ?? '').trim().toLowerCase();
+const m = (r.managerEmail ?? '').trim().toLowerCase();
+if (e && m) edges.push([e, m]);
+}
+
+// Cycle detection (DFS with colors or Kahn’s). Self-manager counts too.
+let managerSelf = 0;
+const nodes = new Set<string>();
+for (const [a,b] of edges) { nodes.add(a); nodes.add(b); }
+const adj = new Map<string,string[]>();
+for (const n of nodes) adj.set(n, []);
+for (const [a,b] of edges) (adj.get(a)!).push(b);
+
+const WHITE=0, GRAY=1, BLACK=2;
+const color = new Map<string,number>();
+for (const n of nodes) color.set(n, WHITE);
+
+let cycles = 0;
+function dfs(u: string) {
+color.set(u, GRAY);
+for (const v of (adj.get(u) || [])) {
+if (u === v) { managerSelf++; cycles++; continue; }
+const c = color.get(v);
+if (c === GRAY) { cycles++; }
+else if (c === WHITE) dfs(v);
+}
+color.set(u, BLACK);
+}
+for (const n of nodes) if (color.get(n) === WHITE) dfs(n);
+
+// Per-record manager resolution and issues; also tally managerMissing
+let managerMissing = 0;
+const outWithManagers: CommitRecord[] = [];
+for (const rec of out) {
+// rec.incoming.email, rec.incoming.managerEmail are already set
+const issues: string[] = [];
+let resolved = false;
+let managerUserId: string|null = null;
+
+const mEmail = rec.incoming?.managerEmail ?? null;
+if (mEmail) {
+if ((rec.incoming?.email ?? '').trim().toLowerCase() === (mEmail ?? '').trim().toLowerCase()) {
+issues.push('self-manager');
+}
+const res = await resolveManager(mEmail);
+if (res.from === 'db') {
+resolved = true; managerUserId = res.userId;
+} else if (res.from === 'csv') {
+// Manager will be created in this batch; treat as tentatively resolved
+resolved = true; managerUserId = null;
+issues.push('manager-in-batch');
+} else {
+managerMissing++; issues.push('manager-not-found');
+}
+}
+
+// Merge into record
+outWithManagers.push({
+...rec,
+managerResolved: resolved,
+managerUserId,
+reason: [...(rec.reason ?? []), ...issues],
+});
+}
+
+// Replace original out with enriched version and update overview with new counters
+const enrichedOut = outWithManagers;
+const overview: CommitOverview = {
+...existingOverviewObject,
+managerMissing,
+managerCycles: cycles,
+managerSelf,
+};
+
+// Then return enrichedOut and new overview instead of older ones.
+
+// 2) Do NOT change approve/write behavior in this slice (read-only diagnostics only).
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Token
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+echo "ORG_ID: $ORG_ID"; echo "ACCESS_LEN=$(echo -n $ACCESS | wc -c)"
+
+1) Create a session with a manager cycle A->B->C->A and one missing manager
+curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON' | python3 -m json.tool | head -200
+{
+"csv": "email,givenName,familyName,department,managerEmail\nalice@demo.com,Alice,One,Eng,bob@demo.com\nbob@demo.com,Bob,Two,Eng,carol@demo.com\ncarol@demo.com,Carol,Three,Eng,alice@demo.com\ndave@demo.com,Dave,Four,Eng,missing@demo.com"
+}
+JSON
+
+2) Preview should show managerCycles >= 1, managerMissing >= 1, and per-record reasons
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,managerEmail\nalice@demo.com,Alice,One,Eng,bob@demo.com\nbob@demo.com,Bob,Two,Eng,carol@demo.com\ncarol@demo.com,Carol,Three,Eng,alice@demo.com\ndave@demo.com,Dave,Four,Eng,missing@demo.com"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | python3 -m json.tool | head -200
+
+3) Quick sanity: approve still runs (we didn't change writes), but we won't rely on manager linking yet
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -120
+
+4) Roadmap/regressions check
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: After adding manager graph diagnostics (read-only), where are we vs the roadmap, and any regression in previous features?"
+
+STOP.

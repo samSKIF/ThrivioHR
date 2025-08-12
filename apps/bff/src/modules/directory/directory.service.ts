@@ -32,6 +32,8 @@ type CommitOverview = {
   skips: number;
   duplicateEmails: string[];
   managerMissing: number;
+  managerCycles?: number;
+  managerSelf?: number;
   newDepartments: string[];
   newLocations: string[];
 };
@@ -448,20 +450,11 @@ export class DirectoryService {
 
       const current = await this.identity.findUserByEmailOrg(row.email!, orgId);
 
-      // manager resolution
-      let managerResolved = false;
-      let managerUserId: string | null = null;
-      if (row.managerEmail) {
-        const mgr = await this.identity.findUserByEmailOrg(row.managerEmail, orgId);
-        if (mgr) { managerResolved = true; managerUserId = (mgr as any).id ?? null; }
-        else { reason.push('Manager email not found in org'); managerMissing++; }
-      } else {
-        managerResolved = true; // no manager specified is fine
-      }
+      // Basic validation only - manager resolution will be done later with enhanced diagnostics
 
       if (!current) {
         creates++;
-        out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved, managerUserId });
+        out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved: false });
       } else {
         // detect diffs across supported fields (CSV as source-of-truth on commit)
         const diffs: string[] = [];
@@ -483,7 +476,7 @@ export class DirectoryService {
 
         if (diffs.length === 0 && !row.managerEmail) {
           skips++;
-          out.push({ email: row.email, action: 'skip', reason, incoming: row, current: { id: (current as any).id }, managerResolved });
+          out.push({ email: row.email, action: 'skip', reason, incoming: row, current: { id: (current as any).id }, managerResolved: false });
         } else {
           updates++;
           out.push({
@@ -505,7 +498,7 @@ export class DirectoryService {
               gender: (current as any).gender,
               phone: (current as any).phone
             },
-            managerResolved, managerUserId
+            managerResolved: false
           });
         }
       }
@@ -523,16 +516,109 @@ export class DirectoryService {
     const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
     const newLocations = Array.from(csvLocSet.values()).filter(l => !existingLocs.has(l));
 
+    // Enhanced manager graph diagnostics
+    const emailToRow = new Map<string, any>();
+    for (const r of normalized) {
+      const e = (r.email ?? '').trim().toLowerCase();
+      if (e) emailToRow.set(e, r);
+    }
+
+    // Resolve function (DB + batch)
+    const resolveManager = async (mEmail: string): Promise<{userId: string|null, from: 'db'|'csv'|null}> => {
+      const key = (mEmail ?? '').trim().toLowerCase();
+      if (!key) return { userId: null, from: null };
+      // 1) Try DB
+      const u = await this.identity.findUserByEmailOrg(key, orgId);
+      if (u) return { userId: (u as any).id ?? null, from: 'db' };
+      // 2) Try batch: if the manager will be created in this CSV, mark as 'csv' with null userId (to be created)
+      if (emailToRow.has(key)) return { userId: null, from: 'csv' };
+      return { userId: null, from: null };
+    };
+
+    // Build graph edges from CSV batch only (for cycle detection)
+    const edges: Array<[string,string]> = [];
+    for (const r of normalized) {
+      const e = (r.email ?? '').trim().toLowerCase();
+      const m = (r.managerEmail ?? '').trim().toLowerCase();
+      if (e && m) edges.push([e, m]);
+    }
+
+    // Cycle detection (DFS with colors or Kahn's). Self-manager counts too.
+    let managerSelf = 0;
+    const nodes = new Set<string>();
+    for (const [a,b] of edges) { nodes.add(a); nodes.add(b); }
+    const adj = new Map<string,string[]>();
+    for (const n of nodes) adj.set(n, []);
+    for (const [a,b] of edges) (adj.get(a)!).push(b);
+
+    const WHITE=0, GRAY=1, BLACK=2;
+    const color = new Map<string,number>();
+    for (const n of nodes) color.set(n, WHITE);
+
+    let cycles = 0;
+    function dfs(u: string) {
+      color.set(u, GRAY);
+      for (const v of (adj.get(u) || [])) {
+        if (u === v) { managerSelf++; cycles++; continue; }
+        const c = color.get(v);
+        if (c === GRAY) { cycles++; }
+        else if (c === WHITE) dfs(v);
+      }
+      color.set(u, BLACK);
+    }
+    for (const n of nodes) if (color.get(n) === WHITE) dfs(n);
+
+    // Per-record manager resolution and issues; also tally managerMissing
+    managerMissing = 0; // Reset counter for accurate tracking
+    const outWithManagers: CommitRecord[] = [];
+    for (const rec of out) {
+      // rec.incoming.email, rec.incoming.managerEmail are already set
+      const issues: string[] = [];
+      let resolved = false;
+      let managerUserId: string|null = null;
+
+      const mEmail = rec.incoming?.managerEmail ?? null;
+      if (mEmail) {
+        if ((rec.incoming?.email ?? '').trim().toLowerCase() === (mEmail ?? '').trim().toLowerCase()) {
+          issues.push('self-manager');
+        }
+        const res = await resolveManager(mEmail);
+        if (res.from === 'db') {
+          resolved = true; managerUserId = res.userId;
+        } else if (res.from === 'csv') {
+          // Manager will be created in this batch; treat as tentatively resolved
+          resolved = true; managerUserId = null;
+          issues.push('manager-in-batch');
+        } else {
+          managerMissing++; issues.push('manager-not-found');
+        }
+      }
+
+      // Merge into record
+      outWithManagers.push({
+        ...rec,
+        managerResolved: resolved,
+        managerUserId,
+        reason: [...(rec.reason ?? []), ...issues],
+      });
+    }
+
+    // Replace original out with enriched version and update overview with new counters
+    const enrichedOut = outWithManagers;
+    const overview: CommitOverview = {
+      rows: normalized.length,
+      creates, updates, skips,
+      duplicateEmails: Array.from(dups.values()),
+      managerMissing,
+      managerCycles: cycles,
+      managerSelf,
+      newDepartments,
+      newLocations
+    };
+
     return {
-      overview: {
-        rows: normalized.length,
-        creates, updates, skips,
-        duplicateEmails: Array.from(dups.values()),
-        managerMissing,
-        newDepartments,
-        newLocations
-      },
-      records: out
+      overview,
+      records: enrichedOut
     };
   }
 
