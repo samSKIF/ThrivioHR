@@ -1,0 +1,100 @@
+You are assisting on ThrivioHR. Do only what’s in SCOPE. Do not edit any other files. If anything is ambiguous, STOP and ask. Print every command you run and the last ~30 lines of any long output. When acceptance checks pass, STOP.
+
+SCOPE
+Create a minimal GitHub Actions workflow that runs on push and PR to main and executes:
+
+pnpm -w lint
+
+pnpm -w test:identity -- --runInBand
+
+pnpm -w build
+
+FILES YOU MAY TOUCH
+
+.github/workflows/ci.yml (create this file)
+
+package.json (root) only if a script name above is missing; if missing, add:
+
+"lint": "nx format:check && nx run-many -t lint"
+
+"build": "nx run-many -t build --parallel=3"
+
+REQUIREMENTS
+
+Node 20.x, pnpm 10.x with cache.
+
+Start a Postgres service in the job (for tests).
+
+Set DATABASE_URL env for the job to that service.
+
+No external cloud resources, no Nx Cloud, no secrets.
+
+Do not change ESLint rules, tsconfigs, or app code.
+
+WORKFLOW CONTENT (implement these exact steps):
+
+triggers: push and pull_request on main
+
+paths include: apps/**, services/**, packages/**, .github/**, pnpm-lock.yaml, nx.json, package.json, tsconfig*.json
+
+jobs.build:
+
+runs-on: ubuntu-latest
+
+services.postgres:
+
+image: postgres:16
+
+env: POSTGRES_USER=postgres, POSTGRES_PASSWORD=postgres, POSTGRES_DB=thriviohr_dev
+
+ports: 5432:5432
+
+options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=10
+
+steps:
+
+actions/checkout@v4
+
+actions/setup-node@v4 with node-version: 20
+
+pnpm/action-setup@v3 with version: 10
+
+Cache: use actions/cache@v4 for ~/.pnpm-store
+
+pnpm i --frozen-lockfile
+
+Env for the job (available to steps):
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/thriviohr_dev
+
+Run:
+
+pnpm -w lint
+
+pnpm -w test:identity -- --runInBand
+
+pnpm -w build
+
+ACCEPTANCE CHECKS (run locally in the workspace and print outputs):
+
+Show the created .github/workflows/ci.yml.
+
+Run (and print last 30 lines each):
+
+pnpm -w lint
+
+pnpm -w test:identity -- --runInBand
+
+pnpm -w build
+
+Explain briefly how the Postgres service + DATABASE_URL make the tests pass in CI.
+
+STOP. Do not modify any other files or attempt further improvements.
+
+OUT OF SCOPE
+
+Changing any app/service code, migrations, or tests.
+
+Adding Nx Cloud or any third-party secrets.
+
+Creating multiple workflows. One is enough.
+

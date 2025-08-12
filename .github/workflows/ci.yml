@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'packages/**'
+      - '.github/**'
+      - 'pnpm-lock.yaml'
+      - 'nx.json'
+      - 'package.json'
+      - 'tsconfig*.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'packages/**'
+      - '.github/**'
+      - 'pnpm-lock.yaml'
+      - 'nx.json'
+      - 'package.json'
+      - 'tsconfig*.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: thriviohr_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/thriviohr_dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
+
+      - name: Lint
+        run: npx nx run-many -t lint
+
+      - name: Test Identity Service
+        run: npx jest --config services/identity/jest.config.ts --runInBand
+
+      - name: Build
+        run: npx nx run-many -t build

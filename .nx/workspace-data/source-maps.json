@@ -232,77 +232,25 @@
       "services/identity/project.json",
       "nx/core/project-json"
     ],
-    "targets.dev": [
+    "targets.test": [
       "services/identity/project.json",
       "nx/core/project-json"
     ],
-    "targets.dev.executor": [
+    "targets.test.executor": [
       "services/identity/project.json",
       "nx/core/project-json"
     ],
-    "targets.dev.options": [
+    "targets.test.options": [
       "services/identity/project.json",
       "nx/core/project-json"
     ],
-    "targets.dev.options.command": [
+    "targets.test.options.command": [
       "services/identity/project.json",
       "nx/core/project-json"
     ],
-    "targets.dev.options.cwd": [
+    "targets.test.options.cwd": [
       "services/identity/project.json",
       "nx/core/project-json"
-    ],
-    "targets.build": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.executor": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.command": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.options.cwd": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.executor": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.options": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.options.command": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.options.cwd": [
-      "services/identity/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.build.dependsOn": [
-      "nx.json",
-      "nx/target-defaults"
-    ],
-    "targets.build.inputs": [
-      "nx.json",
-      "nx/target-defaults"
-    ],
-    "targets.build.parallelism": [
-      "nx.json",
-      "nx/target-defaults"
     ]
   },
   "services/ledger": {
