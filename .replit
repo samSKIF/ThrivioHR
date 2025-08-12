@@ -15,10 +15,6 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Documentation Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "main"
 
 [[workflows.workflow.tasks]]
@@ -49,14 +45,9 @@ args = "test-identity-final"
 task = "workflow.run"
 args = "db-diagnose-identity"
 
-[[workflows.workflow]]
-name = "Documentation Server"
-author = "agent"
-
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python -m http.server 5000"
-waitForPort = 5000
+task = "workflow.run"
+args = "bff-server"
 
 [[workflows.workflow]]
 name = "main"
@@ -142,6 +133,22 @@ args = "tsx scripts/diagnose-identity.ts"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "bff-server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd apps/bff && tsx src/main.ts"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 4000
+externalPort = 3000
 
 [[ports]]
 localPort = 5000

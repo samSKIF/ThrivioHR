@@ -88,6 +88,26 @@
       "apps/bff/project.json",
       "nx/core/project-json"
     ],
+    "targets.serve": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.command": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.cwd": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"

@@ -1,0 +1,99 @@
+You are assisting on ThrivioHR. Do exactly what’s in SCOPE. Don’t touch files outside the list. Don’t change ESLint, tests, or migrations. If anything is ambiguous, STOP and ask. Print each command you run and the last ~30 lines of long output. STOP after acceptance checks.
+
+GOAL
+Add minimal REST endpoints in the BFF for Organizations and Users. Use our existing Drizzle schemas from the Identity service. No auth yet.
+
+SCOPE — FILES YOU MAY TOUCH
+
+apps/bff/src/app.module.ts (imports only)
+
+apps/bff/src/modules/identity/** (new module, controllers, dtos, services, repository)
+
+apps/bff/src/modules/db/** (new: tiny DbModule creating a pg Pool + Drizzle instance)
+
+apps/bff/src/common/** (optional: validation pipe config)
+
+apps/bff/project.json (only if you must add a serve target)
+
+READ-ONLY IMPORTS ALLOWED
+
+services/identity/src/db/schema/** (Drizzle table definitions)
+
+OUT OF SCOPE
+
+Modifying anything under services/identity/**
+
+Adding auth, SSO, or GraphQL
+
+Pagination/search beyond simple limit param
+
+Changing CI or tsconfigs
+
+IMPLEMENTATION DETAILS
+
+DbModule (apps/bff/src/modules/db):
+
+Create a DbModule that provides a singleton Pool (from pg) and a Drizzle db bound to DATABASE_URL (from env).
+
+Export db via Nest provider token DRIZZLE_DB.
+
+IdentityModule (apps/bff/src/modules/identity):
+
+Import DbModule.
+
+Create a repository that imports the Drizzle table objects from services/identity/src/db/schema/* and runs queries using the provided db.
+
+DTOs:
+
+CreateOrgDto { name: string }
+
+CreateUserDto { orgId: string; email: string; givenName?: string; familyName?: string; locale?: string }
+
+Controllers:
+
+POST /orgs → insert org (name required), return { id, name }
+
+GET /orgs?limit=20 → list orgs (id, name)
+
+POST /users → insert user for orgId, return { id, orgId, email }
+
+GET /users?orgId=...&limit=20 → list users for org (id, email, givenName, familyName)
+
+Use class-validator and Nest’s global validation pipe (create it if missing under apps/bff/src/main.ts or configure locally in the module).
+
+Wire module
+
+Add IdentityModule to app.module.ts imports.
+
+Ensure we can nx serve bff.
+
+ACCEPTANCE CHECKS (run locally, print outputs)
+
+Build BFF:
+
+nginx
+Copy
+Edit
+npx nx build bff
+Start BFF (background) and smoke endpoints:
+
+bash
+Copy
+Edit
+(npx nx serve bff > /tmp/bff.log 2>&1 &) && sleep 5
+curl -s -X POST http://localhost:4000/orgs -H 'content-type: application/json' -d '{"name":"Acme"}'
+curl -s 'http://localhost:4000/orgs?limit=5'
+# create user
+ORG_ID=$(curl -s 'http://localhost:4000/orgs?limit=1' | jq -r '.[0].id' 2>/dev/null || true)
+curl -s -X POST http://localhost:4000/users -H 'content-type: application/json' -d "{\"orgId\":\"$ORG_ID\",\"email\":\"demo@example.com\"}"
+curl -s "http://localhost:4000/users?orgId=$ORG_ID&limit=5"
+tail -30 /tmp/bff.log || true
+STOP. Do not add auth, GraphQL, or pagination.
+
+NOTES
+
+If jq is unavailable, just print the /orgs response and manually pass the id in the next curl; do not install anything.
+
+If nx serve bff isn’t configured, add a simple serve target in apps/bff/project.json that runs Nest in dev mode.
+
+STOP after acceptance checks.

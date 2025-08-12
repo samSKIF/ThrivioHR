@@ -24,6 +24,13 @@
         "command": "eslint src",
         "cwd": "apps/bff"
       }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx src/main.ts",
+        "cwd": "apps/bff"
+      }
     }
   },
   "tags": []
