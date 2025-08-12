@@ -1,4 +1,18 @@
 {
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.*",
+      "!{projectRoot}/**/*.test.*",
+      "!{projectRoot}/**/__tests__/**",
+      "!{projectRoot}/**/*.stories.*",
+      "!{projectRoot}/**/*.mdx",
+      "!{projectRoot}/test/**",
+      "!{projectRoot}/cypress/**",
+      "!{projectRoot}/storybook/**"
+    ]
+  },
   "workspaceLayout": {
     "appsDir": "apps",
     "libsDir": "packages"
