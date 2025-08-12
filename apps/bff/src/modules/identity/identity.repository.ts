@@ -90,29 +90,27 @@ export class IdentityRepository {
     return row;
   }
 
-  async findOrCreateDepartment(orgId: string, name: string) {
-    const trimmed = name.trim();
-    if (!trimmed) return null;
+  async findOrCreateDepartment(orgId: string, name: string): Promise<{ dept: any; created: boolean }> {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return { dept: null, created: false };
     const existing = await this.db.select().from(orgUnits)
       .where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department'), eq(orgUnits.name, trimmed)))
       .limit(1);
-    if (existing[0]) return existing[0];
-    const [created] = await this.db.insert(orgUnits).values({
+    if (existing[0]) return { dept: existing[0], created: false };
+    const [createdRow] = await this.db.insert(orgUnits).values({
       organizationId: orgId,
       type: 'department',
       name: trimmed,
     }).returning();
-    return created;
+    return { dept: createdRow, created: true };
   }
 
-  async ensureMembership(userId: string, orgUnitId: string) {
+  async ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: any; created: boolean }> {
     const existing = await this.db.select().from(orgMembership)
       .where(and(eq(orgMembership.userId, userId), eq(orgMembership.orgUnitId, orgUnitId)))
       .limit(1);
-    if (existing[0]) return existing[0];
-    const [created] = await this.db.insert(orgMembership).values({
-      userId, orgUnitId
-    }).returning();
-    return created;
+    if (existing[0]) return { membership: existing[0], created: false };
+    const [createdRow] = await this.db.insert(orgMembership).values({ userId, orgUnitId }).returning();
+    return { membership: createdRow, created: true };
   }
 }

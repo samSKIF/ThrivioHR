@@ -1,0 +1,94 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Fix applyImportSession counters:
+
+Increment membershipsLinked only when a new membership is created.
+
+Count departmentsCreated precisely when a new department org_unit is created.
+(No behavior changes beyond accurate counting. Keep departments scoped to the current org, no parent assignment.)
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.repository.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// apps/bff/src/modules/identity/identity.repository.ts
+// 1) Modify findOrCreateDepartment() to return { dept, created }
+// 2) Modify ensureMembership() to return { membership, created }
+
+--- REPLACE the current findOrCreateDepartment() with:
+async findOrCreateDepartment(orgId: string, name: string): Promise<{ dept: any; created: boolean }> {
+const trimmed = (name ?? '').trim();
+if (!trimmed) return { dept: null, created: false };
+const existing = await db.select().from(orgUnits)
+.where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department'), eq(orgUnits.name, trimmed)))
+.limit(1);
+if (existing[0]) return { dept: existing[0], created: false };
+const [createdRow] = await db.insert(orgUnits).values({
+organizationId: orgId,
+type: 'department',
+name: trimmed,
+}).returning();
+return { dept: createdRow, created: true };
+}
+
+--- REPLACE the current ensureMembership() with:
+async ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: any; created: boolean }> {
+const existing = await db.select().from(orgMembership)
+.where(and(eq(orgMembership.userId, userId), eq(orgMembership.orgUnitId, orgUnitId)))
+.limit(1);
+if (existing[0]) return { membership: existing[0], created: false };
+const [createdRow] = await db.insert(orgMembership).values({ userId, orgUnitId }).returning();
+return { membership: createdRow, created: true };
+}
+
+// apps/bff/src/modules/directory/directory.service.ts
+// 3) In applyImportSession(), increment counters based on the new return shapes.
+
+--- In every place where findOrCreateDepartment(...) is called:
+const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+if (deptCreated) departmentsCreated++;
+
+--- In every place where ensureMembership(...) is called:
+const { created: membershipCreated } = await this.identity.ensureMembership(<userId>, dept.id);
+if (membershipCreated) membershipsLinked++;
+// Keep per-row membershipLinked: true as-is (still useful to the UI)
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Fresh auth + session
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON'
+{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering\nmaria@demo.com,Maria,Gomez,Finance"}
+JSON
+)
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+Approve (first run should create 2 users, 2 departments, 2 memberships)
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | python3 -m json.tool | head -160
+
+Approve again (idempotency: createdUsers=0, departmentsCreated=0, membershipsLinked=0, updatedUsers>=0)
+SESSION2=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering\nmaria@demo.com,Maria,Gomez,Finance"}')
+TOKEN2=$(echo "$SESSION2" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN2"}" | python3 -m json.tool | head -160
+
+Status check
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: After the counter fix, where are we vs the roadmap and any regression in prior features?"
+
+STOP.

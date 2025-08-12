@@ -592,15 +592,12 @@ export class DirectoryService {
           let departmentCreated = false;
           let membershipLinkedFlag = false;
           if (deptName) {
-            const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            if (deptCreated) departmentsCreated++;
             if (dept) {
-              if (dept.name?.trim() === deptName.trim()) {
-                // we can infer creation by re-fetch + equality; simpler: if not found earlier, it was created
-              }
-              // naive heuristic: if membership didn't exist, ensureMembership will create one
-              const m = await this.identity.ensureMembership(u.id, dept.id);
-              membershipLinkedFlag = !!m;
-              // we can't perfectly know if dept was just created; count by comparing against planner's overview.newDepartments if needed.
+              const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id);
+              if (membershipCreated) membershipsLinked++;
+              membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }
           }
 
@@ -621,10 +618,12 @@ export class DirectoryService {
             createdUsers++;
             let membershipLinkedFlag = false;
             if (deptName) {
-              const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+              const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+              if (deptCreated) departmentsCreated++;
               if (dept) {
-                await this.identity.ensureMembership(u.id, dept.id);
-                membershipLinkedFlag = true;
+                const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id);
+                if (membershipCreated) membershipsLinked++;
+                membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
               }
             }
             rows.push({ email, action: 'created', userId: u.id, department: deptName, membershipLinked: membershipLinkedFlag, ignoredFields });
@@ -638,10 +637,12 @@ export class DirectoryService {
 
           let membershipLinkedFlag = false;
           if (deptName) {
-            const dept = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
+            if (deptCreated) departmentsCreated++;
             if (dept) {
-              await this.identity.ensureMembership(user.id, dept.id);
-              membershipLinkedFlag = true;
+              const { created: membershipCreated } = await this.identity.ensureMembership(user.id, dept.id);
+              if (membershipCreated) membershipsLinked++;
+              membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }
           }
 
@@ -655,10 +656,7 @@ export class DirectoryService {
       }
     }
 
-    // departmentsCreated is hard to know precisely without diffing; approximate with overview.newDepartments length if present
-    if (Array.isArray(payload?.overview?.newDepartments)) {
-      departmentsCreated = payload.overview.newDepartments.length;
-    }
+    // departmentsCreated and membershipsLinked are now counted precisely above
 
     return {
       createdUsers, updatedUsers, skipped, errors,
