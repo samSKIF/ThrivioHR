@@ -100,8 +100,9 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-10**: Successfully bootstrapped complete pnpm+Nx+TypeScript monorepo skeleton
-- **Core Structure**: Next.js web app, NestJS GraphQL BFF, 3 microservices (identity, recognition, ledger)
-- **Shared Packages**: Created types, config, ui, contracts, testing utilities
-- **Development Ready**: All services start successfully, cleanup scripts configured
-- **Note**: ESLint needs TypeScript decorator support (minor config issue, core functionality works)
+- **2025-08-12**: Successfully completed BFF REST API foundation for Identity domain
+- **BFF Implementation**: NestJS REST endpoints for Organizations and Users with complete CRUD operations
+- **Database Integration**: Connected to PostgreSQL via Drizzle ORM using existing identity schemas
+- **API Features**: DTO validation, proper dependency injection, API documentation page
+- **Status**: Big 1-2 (Infrastructure/Database) and Big 3.1-3.2 (Identity Data Layer + REST API) complete
+- **Next**: Ready for Big 3.3 (Sessions/JWT Auth implementation)
