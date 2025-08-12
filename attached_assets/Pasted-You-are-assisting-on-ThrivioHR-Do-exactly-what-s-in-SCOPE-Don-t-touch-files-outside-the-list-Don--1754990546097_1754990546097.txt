@@ -1,0 +1,129 @@
+You are assisting on ThrivioHR. Do exactly what’s in SCOPE. Don’t touch files outside the list. Don’t change existing migrations/tests. If anything is ambiguous, STOP and ask. Print each command you run and the last ~30 lines of long output. STOP after acceptance checks.
+
+GOAL
+Implement minimal auth in the BFF:
+
+POST /auth/login with { orgId, email } → creates a DB session and returns { accessToken, refreshToken, user }.
+
+POST /auth/refresh with { refreshToken } → returns { accessToken }.
+
+GET /auth/me (JWT guard) → returns the token claims.
+Use HS256 with JWT_SECRET from env (fallback to "dev-secret" for local only).
+
+SCOPE — FILES YOU MAY TOUCH
+
+apps/bff/src/app.module.ts (imports only)
+
+apps/bff/src/modules/db/** (reuse existing; read-only unless you need a tiny export name)
+
+apps/bff/src/modules/auth/** (new module: controller, service, dtos, guard)
+
+apps/bff/project.json (only if a serve target is missing)
+
+READ-ONLY IMPORTS ALLOWED
+
+services/identity/src/db/schema/** (Drizzle tables)
+
+PERMITTED DEPENDENCIES
+
+If missing, install: jsonwebtoken and @types/jsonwebtoken
+
+IMPLEMENTATION DETAILS
+
+AuthModule under apps/bff/src/modules/auth:
+
+DTOs:
+
+login.dto.ts → { orgId: string; email: string } with class-validator.
+
+refresh.dto.ts → { refreshToken: string }.
+
+Service:
+
+Inject DRIZZLE_DB (from DbModule).
+
+login({ orgId, email }): find user by orgId+email. If not found, return 401.
+
+Insert into sessions with issued_at=now, expires_at=now+60m, user_id=user.id, ip and user_agent optional/null.
+
+Sign accessToken (exp 15m) and refreshToken (exp 7d) using jwt.sign with payload { sub: user.id, orgId, sid: sessionId }, secret process.env.JWT_SECRET ?? 'dev-secret'.
+
+Return { accessToken, refreshToken, user: { id: user.id, orgId, email } }.
+
+refresh({ refreshToken }): verify; return new accessToken (15m) with same claims.
+
+Controller:
+
+POST /auth/login → service.login
+
+POST /auth/refresh → service.refresh
+
+GET /auth/me → guarded; returns the decoded claims (req.user).
+
+JwtAuthGuard:
+
+Reads Authorization: Bearer <token>.
+
+Verifies with HS256 + secret from env.
+
+On success, attaches decoded claims to req.user; else 401.
+
+Wire up
+
+Import AuthModule in apps/bff/src/app.module.ts.
+
+Keep server port at 5000 (as you configured).
+
+Don’ts
+
+Don’t change Identity schemas or migrations.
+
+Don’t add passwords; this is email+orgId login for MVP.
+
+Don’t protect existing routes yet (we’ll do that next). Just expose /auth/me to prove the guard.
+
+ACCEPTANCE CHECKS (print outputs)
+
+Install deps if needed:
+
+sql
+Copy
+Edit
+pnpm add -w jsonwebtoken
+pnpm add -D -w @types/jsonwebtoken
+Build & start:
+
+bash
+Copy
+Edit
+npx nx build bff
+(npx nx serve bff > /tmp/bff.log 2>&1 &) && sleep 5
+Smoke flow (create org+user if needed, login, me):
+
+bash
+Copy
+Edit
+echo "=== PREP ORG/USER ==="
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+if [ -z "$ORG_ID" ]; then ORG_ID=$(curl -s -X POST http://localhost:5000/orgs -H 'content-type: application/json' -d '{"name":"Auth Demo Org"}' | grep -o '"id":"[^"]*"' | cut -d'"' -f4); fi
+curl -s -X POST http://localhost:5000/users -H 'content-type: application/json' -d "{\"orgId\":\"$ORG_ID\",\"email\":\"authdemo@example.com\"}" | tee /tmp/user.json
+
+echo "=== LOGIN ==="
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d "{\"orgId\":\"$ORG_ID\",\"email\":\"authdemo@example.com\"}")
+echo "$LOGIN" | head -200
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+echo "=== ME (GUARDED) ==="
+curl -s -H "Authorization: Bearer $ACCESS" http://localhost:5000/auth/me | head -200
+
+echo "=== LOG TAIL ==="
+tail -30 /tmp/bff.log || true
+Confirm:
+
+/auth/login returns tokens and user object.
+
+/auth/me returns claims (sub/orgId/sid).
+
+No edits outside the allowed files.
+
+STOP.
