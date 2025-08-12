@@ -384,7 +384,7 @@ export class DirectoryService {
     }
 
     // existing departments in org
-    const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim()));
+    const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim().toLowerCase()));
     const out: CommitRecord[] = [];
     let creates = 0, updates = 0, skips = 0, managerMissing = 0;
 
@@ -470,7 +470,7 @@ export class DirectoryService {
     // compute new departments from CSV vs existing
     const csvDeptSet = new Set<string>();
     for (const r of normalized) {
-      const d = (r.department ?? '').trim();
+      const d = (r.department ?? '').trim().toLowerCase();
       if (d) csvDeptSet.add(d);
     }
     const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));

@@ -1,0 +1,87 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Align the dry-run commit planner with the actual schema:
+
+Use org_units (type='department') to detect existing departments instead of users.department fallback.
+
+Map users.firstName/lastName -> givenName/familyName when computing diffs.
+
+Keep everything READ-ONLY.
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.repository.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// apps/bff/src/modules/identity/identity.repository.ts
+// 1) Import org_units and add a proper department list method.
+// Append these imports near existing schema imports:
+import { orgUnits } from '../../../services/identity/src/db/schema/org_units';
+import { organizations } from '../../../services/identity/src/db/schema/organizations';
+
+// 2) Replace the current listDistinctDepartments() implementation with this:
+async listDistinctDepartments(orgId: string): Promise<string[]> {
+// Read org_units where type = 'department' for this org
+const rows = await db.select({ name: orgUnits.name })
+.from(orgUnits)
+.where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department')));
+const set = new Set<string>();
+for (const r of rows) {
+const d = (r.name ?? '').trim();
+if (d) set.add(d);
+}
+return Array.from(set.values());
+}
+
+// apps/bff/src/modules/directory/directory.service.ts
+// 3) Update diff mapping to real user fields firstName/lastName.
+// Find the block where we compute diffs using cmp('givenName'...), and replace just the name comparisons with:
+cmp('givenName', (current as any).firstName);
+cmp('familyName', (current as any).lastName);
+
+// 4) Ensure newDepartments detection uses repo listDistinctDepartments (already called) and compares names case-insensitively.
+// Replace the line computing existingDepts with:
+const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim().toLowerCase()));
+
+// And replace computation of csvDeptSet with:
+const csvDeptSet = new Set<string>();
+for (const r of normalized) {
+const d = (r.department ?? '').trim().toLowerCase();
+if (d) csvDeptSet.add(d);
+}
+const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Token
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+echo "ORG_ID: $ORG_ID"
+echo "ACCESS_LEN=$(echo -n $ACCESS | wc -c)"
+
+Dry-run commit: verify overview.newDepartments now reflects org_units, and diffs compare to firstName/lastName
+curl -s -X POST http://localhost:5000/directory/import/commit
+-H "content-type: application/json"
+-H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON' | python3 -m json.tool | head -200
+{
+"dryRun": true,
+"csv": "email,givenName,familyName,department,managerEmail,location,jobTitle,startDate,employeeId,birthDate,nationality,gender,phone
+alex@demo.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567
+maria@demo.com,Maria,Gomez,Finance,cfo@example.com,ES,Accountant,2023-03-12,E003,1985-12-31,US,female,+12025550123
+khalid@demo.com,Khalid,Ben,Space Operations,opslead@example.com,MA,Supervisor,2022-07-19,E005,1990-09-09,MA,prefer-not-to-say,+212612345678
+alex@demo.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567"
+}
+JSON
+
+Status question to confirm roadmap / regressions
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: After aligning planner to org_units and firstName/lastName, where are we vs the roadmap, and any regression in prior features?"
+
+STOP.

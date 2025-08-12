@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, and, isNotNull } from 'drizzle-orm';
 import * as schema from '../../../../../services/identity/src/db/schema';
+import { orgUnits } from '../../../../../services/identity/src/db/schema/org_units';
+import { organizations } from '../../../../../services/identity/src/db/schema/organizations';
 import { DRIZZLE_DB } from '../db/db.module';
 
 @Injectable()
@@ -66,9 +68,15 @@ export class IdentityRepository {
   }
 
   async listDistinctDepartments(orgId: string): Promise<string[]> {
-    // Fallback: derive departments from users.department values in this org
-    // (We'll add a true departments table in a later slice.)
-    // For now, return empty array since department field doesn't exist yet
-    return [];
+    // Read org_units where type = 'department' for this org
+    const rows = await this.db.select({ name: orgUnits.name })
+      .from(orgUnits)
+      .where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department')));
+    const set = new Set<string>();
+    for (const r of rows) {
+      const d = (r.name ?? '').trim();
+      if (d) set.add(d);
+    }
+    return Array.from(set.values());
   }
 }
