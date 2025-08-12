@@ -1,0 +1,139 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add Locations support to CSV import:
+
+Read-only planner: detect newLocations per org using the locations table.
+
+Approve (writes): create missing locations (no user linking yet).
+
+Keep multi-tenant isolation (orgId from JWT).
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.repository.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// apps/bff/src/modules/identity/identity.repository.ts
+// 1) Add helpers for locations (reuse existing db import style)
+import { locations } from '../../../services/identity/src/db/schema/locations';
+import { and, eq } from 'drizzle-orm';
+
+// Append inside IdentityRepository:
+async listDistinctLocations(orgId: string): Promise<string[]> {
+const rows = await db.select({ name: locations.name })
+.from(locations)
+.where(eq(locations.organizationId, orgId));
+const set = new Set<string>();
+for (const r of rows) {
+const n = (r.name ?? '').trim();
+if (n) set.add(n.toLowerCase());
+}
+return Array.from(set.values());
+}
+
+async findOrCreateLocation(orgId: string, name: string): Promise<{ loc: any; created: boolean }> {
+const trimmed = (name ?? '').trim();
+if (!trimmed) return { loc: null, created: false };
+const existing = await db.select().from(locations)
+.where(and(eq(locations.organizationId, orgId), eq(locations.name, trimmed)))
+.limit(1);
+if (existing[0]) return { loc: existing[0], created: false };
+const [createdRow] = await db.insert(locations).values({
+organizationId: orgId,
+name: trimmed,
+}).returning();
+return { loc: createdRow, created: true };
+}
+
+// apps/bff/src/modules/directory/directory.service.ts
+// 2) Planner: include newLocations in overview using listDistinctLocations()
+//
+// In commitPlan(csv, orgId): after computing normalized rows and before return,
+// build a CSV set of locations and diff with repo list:
+const existingLocs = new Set((await this.identity.listDistinctLocations(orgId)));
+const csvLocSet = new Set<string>();
+for (const r of normalized) {
+const n = (r.location ?? '').trim().toLowerCase();
+if (n) csvLocSet.add(n);
+}
+const newLocations = Array.from(csvLocSet.values()).filter(n => !existingLocs.has(n));
+
+// Add newLocations to the returned overview object:
+// overview: { ...existing, newLocations }
+
+// 3) Approve writes: create locations as needed (no user link yet).
+// In applyImportSession(token, orgIdFromJwt):
+// - Add a counter: let locationsCreated = 0;
+// - For each record, if incoming.location, call findOrCreateLocation(...)
+// and increment locationsCreated when created.
+// - Include per-row flag: locationCreated?: boolean
+
+// Extend ApplyResultRow and ApplyReport types:
+type ApplyResultRow = {
+// ...existing...
+location?: string|null;
+locationCreated?: boolean;
+};
+type ApplyReport = {
+// ...existing...
+locationsCreated: number;
+};
+
+// In each branch (create & update flows), around where department is handled:
+const locName = rec?.incoming?.location ?? null;
+if (locName) {
+const { created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+if (locCreated) locationsCreated++;
+// and include location + locationCreated in the rows.push(...) object
+}
+
+// In the final return of applyImportSession(), include locationsCreated.
+
+// 4) Do NOT modify endpoints or auth; planner/approve response just has new fields.
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Fresh token
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' -d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+1) Create a session with new locations (e.g., Dubai, Madrid)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d @- <<'JSON'
+{"csv":"email,givenName,familyName,department,location
+alex@demo.com,Alex,Stone,Engineering,Dubai
+maria@demo.com,Maria,Gomez,Finance,Madrid"}
+JSON
+)
+echo "$SESSION" | python3 -m json.tool | head -60
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+2) Preview should show overview.newLocations ["dubai","madrid"]
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | python3 -m json.tool | head -120
+
+3) Approve should create locations; report.locationsCreated==2; rows show locationCreated: true
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | python3 -m json.tool | head -160
+
+4) Approve again (idempotency): locationsCreated should be 0
+SESSION2=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location\nalex@demo.com,Alex,Stone,Engineering,Dubai\nmaria@demo.com,Maria,Gomez,Finance,Madrid"}')
+TOKEN2=$(echo "$SESSION2" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN2"}" | python3 -m json.tool | head -160
+
+Status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: After adding locations to planner/approve (create only, no user link), where are we vs the roadmap and any regression?"
+
+STOP.

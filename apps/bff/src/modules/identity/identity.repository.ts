@@ -5,6 +5,7 @@ import * as schema from '../../../../../services/identity/src/db/schema';
 import { orgUnits } from '../../../../../services/identity/src/db/schema/org_units';
 import { orgMembership } from '../../../../../services/identity/src/db/schema/org_membership';
 import { organizations } from '../../../../../services/identity/src/db/schema/organizations';
+import { locations } from '../../../../../services/identity/src/db/schema/locations';
 import { DRIZZLE_DB } from '../db/db.module';
 
 @Injectable()
@@ -112,5 +113,32 @@ export class IdentityRepository {
     if (existing[0]) return { membership: existing[0], created: false };
     const [createdRow] = await this.db.insert(orgMembership).values({ userId, orgUnitId }).returning();
     return { membership: createdRow, created: true };
+  }
+
+  async listDistinctLocations(orgId: string): Promise<string[]> {
+    const rows = await this.db.select({ name: locations.name })
+      .from(locations)
+      .where(eq(locations.organizationId, orgId));
+    const set = new Set<string>();
+    for (const r of rows) {
+      const n = (r.name ?? '').trim();
+      if (n) set.add(n.toLowerCase());
+    }
+    return Array.from(set.values());
+  }
+
+  async findOrCreateLocation(orgId: string, name: string): Promise<{ loc: any; created: boolean }> {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return { loc: null, created: false };
+    const existing = await this.db.select().from(locations)
+      .where(and(eq(locations.organizationId, orgId), eq(locations.name, trimmed)))
+      .limit(1);
+    if (existing[0]) return { loc: existing[0], created: false };
+    const [createdRow] = await this.db.insert(locations).values({
+      organizationId: orgId,
+      name: trimmed,
+      type: 'site', // Default to 'site' for CSV imports (office/work locations)
+    }).returning();
+    return { loc: createdRow, created: true };
   }
 }

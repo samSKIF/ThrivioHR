@@ -33,6 +33,7 @@ type CommitOverview = {
   duplicateEmails: string[];
   managerMissing: number;
   newDepartments: string[];
+  newLocations: string[];
 };
 type CommitResponse = {
   overview: CommitOverview;
@@ -46,6 +47,8 @@ type ApplyResultRow = {
   department?: string|null;
   departmentCreated?: boolean;
   membershipLinked?: boolean;
+  location?: string|null;
+  locationCreated?: boolean;
   ignoredFields?: string[];
   message?: string;
 };
@@ -56,6 +59,7 @@ type ApplyReport = {
   errors: number;
   departmentsCreated: number;
   membershipsLinked: number;
+  locationsCreated: number;
   rows: ApplyResultRow[];
 };
 
@@ -404,7 +408,7 @@ export class DirectoryService {
       return {
         overview: {
           rows: 0, creates: 0, updates: 0, skips: 0,
-          duplicateEmails: [], managerMissing: 0, newDepartments: []
+          duplicateEmails: [], managerMissing: 0, newDepartments: [], newLocations: []
         },
         records: [{
           email: null, action: 'skip',
@@ -422,8 +426,9 @@ export class DirectoryService {
       if (seen.has(e)) dups.add(e); else seen.add(e);
     }
 
-    // existing departments in org
+    // existing departments and locations in org
     const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim().toLowerCase()));
+    const existingLocs = new Set((await this.identity.listDistinctLocations(orgId)).map(l => l.trim().toLowerCase()));
     const out: CommitRecord[] = [];
     let creates = 0, updates = 0, skips = 0, managerMissing = 0;
 
@@ -506,13 +511,17 @@ export class DirectoryService {
       }
     }
 
-    // compute new departments from CSV vs existing
+    // compute new departments and locations from CSV vs existing
     const csvDeptSet = new Set<string>();
+    const csvLocSet = new Set<string>();
     for (const r of normalized) {
       const d = (r.department ?? '').trim().toLowerCase();
+      const l = (r.location ?? '').trim().toLowerCase();
       if (d) csvDeptSet.add(d);
+      if (l) csvLocSet.add(l);
     }
     const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
+    const newLocations = Array.from(csvLocSet.values()).filter(l => !existingLocs.has(l));
 
     return {
       overview: {
@@ -520,7 +529,8 @@ export class DirectoryService {
         creates, updates, skips,
         duplicateEmails: Array.from(dups.values()),
         managerMissing,
-        newDepartments
+        newDepartments,
+        newLocations
       },
       records: out
     };
@@ -559,15 +569,16 @@ export class DirectoryService {
     }
 
     const rows: ApplyResultRow[] = [];
-    let createdUsers = 0, updatedUsers = 0, skipped = 0, errors = 0, departmentsCreated = 0, membershipsLinked = 0;
+    let createdUsers = 0, updatedUsers = 0, skipped = 0, errors = 0, departmentsCreated = 0, membershipsLinked = 0, locationsCreated = 0;
 
     for (const rec of payload.records as any[]) {
       const email = rec?.incoming?.email ?? null;
       const deptName = rec?.incoming?.department ?? null;
+      const locName = rec?.incoming?.location ?? null;
 
       const ignoredFields: string[] = [];
       // These fields are not in the users schema yet; mark as ignored:
-      ['jobTitle','location','employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
+      ['jobTitle','employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
         .forEach(f => { if (rec?.incoming?.[f] != null) ignoredFields.push(f); });
 
       try {
@@ -591,6 +602,7 @@ export class DirectoryService {
 
           let departmentCreated = false;
           let membershipLinkedFlag = false;
+          let locationCreated = false;
           if (deptName) {
             const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
             if (deptCreated) departmentsCreated++;
@@ -600,12 +612,19 @@ export class DirectoryService {
               membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }
           }
+          if (locName) {
+            const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            if (locCreated) locationsCreated++;
+            locationCreated = locCreated;
+          }
 
           rows.push({
             email, action: user ? 'updated' : 'created',
             userId: (user ? user.id : u.id),
             department: deptName,
             membershipLinked: membershipLinkedFlag,
+            location: locName,
+            locationCreated,
             ignoredFields
           });
         } else if (rec.action === 'update') {
@@ -617,6 +636,7 @@ export class DirectoryService {
             const u = await this.identity.createUser(payload.orgId, email, firstName, lastName);
             createdUsers++;
             let membershipLinkedFlag = false;
+            let locationCreated = false;
             if (deptName) {
               const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
               if (deptCreated) departmentsCreated++;
@@ -626,7 +646,12 @@ export class DirectoryService {
                 membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
               }
             }
-            rows.push({ email, action: 'created', userId: u.id, department: deptName, membershipLinked: membershipLinkedFlag, ignoredFields });
+            if (locName) {
+              const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+              if (locCreated) locationsCreated++;
+              locationCreated = locCreated;
+            }
+            rows.push({ email, action: 'created', userId: u.id, department: deptName, membershipLinked: membershipLinkedFlag, location: locName, locationCreated, ignoredFields });
             continue;
           }
 
@@ -636,6 +661,7 @@ export class DirectoryService {
           updatedUsers++;
 
           let membershipLinkedFlag = false;
+          let locationCreated = false;
           if (deptName) {
             const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
             if (deptCreated) departmentsCreated++;
@@ -645,14 +671,19 @@ export class DirectoryService {
               membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }
           }
+          if (locName) {
+            const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            if (locCreated) locationsCreated++;
+            locationCreated = locCreated;
+          }
 
-          rows.push({ email, action: 'updated', userId: user.id, department: deptName, membershipLinked: membershipLinkedFlag, ignoredFields });
+          rows.push({ email, action: 'updated', userId: user.id, department: deptName, membershipLinked: membershipLinkedFlag, location: locName, locationCreated, ignoredFields });
         } else {
-          skipped++; rows.push({ email, action: 'skipped', department: deptName, ignoredFields });
+          skipped++; rows.push({ email, action: 'skipped', department: deptName, location: locName, ignoredFields });
         }
       } catch (e: any) {
         errors++;
-        rows.push({ email, action: 'error', department: deptName, ignoredFields, message: e?.message || 'unknown error' });
+        rows.push({ email, action: 'error', department: deptName, location: locName, ignoredFields, message: e?.message || 'unknown error' });
       }
     }
 
@@ -662,6 +693,7 @@ export class DirectoryService {
       createdUsers, updatedUsers, skipped, errors,
       departmentsCreated,
       membershipsLinked,
+      locationsCreated,
       rows,
     };
   }

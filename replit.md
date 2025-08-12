@@ -100,10 +100,10 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-12**: Successfully completed JWT Authentication (Big 3.3)
-- **Auth Implementation**: JWT authentication with login, refresh, and protected endpoints
-- **Security Features**: HS256 signing, 15min access tokens, 7d refresh tokens, session tracking
-- **API Endpoints**: POST /auth/login, POST /auth/refresh, GET /auth/me (protected)
-- **Status**: Big 1-3 complete (Infrastructure, Database, Full Identity with Auth)
-- **Progress**: 6 of 16 stages complete (37.5% - Identity domain fully operational)
-- **Next**: Ready for Big 4 (Directory - CSV/JIT imports and SSO)
+- **2025-08-12**: Successfully implemented locations support for CSV import (Big 4.4)
+- **Locations Features**: Full location import workflow with findOrCreateLocation, location counter tracking
+- **Repository Methods**: Added listDistinctLocations and findOrCreateLocation with proper type handling
+- **Import Enhancement**: CSV import now supports location field, creates locations as 'site' type, tracks newLocations
+- **Database Integration**: Fixed location schema handling with required type field for hierarchical structure
+- **Testing**: Verified location creation, import planning, and counter accuracy
+- **Progress**: Big 4 Directory ADVANCED - locations import operational alongside departments and users
