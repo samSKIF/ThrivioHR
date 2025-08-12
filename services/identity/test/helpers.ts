@@ -150,7 +150,7 @@ export async function createUser(arg1?: any, arg2?: any) {
   });
 
   // ALWAYS return object, even in legacy mode
-  return { userId, organizationId: orgId, orgId, email: finalEmail };
+  return { id: userId, userId, organizationId: orgId, orgId: orgId, email: finalEmail };
 }
 
 export async function createIdentity(userId?: string, provider: 'local'|'oidc'|'saml'|'csv' = 'local', subject?: string) {
