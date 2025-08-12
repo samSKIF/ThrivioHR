@@ -1,6 +1,6 @@
 # Legacy UI Component Map
 
-Generated: 2025-08-12T18:33:38.295Z
+Generated: 2025-08-12T18:43:52.933Z
 Total Size: 2.39 MB
 Total Files: 420
 
