@@ -1,0 +1,33 @@
+{
+  "root": true,
+  "ignorePatterns": ["/dist/", "/node_modules/"],
+  "plugins": ["@nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "parserOptions": { "sourceType": "module" },
+      "rules": {
+        "@nx/enforce-module-boundaries": ["error", {
+          "allow": [],
+          "enforceBuildableLibDependency": true,
+          "depConstraints": [
+            { "sourceTag": "scope:bff", "onlyDependOnLibsWithTags": ["scope:contracts"] },
+            { "sourceTag": "scope:identity", "onlyDependOnLibsWithTags": ["scope:identity", "scope:contracts"] },
+            { "sourceTag": "scope:contracts", "onlyDependOnLibsWithTags": ["scope:contracts"] },
+            { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+          ]
+        }],
+        "max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }]
+      }
+    },
+    {
+      "files": ["apps/bff/**/*.{ts,tsx,js,jsx}"],
+      "rules": {
+        "no-restricted-imports": ["error", {
+          "patterns": ["**/services/**"],
+          "message": "BFF must not import from services/* directly. Use @thrivio/contracts or a repository interface."
+        }]
+      }
+    }
+  ]
+}

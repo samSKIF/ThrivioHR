@@ -1,0 +1,118 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Enable Nx enforceModuleBoundaries and ESLint guards:
+
+Turn on @nx/enforce-module-boundaries.
+
+Tag projects so BFF cannot import from services/* (must use contracts).
+
+Add ESLint max-lines=500.
+
+Add a BFF-only rule blocking any import matching "/services/".
+No app logic changes.
+
+TOUCH ONLY
+package.json
+.eslintrc.json
+.eslintignore
+apps/bff/project.json
+services/identity/project.json
+packages/contracts/project.json
+
+CHANGES
+// package.json (merge keys; keep existing fields)
+// - Ensure devDeps include eslint + @nx/eslint-plugin (do NOT remove others)
+// - Add a convenience lint script
+{
+"scripts": {
+"lint:repo": "eslint . --ext .ts,.tsx,.js,.jsx --report-unused-disable-directives"
+},
+"devDependencies": {
+"eslint": "^8.57.0",
+"@nx/eslint-plugin": "^19.0.0"
+}
+}
+
+// .eslintrc.json (new file at repo root)
+{
+"root": true,
+"ignorePatterns": ["/dist/", "/node_modules/"],
+"plugins": ["@nx"],
+"overrides": [
+{
+"files": [".ts", ".tsx", ".js", ".jsx"],
+"parserOptions": { "sourceType": "module" },
+"rules": {
+"@nx/enforce-module-boundaries": ["error", {
+"allow": [],
+"enforceBuildableLibDependency": true,
+"depConstraints": [
+{ "sourceTag": "scope:bff", "onlyDependOnLibsWithTags": ["scope:contracts"] },
+{ "sourceTag": "scope:identity", "onlyDependOnLibsWithTags": ["scope:identity", "scope:contracts"] },
+{ "sourceTag": "scope:contracts", "onlyDependOnLibsWithTags": ["scope:contracts"] },
+{ "sourceTag": "", "onlyDependOnLibsWithTags": [""] }
+]
+}],
+"max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }]
+}
+},
+{
+// Extra safety: BFF must NOT import from services/* via deep relative paths
+"files": ["apps/bff//*.{ts,tsx,js,jsx}"],
+"rules": {
+"no-restricted-imports": ["error", {
+"patterns": ["/services/**"],
+"message": "BFF must not import from services/* directly. Use @thrivio/contracts or a repository interface."
+}]
+}
+}
+]
+}
+
+// .eslintignore (new file)
+dist/
+node_modules/
+
+// apps/bff/project.json — ensure tags
+// (merge with existing JSON; do not remove current targets)
+{
+"tags": ["type:app", "scope:bff"]
+}
+
+// services/identity/project.json — ensure tags
+{
+"tags": ["type:service", "scope:identity"]
+}
+
+// packages/contracts/project.json — ensure tags
+{
+"tags": ["type:lib", "scope:contracts"]
+}
+
+RUN & PRINT
+
+1) Install/refresh dev deps (quiet)
+pnpm i --silent || npm i --silent || true
+
+2) Show key configs
+echo "=== ESLINT ROOT CONFIG ===" && sed -n '1,220p' .eslintrc.json
+echo "=== PROJECT TAGS ===" &&
+node -e "const fs=require('fs');const p=(f)=>JSON.parse(fs.readFileSync(f,'utf8'));console.log({bff:p('apps/bff/project.json').tags, identity:p('services/identity/project.json').tags, contracts:p('packages/contracts/project.json').tags});"
+
+3) Lint target files to prove guards are active (do not fail the task if errors — print & continue)
+echo '=== LINT: BFF directory + identity repository (expect max-lines + restricted-import findings) ===' &&
+npx eslint apps/bff/src/modules/directory/directory.service.ts apps/bff/src/modules/identity/identity.repository.ts || true
+
+4) Quick grep for dev-secret to keep on the radar
+echo "=== dev-secret occurrences (still to fix in a later slice) ===" && grep -n "dev-secret" -R apps/bff/src || true
+
+5) Confirm module-boundaries rule is loaded
+node -e "try{require('@nx/eslint-plugin');console.log('NX ESLint plugin: OK')}catch(e){console.log('NX ESLint plugin missing:', e?.message)}"
+
+6) Roadmap/regression check
+echo '=== STATUS QUESTION ==='
+echo 'Replit, confirm: Boundaries & ESLint guards enabled. Where are we vs the roadmap, and any regression from this config change?'
+
+STOP.

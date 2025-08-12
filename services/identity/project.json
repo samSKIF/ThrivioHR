@@ -12,5 +12,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["type:service", "scope:identity"]
 }
