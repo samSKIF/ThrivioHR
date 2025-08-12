@@ -1,0 +1,358 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add a protected endpoint: POST /directory/import/commit (READ-ONLY).
+Input: { csv: string, dryRun: boolean }
+When dryRun=true:
+•	Parse CSV (reuse existing normalization/validation).
+•	Look up existing users in org by email.
+•	Tag each valid row as action: “create” | “update” | “skip”.
+•	Detect duplicate emails within CSV.
+•	Resolve manager by managerEmail within org (if present).
+•	Detect new departments (present in CSV but not in org’s current departments).
+•	Return a top-level overview + detailed records (no DB writes).
+When dryRun=false:
+•	Return HTTP 400 “Writes not implemented yet”.
+This enables the Admin overview/approval UX. Writes will be added in the next slice.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.controller.ts
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/directory.module.ts
+apps/bff/src/modules/identity/identity.module.ts
+apps/bff/src/modules/identity/identity.repository.ts
+
+CHANGES
+// apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+export class ImportCommitDto {
+csv!: string;
+dryRun!: boolean;
+}
+
+// apps/bff/src/modules/identity/identity.module.ts
+// Ensure repository is exported for injection in DirectoryService.
+import { Module } from ‘@nestjs/common’;
+import { IdentityRepository } from ‘./identity.repository’;
+@Module({
+providers: [IdentityRepository],
+exports: [IdentityRepository],
+})
+export class IdentityModule {}
+
+// apps/bff/src/modules/identity/identity.repository.ts
+// Add helpers for commit planner. Keep existing imports + class; append these methods.
+import { Injectable } from ‘@nestjs/common’;
+import { db } from ‘../../../services/identity/src/db/client’;
+import { users } from ‘../../../services/identity/src/db/schema/users’;
+import { and, eq, isNotNull } from ‘drizzle-orm’;
+
+@Injectable()
+export class IdentityRepository {
+// …existing code…
+
+async findUserByEmailOrg(email: string, orgId: string) {
+const res = await db.select().from(users)
+.where(and(eq(users.email, email), eq(users.organizationId, orgId)))
+.limit(1);
+return res[0] ?? null;
+}
+
+async listDistinctDepartments(orgId: string): Promise<string[]> {
+// Fallback: derive departments from users.department values in this org
+// (We’ll add a true departments table in a later slice.)
+const rows = await db.select({ department: users.department })
+.from(users)
+.where(and(eq(users.organizationId, orgId), isNotNull(users.department)));
+const set = new Set();
+for (const r of rows) {
+const d = (r.department ?? ‘’).trim();
+if (d) set.add(d);
+}
+return Array.from(set.values());
+}
+}
+
+// apps/bff/src/modules/directory/directory.module.ts
+import { Module, forwardRef } from ‘@nestjs/common’;
+import { DirectoryController } from ‘./directory.controller’;
+import { DirectoryService } from ‘./directory.service’;
+import { IdentityModule } from ‘../identity/identity.module’;
+
+@Module({
+imports: [forwardRef(() => IdentityModule)],
+controllers: [DirectoryController],
+providers: [DirectoryService],
+exports: [DirectoryService],
+})
+export class DirectoryModule {}
+
+// apps/bff/src/modules/directory/directory.service.ts
+// Append dry-run commit planner to existing service. Reuse normalize rules.
+// Phone policy: treat CSV as source-of-truth (we’ll overwrite on real commit later).
+import { Injectable, Inject } from ‘@nestjs/common’;
+import { parse } from ‘csv-parse/sync’;
+import { IdentityRepository } from ‘../identity/identity.repository’;
+
+type CommitAction = ‘create’ | ‘update’ | ‘skip’;
+type CommitRecord = {
+email: string | null;
+action: CommitAction;
+diffs?: string[];
+reason?: string[];
+incoming: any;
+current?: any;
+managerResolved: boolean;
+managerUserId?: string | null;
+};
+type CommitOverview = {
+rows: number;
+creates: number;
+updates: number;
+skips: number;
+duplicateEmails: string[];
+managerMissing: number;
+newDepartments: string[];
+};
+type CommitResponse = {
+overview: CommitOverview;
+records: CommitRecord[];
+};
+
+const REQUIRED = [‘email’, ‘givenName’, ‘familyName’];
+const OPTIONAL = [
+‘jobTitle’,‘department’,‘managerEmail’,‘location’,‘employeeId’,‘startDate’,
+‘birthDate’,‘nationality’,‘gender’,‘phone’
+];
+
+@Injectable()
+export class DirectoryService {
+constructor(@Inject(IdentityRepository) private readonly identity: IdentityRepository) {}
+
+private normGender(g?: string|null) {
+const v = (g ?? ‘’).trim().toLowerCase();
+if (v === ‘m’ || v === ‘male’) return ‘male’;
+if (v === ‘f’ || v === ‘female’) return ‘female’;
+if ([‘non-binary’,‘nonbinary’].includes(v)) return ‘non-binary’;
+if (v === ‘other’) return ‘other’;
+if (v === ‘prefer-not-to-say’) return ‘prefer-not-to-say’;
+return v || null;
+}
+
+private normalizeRow(r: Record<string,string>) {
+return {
+email: r.email ?? null,
+givenName: r.givenName ?? null,
+familyName: r.familyName ?? null,
+department: r.department ?? null,
+managerEmail: r.managerEmail ?? null,
+location: r.location ?? null,
+jobTitle: r.jobTitle ?? null,
+employeeId: r.employeeId ?? null,
+startDate: r.startDate ?? null,
+birthDate: r.birthDate ?? null,
+nationality: r.nationality ? r.nationality.toUpperCase() : null,
+gender: this.normGender(r.gender),
+phone: r.phone ?? null,
+};
+}
+
+async commitPlan(csv: string, orgId: string): Promise {
+const records = csv?.trim()
+? (parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string,string>[])
+: [];
+const headers = records.length ? Object.keys(records[0]) : [];
+const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
+if (missingHeaders.length) {
+return {
+overview: {
+rows: 0, creates: 0, updates: 0, skips: 0,
+duplicateEmails: [], managerMissing: 0, newDepartments: []
+},
+records: [{
+email: null, action: ‘skip’,
+reason: [Missing required headers: ${missingHeaders.join(', ')}],
+incoming: {}, managerResolved: false
+}]
+};
+}
+// CSV duplicate detection
+const seen = new Set<string>();
+const dups = new Set<string>();
+for (const r of records) {
+  const e = (r.email ?? '').trim().toLowerCase();
+  if (!e) continue;
+  if (seen.has(e)) dups.add(e); else seen.add(e);
+}
+
+// existing departments in org
+const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim()));
+const out: CommitRecord[] = [];
+let creates = 0, updates = 0, skips = 0, managerMissing = 0;
+
+// normalize rows
+const normalized = records.map(r => this.normalizeRow(r));
+
+for (const row of normalized) {
+  const reason: string[] = [];
+  if (!row.email || !row.givenName || !row.familyName) {
+    out.push({ email: row.email, action: 'skip', reason: ['Missing required fields'], incoming: row, managerResolved: false });
+    continue;
+  }
+  if (dups.has((row.email || '').toLowerCase())) {
+    reason.push('Duplicate email in CSV');
+  }
+
+  const current = await this.identity.findUserByEmailOrg(row.email!, orgId);
+
+  // manager resolution
+  let managerResolved = false;
+  let managerUserId: string | null = null;
+  if (row.managerEmail) {
+    const mgr = await this.identity.findUserByEmailOrg(row.managerEmail, orgId);
+    if (mgr) { managerResolved = true; managerUserId = (mgr as any).id ?? null; }
+    else { reason.push('Manager email not found in org'); managerMissing++; }
+  }
+
+  if (!current) {
+    creates++;
+    out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved, managerUserId });
+  } else {
+    // detect diffs across supported fields (CSV as source-of-truth on commit)
+    const diffs: string[] = [];
+    const cmp = (k: keyof typeof row, curVal: any) => {
+      const inc = (row as any)[k];
+      if ((inc ?? null) !== (curVal ?? null)) diffs.push(String(k));
+    };
+    cmp('givenName', (current as any).givenName);
+    cmp('familyName', (current as any).familyName);
+    cmp('jobTitle', (current as any).jobTitle);
+    cmp('department', (current as any).department);
+    cmp('location', (current as any).location);
+    cmp('employeeId', (current as any).employeeId);
+    cmp('startDate', (current as any).startDate);
+    cmp('birthDate', (current as any).birthDate);
+    cmp('nationality', (current as any).nationality);
+    cmp('gender', (current as any).gender);
+    cmp('phone', (current as any).phone);
+
+    if (diffs.length === 0 && !row.managerEmail) {
+      skips++;
+      out.push({ email: row.email, action: 'skip', reason, incoming: row, current: { id: (current as any).id }, managerResolved });
+    } else {
+      updates++;
+      out.push({
+        email: row.email,
+        action: 'update',
+        diffs, reason,
+        incoming: row,
+        current: {
+          id: (current as any).id,
+          givenName: (current as any).givenName,
+          familyName: (current as any).familyName,
+          jobTitle: (current as any).jobTitle,
+          department: (current as any).department,
+          location: (current as any).location,
+          employeeId: (current as any).employeeId,
+          startDate: (current as any).startDate,
+          birthDate: (current as any).birthDate,
+          nationality: (current as any).nationality,
+          gender: (current as any).gender,
+          phone: (current as any).phone
+        },
+        managerResolved, managerUserId
+      });
+    }
+  }
+}
+
+// compute new departments from CSV vs existing
+const csvDeptSet = new Set<string>();
+for (const r of normalized) {
+  const d = (r.department ?? '').trim();
+  if (d) csvDeptSet.add(d);
+}
+const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
+
+return {
+  overview: {
+    rows: normalized.length,
+    creates, updates, skips,
+    duplicateEmails: Array.from(dups.values()),
+    managerMissing,
+    newDepartments
+  },
+  records: out
+};
+}
+}
+
+// apps/bff/src/modules/directory/directory.controller.ts
+import { Body, Controller, Post, UseGuards, Req, BadRequestException, Inject } from ‘@nestjs/common’;
+import { JwtAuthGuard } from ‘../auth/jwt-auth.guard’;
+import { DirectoryService } from ‘./directory.service’;
+import { ImportCommitDto } from ‘./dtos/import-commit.dto’;
+
+@Controller(‘directory’)
+export class DirectoryController {
+constructor(@Inject(DirectoryService) private readonly svc: DirectoryService) {}
+
+@UseGuards(JwtAuthGuard)
+@Post(‘import/commit’)
+async commit(@Body() dto: ImportCommitDto, @Req() req: any) {
+if (!dto?.dryRun) {
+throw new BadRequestException(‘Writes not implemented yet; use dryRun=true.’);
+}
+const orgId = req.user?.orgId;
+return this.svc.commitPlan(dto.csv, orgId);
+}
+}
+
+RUN & PRINT
+
+Build
+
+npx nx build bff && echo “=== BUILD OK ===”
+
+Prepare token
+
+ORG_ID=$(curl -s ‘http://localhost:5000/orgs?limit=1’ | grep -o ‘“id”:”[^”]”’ | head -1 | cut -d’”’ -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H ‘content-type: application/json’ -d “{"orgId":"$ORG_ID","email":"csvdemo@example.com"}”)
+ACCESS=$(echo “$LOGIN” | grep -o ’“accessToken”:”[^”]”’ | cut -d’”’ -f4)
+echo “ORG_ID: $ORG_ID”
+echo “ACCESS_LEN=$(echo -n $ACCESS | wc -c)”
+
+Dry-run commit to show overview (includes a new department that likely doesn’t exist)
+
+curl -s -X POST http://localhost:5000/directory/import/commit 
+-H “content-type: application/json” 
+-H “Authorization: Bearer $ACCESS” 
+-d @- <<‘JSON’ | python3 -m json.tool | head -180
+{
+“dryRun”: true,
+“csv”: “email,givenName,familyName,department,managerEmail,location,jobTitle,startDate,employeeId,birthDate,nationality,gender,phone
+alex@demo.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567
+maria@demo.com,Maria,Gomez,Finance,cfo@example.com,ES,Accountant,2023-03-12,E003,1985-12-31,US,female,+12025550123
+khalid@demo.com,Khalid,Ben,Space Operations,opslead@example.com,MA,Supervisor,2022-07-19,E005,1990-09-09,MA,prefer-not-to-say,+212612345678
+alex@demo.com,Alex,Stone,Engineering,lead@example.com,UAE,Engineer,2024-10-01,E001,1992-05-10,AE,M,+971501234567”
+}
+JSON
+
+Validate “writes not implemented” branch
+
+curl -s -X POST http://localhost:5000/directory/import/commit 
+-H “content-type: application/json” 
+-H “Authorization: Bearer $ACCESS” 
+-d ‘{“dryRun”:false,“csv”:“email,givenName,familyName\nx@y.com,X,Y”}’ | head -60
+
+Protected route sanity check
+
+curl -s -H “Authorization: Bearer $ACCESS” http://localhost:5000/auth/me | python3 -m json.tool | head -30
+
+Ask Replit about roadmap position/regressions
+
+echo “=== STATUS QUESTION ===”
+echo “Replit, confirm: Where are we vs the roadmap after adding /directory/import/commit (dry-run + newDepartments), and is there any regression in previous features?”
+
+STOP

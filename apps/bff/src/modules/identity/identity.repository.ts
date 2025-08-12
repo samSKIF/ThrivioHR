@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
 import * as schema from '../../../../../services/identity/src/db/schema';
 import { DRIZZLE_DB } from '../db/db.module';
 
@@ -56,5 +56,19 @@ export class IdentityRepository {
       .from(schema.users)
       .where(eq(schema.users.organizationId, orgId))
       .limit(limit);
+  }
+
+  async findUserByEmailOrg(email: string, orgId: string) {
+    const res = await this.db.select().from(schema.users)
+      .where(and(eq(schema.users.email, email), eq(schema.users.organizationId, orgId)))
+      .limit(1);
+    return res[0] ?? null;
+  }
+
+  async listDistinctDepartments(orgId: string): Promise<string[]> {
+    // Fallback: derive departments from users.department values in this org
+    // (We'll add a true departments table in a later slice.)
+    // For now, return empty array since department field doesn't exist yet
+    return [];
   }
 }

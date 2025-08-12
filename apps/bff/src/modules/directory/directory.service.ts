@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
+import { IdentityRepository } from '../identity/identity.repository';
 
 type ValidationResult = {
   rows: number;
@@ -12,6 +13,31 @@ type ValidationResult = {
   sampleErrors: { row: number; message: string }[];
 };
 
+type CommitAction = 'create' | 'update' | 'skip';
+type CommitRecord = {
+  email: string | null;
+  action: CommitAction;
+  diffs?: string[];
+  reason?: string[];
+  incoming: any;
+  current?: any;
+  managerResolved: boolean;
+  managerUserId?: string | null;
+};
+type CommitOverview = {
+  rows: number;
+  creates: number;
+  updates: number;
+  skips: number;
+  duplicateEmails: string[];
+  managerMissing: number;
+  newDepartments: string[];
+};
+type CommitResponse = {
+  overview: CommitOverview;
+  records: CommitRecord[];
+};
+
 const REQUIRED = ['email', 'givenName', 'familyName'];
 const OPTIONAL = [
   'jobTitle','department','managerEmail','location','employeeId','startDate',
@@ -20,6 +46,7 @@ const OPTIONAL = [
 
 @Injectable()
 export class DirectoryService {
+  constructor(@Inject(IdentityRepository) private readonly identity: IdentityRepository) {}
   validate(csv: string): ValidationResult {
     if (!csv?.trim()) {
       return {
@@ -297,6 +324,166 @@ export class DirectoryService {
       preview,
       proposedUsers,
       sampleErrors: errors.slice(0, 5)
+    };
+  }
+
+  private normGender(g?: string|null) {
+    const v = (g ?? '').trim().toLowerCase();
+    if (v === 'm' || v === 'male') return 'male';
+    if (v === 'f' || v === 'female') return 'female';
+    if (['non-binary','nonbinary'].includes(v)) return 'non-binary';
+    if (v === 'other') return 'other';
+    if (v === 'prefer-not-to-say') return 'prefer-not-to-say';
+    return v || null;
+  }
+
+  private normalizeRow(r: Record<string,string>) {
+    return {
+      email: r.email ?? null,
+      givenName: r.givenName ?? null,
+      familyName: r.familyName ?? null,
+      department: r.department ?? null,
+      managerEmail: r.managerEmail ?? null,
+      location: r.location ?? null,
+      jobTitle: r.jobTitle ?? null,
+      employeeId: r.employeeId ?? null,
+      startDate: r.startDate ?? null,
+      birthDate: r.birthDate ?? null,
+      nationality: r.nationality ? r.nationality.toUpperCase() : null,
+      gender: this.normGender(r.gender),
+      phone: r.phone ?? null,
+    };
+  }
+
+  async commitPlan(csv: string, orgId: string): Promise<CommitResponse> {
+    const records = csv?.trim()
+      ? (parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string,string>[])
+      : [];
+    const headers = records.length ? Object.keys(records[0]) : [];
+    const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
+    if (missingHeaders.length) {
+      return {
+        overview: {
+          rows: 0, creates: 0, updates: 0, skips: 0,
+          duplicateEmails: [], managerMissing: 0, newDepartments: []
+        },
+        records: [{
+          email: null, action: 'skip',
+          reason: [`Missing required headers: ${missingHeaders.join(', ')}`],
+          incoming: {}, managerResolved: false
+        }]
+      };
+    }
+    // CSV duplicate detection
+    const seen = new Set<string>();
+    const dups = new Set<string>();
+    for (const r of records) {
+      const e = (r.email ?? '').trim().toLowerCase();
+      if (!e) continue;
+      if (seen.has(e)) dups.add(e); else seen.add(e);
+    }
+
+    // existing departments in org
+    const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim()));
+    const out: CommitRecord[] = [];
+    let creates = 0, updates = 0, skips = 0, managerMissing = 0;
+
+    // normalize rows
+    const normalized = records.map(r => this.normalizeRow(r));
+
+    for (const row of normalized) {
+      const reason: string[] = [];
+      if (!row.email || !row.givenName || !row.familyName) {
+        out.push({ email: row.email, action: 'skip', reason: ['Missing required fields'], incoming: row, managerResolved: false });
+        skips++;
+        continue;
+      }
+      if (dups.has((row.email || '').toLowerCase())) {
+        reason.push('Duplicate email in CSV');
+      }
+
+      const current = await this.identity.findUserByEmailOrg(row.email!, orgId);
+
+      // manager resolution
+      let managerResolved = false;
+      let managerUserId: string | null = null;
+      if (row.managerEmail) {
+        const mgr = await this.identity.findUserByEmailOrg(row.managerEmail, orgId);
+        if (mgr) { managerResolved = true; managerUserId = (mgr as any).id ?? null; }
+        else { reason.push('Manager email not found in org'); managerMissing++; }
+      } else {
+        managerResolved = true; // no manager specified is fine
+      }
+
+      if (!current) {
+        creates++;
+        out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved, managerUserId });
+      } else {
+        // detect diffs across supported fields (CSV as source-of-truth on commit)
+        const diffs: string[] = [];
+        const cmp = (k: keyof typeof row, curVal: any) => {
+          const inc = (row as any)[k];
+          if ((inc ?? null) !== (curVal ?? null)) diffs.push(String(k));
+        };
+        cmp('givenName', (current as any).firstName);
+        cmp('familyName', (current as any).lastName);
+        cmp('jobTitle', (current as any).jobTitle);
+        cmp('department', (current as any).department);
+        cmp('location', (current as any).location);
+        cmp('employeeId', (current as any).employeeId);
+        cmp('startDate', (current as any).startDate);
+        cmp('birthDate', (current as any).birthDate);
+        cmp('nationality', (current as any).nationality);
+        cmp('gender', (current as any).gender);
+        cmp('phone', (current as any).phone);
+
+        if (diffs.length === 0 && !row.managerEmail) {
+          skips++;
+          out.push({ email: row.email, action: 'skip', reason, incoming: row, current: { id: (current as any).id }, managerResolved });
+        } else {
+          updates++;
+          out.push({
+            email: row.email,
+            action: 'update',
+            diffs, reason,
+            incoming: row,
+            current: {
+              id: (current as any).id,
+              givenName: (current as any).firstName,
+              familyName: (current as any).lastName,
+              jobTitle: (current as any).jobTitle,
+              department: (current as any).department,
+              location: (current as any).location,
+              employeeId: (current as any).employeeId,
+              startDate: (current as any).startDate,
+              birthDate: (current as any).birthDate,
+              nationality: (current as any).nationality,
+              gender: (current as any).gender,
+              phone: (current as any).phone
+            },
+            managerResolved, managerUserId
+          });
+        }
+      }
+    }
+
+    // compute new departments from CSV vs existing
+    const csvDeptSet = new Set<string>();
+    for (const r of normalized) {
+      const d = (r.department ?? '').trim();
+      if (d) csvDeptSet.add(d);
+    }
+    const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
+
+    return {
+      overview: {
+        rows: normalized.length,
+        creates, updates, skips,
+        duplicateEmails: Array.from(dups.values()),
+        managerMissing,
+        newDepartments
+      },
+      records: out
     };
   }
 }
