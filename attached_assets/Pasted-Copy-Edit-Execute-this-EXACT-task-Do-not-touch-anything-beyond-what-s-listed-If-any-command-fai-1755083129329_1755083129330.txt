@@ -1,0 +1,50 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Restore a namespaced `identity` export in @thrivio/contracts for legacy code, and update the BFF’s identity repository to import only the types it needs, instead of the removed namespace.
+
+TOUCH ONLY
+packages/contracts/src/index.ts
+apps/bff/src/modules/identity/identity.repository.ts
+
+CHANGES
+// packages/contracts/src/index.ts
+// Re‑add an identity namespace, but keep it type‑only to avoid conflicts with Zod values.
+ import * as identitySchemas from "./identity";
++export namespace identity {
++  export type UserPublic = import("./identity").UserPublic;
++  export type OrgUnitPublic = import("./identity").OrgUnitPublic;
++  export type LocationPublic = import("./identity").LocationPublic;
++}
+ // keep the rest of the existing exports unchanged
+
+// apps/bff/src/modules/identity/identity.repository.ts
+// Remove the value import of "identity" and switch to type‑only imports.
+-import { identity as CIdentity } from '@thrivio/contracts';
++import type { UserPublic } from '@thrivio/contracts';
+...
+ // Wherever you used "CIdentity.UserPublic" as a return type, replace it with just UserPublic.
+-async findUserByEmailOrg(...): Promise<CIdentity.UserPublic | null> { ... }
++async findUserByEmailOrg(...): Promise<UserPublic | null> { ... }
+
+RUN & PRINT
+# Build the BFF to ensure types resolve
+npx nx build bff && echo "=== BUILD OK ==="
+
+# Quick smoke test (login → create session → preview)
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"csvdemo@example.com\"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session \
+  -H "content-type: application/json" -H "Authorization: Bearer $ACCESS" \
+  -d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN" -H "Authorization: Bearer $ACCESS" | head -100
+
+# Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: identity export restored via namespace and repository updated; build and preview succeed."

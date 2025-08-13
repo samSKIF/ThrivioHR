@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-import type { identity as CIdentity } from '@thrivio/contracts';
+import type { UserPublic } from '@thrivio/contracts';
 import { DRIZZLE_DB } from '../db/db.module';
 
 // helper: display name
@@ -33,7 +33,7 @@ export class IdentityRepository {
     return (res as any).rows ?? [];
   }
 
-  async findUserByEmailOrg(email: string, orgId: string): Promise<CIdentity.UserPublic | null> {
+  async findUserByEmailOrg(email: string, orgId: string): Promise<UserPublic | null> {
     const res = await this.db.execute(sql`SELECT id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" FROM users WHERE organization_id = ${orgId} AND LOWER(email) = LOWER(${email}) LIMIT 1`);
     const row = (res as any).rows?.[0];
     return row ?? null;
