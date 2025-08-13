@@ -1,12 +1,8 @@
-import type { CommitPlan, CommitRecord, CommitOverview } from '../lib/types';
+import type { CommitRecord, CommitOverview, CommitPlan } from '../lib/types';
 
 export class ImportCommitDto {
   csv!: string;
   dryRun!: boolean;
 }
 
-// Type annotations for contracts alignment
-export interface CommitResponse {
-  overview: CommitOverview;
-  records: CommitRecord[];
-}
+export type CommitResponse = CommitPlan; // used by controller's return type

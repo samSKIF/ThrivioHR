@@ -189,7 +189,11 @@ export class DirectoryService {
       } else {
         // detect diffs using computeDiff helper
         const diffResult = computeDiff(current, row);
-        const changes = diffResult.changes.map(c => `${c.field}: ${c.from} → ${c.to}`);
+        const changes = diffResult.changes.map(c => ({ 
+          field: c.field, 
+          from: c.from ?? null, 
+          to: c.to ?? null 
+        }));
 
         if (changes.length === 0 && !row.managerEmail) {
           skips++;
@@ -198,7 +202,8 @@ export class DirectoryService {
           updates++;
           out.push({
             action: 'update',
-            changes, reason,
+            changes: changes.length ? changes : undefined,
+            reason,
             incoming: row
           });
         }

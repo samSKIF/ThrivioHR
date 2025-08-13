@@ -1,0 +1,117 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make the Directory commit-plan output conform to the `@thrivio/contracts` CommitPlan and CommitRecord types by normalising the `changes` array and overview fields. Preserve all existing logic.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+
+CHANGES
+// apps/bff/src/modules/directory/directory.service.ts
+// 1. When computing diffs, build a list of change objects instead of strings.
+//    Each change object must be { field, from, to } to satisfy CommitChange.
+@@ Commit Planner section (inside commitPlan or the helper that builds records)
+-  const diffs: string[] = [];
++  const diffs: { field: string; from: any; to: any }[] = [];
+   const cmp = (k: keyof typeof row, curVal: any) => {
+     const inc = (row as any)[k];
+     if ((inc ?? null) !== (curVal ?? null)) {
+-      diffs.push(String(k));
++      diffs.push({ field: String(k), from: curVal ?? null, to: inc ?? null });
+     }
+   };
+
+ // 2. When constructing each CommitRecord, remove top-level properties that aren’t in the contract (email, managerResolved, etc.). Include only:
+ //    { incoming, action, reason?: string[], changes?: CommitChange[] }.
+ //    Append manager or location notes to the `reason` array.
+@@ record construction (create/update branch)
+-  rows.push({
+-    email,
+-    action,
+-    diffs,
+-    reason,
+-    incoming,
+-    current,
+-    managerResolved,
+-    managerUserId,
+-    department: deptName,
+-    location: locName,
+-    locationCreated: locationCreatedFlag,
+-  });
++  rows.push({
++    incoming,
++    action,
++    reason,
++    changes: diffs.length ? diffs : undefined,
++  });
+
+ // 3. Update overview construction to use contract fields:
+ //    - Rename duplicateEmails counter to `duplicates`.
+ //    - Add `invalid` counter (number of rows with missing required fields).
+ //    - Remove any extra keys not defined in the contract.
+@@ overview construction
+-  overview: {
+-    rows: normalized.length,
+-    creates,
+-    updates,
+-    skips,
+-    duplicateEmails: Array.from(dups.values()),
+-    managerMissing,
+-    newDepartments,
+-    newLocations,
+-  },
++  overview: {
++    creates,
++    updates,
++    skips,
++    duplicates: dups.size,
++    invalid: errors.length,
++    newDepartments,
++    newLocations,
++    managerMissing,
++    managerSelf: diag.managerSelf,
++    managerCycles: diag.managerCycles,
++  },
+
+// apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+// 4. Import contract types via compat re-exports and adjust type annotations.
+-import { directory as CDirectory } from '@thrivio/contracts';
+-export class ImportCommitDto {
+-  csv!: string;
+-  dryRun!: boolean;
+-}
++import type { CommitRecord, CommitOverview, CommitPlan } from '../lib/types';
++export class ImportCommitDto {
++  csv!: string;
++  dryRun!: boolean;
++}
++export type CommitResponse = CommitPlan; // used by controller’s return type
+
+RUN & PRINT
+# Verify build and lint
+npx nx build bff && echo "=== BUILD OK ==="
+npx eslint apps/bff/src/modules/directory/directory.service.ts || true
+
+# Smoke test the import flow (create session → preview → approve)
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"csvdemo@example.com\"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session \
+  -H "content-type: application/json" -H "Authorization: Bearer $ACCESS" \
+  -d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+echo "=== PREVIEW ==="
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN" -H "Authorization: Bearer $ACCESS" | head -200
+echo "=== APPROVE ==="
+curl -s -X POST http://localhost:5000/directory/import/session/approve \
+  -H "content-type: application/json" -H "Authorization: Bearer $ACCESS" \
+  -d "{\"token\":\"$TOKEN\"}" | head -200
+
+# Ask Replit for status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: Directory commit-plan now conforms to @thrivio/contracts types, and there’s no regression elsewhere."
