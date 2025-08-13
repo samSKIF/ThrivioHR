@@ -1,0 +1,159 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Decouple BFF from Identity service schema by removing all services/identity/src/db/schema/* imports from the BFF repository layer and switching to raw SQL via Drizzle’s db.execute(sql\...`). Return @thrivio/contracts` types. No endpoint or logic changes.
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.repository.ts
+
+CHANGES
+// apps/bff/src/modules/identity/identity.repository.ts
+// 1) REMOVE ALL imports from "services/identity/src/db/schema/*" and any table symbols.
+// 2) KEEP how db is obtained today (constructor injection or import) — do NOT change providers/config here.
+// 3) ADD these imports at top:
+import { sql } from 'drizzle-orm';
+import type { identity as CIdentity } from '@thrivio/contracts';
+
+// 4) Ensure the class exports the SAME public methods (signatures unchanged) that the BFF uses today:
+// - findUserByEmailOrg(email: string, orgId: string)
+// - listDistinctDepartments(orgId: string)
+// - listDistinctLocations(orgId: string)
+// - findOrCreateDepartment(orgId: string, name: string): Promise<{ dept: any; created: boolean }>
+// - ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: any; created: boolean }>
+// - findOrCreateLocation(orgId: string, name: string): Promise<{ loc: any; created: boolean }>
+// - createUser(orgId: string, email: string, firstName: string|null, lastName: string|null)
+// - updateUserNames(userId: string, firstName: string|null, lastName: string|null)
+//
+// Re-implement each method using db.execute(sql...) with raw SQL over the identity DB.
+// Map DB column names to public contract shape fields where applicable.
+// IMPORTANT: preserve multi-tenant safety by filtering on organization_id for all relevant queries.
+// Use LOWER(email) comparisons for lookups to avoid case issues.
+
+/// --- SAMPLE IMPLEMENTATIONS (ADAPT EXACTLY; keep existing method names) ---
+/// helper: display name
+function makeDisplayName(firstName: string|null, lastName: string|null): string|null {
+const fn = (firstName ?? '').trim(); const ln = (lastName ?? '').trim();
+const d = [fn, ln].filter(Boolean).join(' ');
+return d || null;
+}
+
+// findUserByEmailOrg
+async findUserByEmailOrg(email: string, orgId: string): Promise<CIdentity.UserPublic | null> {
+const res = await this.db.execute(sql SELECT id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" FROM users WHERE organization_id = ${orgId} AND LOWER(email) = LOWER(${email}) LIMIT 1; );
+const row = (res as any).rows?.[0];
+return row ?? null;
+}
+
+// listDistinctDepartments (via org_units type='department', case-insensitive set)
+async listDistinctDepartments(orgId: string): Promise<string[]> {
+const res = await this.db.execute(sql SELECT LOWER(name) AS name FROM org_units WHERE organization_id = ${orgId} AND type = 'department' );
+const set = new Set<string>();
+for (const r of (res as any).rows ?? []) {
+const n = (r.name ?? '').trim();
+if (n) set.add(n);
+}
+return Array.from(set.values());
+}
+
+// listDistinctLocations
+async listDistinctLocations(orgId: string): Promise<string[]> {
+const res = await this.db.execute(sql SELECT LOWER(name) AS name FROM locations WHERE organization_id = ${orgId} );
+const set = new Set<string>();
+for (const r of (res as any).rows ?? []) {
+const n = (r.name ?? '').trim();
+if (n) set.add(n);
+}
+return Array.from(set.values());
+}
+
+// findOrCreateDepartment
+async findOrCreateDepartment(orgId: string, name: string): Promise<{ dept: any; created: boolean }> {
+const trimmed = (name ?? '').trim();
+if (!trimmed) return { dept: null, created: false };
+// try existing
+const sel = await this.db.execute(sql SELECT id, organization_id AS "organizationId", type, name, parent_id AS "parentId" FROM org_units WHERE organization_id = ${orgId} AND type = 'department' AND name = ${trimmed} LIMIT 1 );
+const existing = (sel as any).rows?.[0];
+if (existing) return { dept: existing, created: false };
+// create
+const ins = await this.db.execute(sql INSERT INTO org_units (id, organization_id, type, name) VALUES (gen_random_uuid(), ${orgId}, 'department', ${trimmed}) RETURNING id, organization_id AS "organizationId", type, name, parent_id AS "parentId" );
+return { dept: (ins as any).rows?.[0] ?? null, created: true };
+}
+
+// ensureMembership
+async ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: any; created: boolean }> {
+const sel = await this.db.execute(sql SELECT id, user_id AS "userId", org_unit_id AS "orgUnitId", is_primary AS "isPrimary" FROM org_membership WHERE user_id = ${userId} AND org_unit_id = ${orgUnitId} LIMIT 1 );
+const existing = (sel as any).rows?.[0];
+if (existing) return { membership: existing, created: false };
+const ins = await this.db.execute(sql INSERT INTO org_membership (id, user_id, org_unit_id, is_primary) VALUES (gen_random_uuid(), ${userId}, ${orgUnitId}, false) RETURNING id, user_id AS "userId", org_unit_id AS "orgUnitId", is_primary AS "isPrimary" );
+return { membership: (ins as any).rows?.[0] ?? null, created: true };
+}
+
+// findOrCreateLocation
+async findOrCreateLocation(orgId: string, name: string): Promise<{ loc: any; created: boolean }> {
+const trimmed = (name ?? '').trim();
+if (!trimmed) return { loc: null, created: false };
+const sel = await this.db.execute(sql SELECT id, organization_id AS "organizationId", name, type FROM locations WHERE organization_id = ${orgId} AND name = ${trimmed} LIMIT 1 );
+const existing = (sel as any).rows?.[0];
+if (existing) return { loc: existing, created: false };
+const ins = await this.db.execute(sql INSERT INTO locations (id, organization_id, name) VALUES (gen_random_uuid(), ${orgId}, ${trimmed}) RETURNING id, organization_id AS "organizationId", name, type );
+return { loc: (ins as any).rows?.[0] ?? null, created: true };
+}
+
+// createUser
+async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+const displayName = makeDisplayName(firstName, lastName);
+const ins = await this.db.execute(sql INSERT INTO users (id, organization_id, email, first_name, last_name, display_name) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" );
+return (ins as any).rows?.[0];
+}
+
+// updateUserNames
+async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+const displayName = makeDisplayName(firstName, lastName);
+const upd = await this.db.execute(sql UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" );
+return (upd as any).rows?.[0];
+}
+
+RUN & PRINT
+
+1) Build to ensure types and imports are valid
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) Prove there are NO schema imports left in the repository
+echo "=== CROSS-SERVICE SCHEMA IMPORTS (should be empty) ==="
+! grep -n "services/identity/src/db/schema" -R apps/bff/src/modules/identity/identity.repository.ts || true
+
+3) Lint the repository file to satisfy our boundaries rule
+echo "=== ESLINT on identity.repository.ts ==="
+npx eslint apps/bff/src/modules/identity/identity.repository.ts || true
+
+4) End-to-end sanity: login → create session → preview → approve
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location\nalex@demo.com,Alex,Stone,Engineering,Dubai\nmaria@demo.com,Maria,Gomez,Finance,Madrid"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+
+echo "=== PREVIEW (should work) ==="
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN" -H "Authorization: Bearer $ACCESS" | head -120
+
+echo "=== APPROVE (should still create/update users, depts, locs, memberships) ==="
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -200
+
+5) Status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: identity.repository.ts no longer imports service schema, returns @thrivio/contracts types, and all flows still pass; any regressions?"
+
+STOP.
+
+
+
+
+
+
+
+Ask ChatGPT
