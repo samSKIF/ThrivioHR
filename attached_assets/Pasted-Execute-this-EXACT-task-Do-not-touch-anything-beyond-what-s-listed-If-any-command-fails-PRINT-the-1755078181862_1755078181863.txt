@@ -1,0 +1,181 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Unblock type adoption by:
+
+Adjusting contracts’ index to re-export types with export type and move Zod objects under a separate namespace to avoid type/value collisions.
+
+Switching BFF imports to type-only named imports from @thrivio/contracts.
+
+Using local compat types (Partial<> + extras) so current shapes compile without behavior changes.
+
+TOUCH ONLY
+packages/contracts/src/index.ts
+apps/bff/src/modules/directory/lib/compat.ts
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// packages/contracts/src/index.ts
+
+export * as primitives from "./primitives";
+
+export * as identity from "./identity";
+
+export * as directory from "./directory";
+
+export * as media from "./media";
++// Keep value (Zod) exports under "*Schemas" to avoid type/value confusion in consumers.
++export * as primitiveSchemas from "./primitives";
++export * as identitySchemas from "./identity";
++export * as directorySchemas from "./directory";
++export * as mediaSchemas from "./media";
++// Re-export TYPES explicitly (isolatedModules-friendly)
++export type {
+
+UUID, Email,
++} from "./primitives";
++export type {
+
+UserPublic, OrgUnitPublic, LocationPublic,
++} from "./identity";
++export type {
+
+ImportRow, CommitChange, CommitRecord, CommitOverview, CommitPlan, ImportSessionToken,
++} from "./directory";
+
+// apps/bff/src/modules/directory/lib/compat.ts (NEW)
++import type {
+
+ImportRow as TImportRow,
+
+CommitChange as TCommitChange,
+
+CommitRecord as TCommitRecord,
+
+CommitOverview as TCommitOverview,
+
+CommitPlan as TCommitPlan,
++} from "@thrivio/contracts";
++type Extras = Record<string, unknown>;
++export type ImportRow = TImportRow;
++export type CommitChange = TCommitChange;
++// Allow extra fields (e.g., email, managerResolved) and tolerate missing strict ones for now
++export type CommitRecordCompat = Partial<TCommitRecord> & {
+
+email?: string;
+
+managerResolved?: boolean;
++} & Extras;
++export type CommitOverviewCompat = Partial<TCommitOverview> & Extras;
++export type CommitPlanCompat = {
+
+overview: CommitOverviewCompat;
+
+records: CommitRecordCompat[];
++} & Extras;
++// Keep internal NormalizedRow (assignable from ImportRow)
++export type NormalizedRow = {
+
+email: string | null;
+
+givenName: string | null;
+
+familyName: string | null;
+
+department?: string | null;
+
+location?: string | null;
+
+managerEmail?: string | null;
+
+jobTitle?: string | null;
+
+employeeId?: string | null;
+
+startDate?: string | null;
+
+birthDate?: string | null;
+
+nationality?: string | null;
+
+gender?: string | null;
+
+phone?: string | null;
++};
+
+// apps/bff/src/modules/directory/lib/types.ts
+-// previous local or contract direct re-exports
++export type {
+
+ImportRow,
+
+CommitChange,
++} from "./compat";
++export type {
+
+CommitRecordCompat as CommitRecord,
+
+CommitOverviewCompat as CommitOverview,
+
+CommitPlanCompat as CommitPlan,
+
+NormalizedRow,
++} from "./compat";
+
+// apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+
+import { directory as CDirectory } from '@thrivio/contracts';
+
+import type { CommitPlan, CommitRecord, ImportRow } from '../lib/types';
+
+// apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+
+import { directory as CDirectory } from '@thrivio/contracts';
+
+import type { CommitPlan, CommitRecord, ImportRow } from '../lib/types';
+
+// apps/bff/src/modules/directory/directory.service.ts
+
+import { directory as CDirectory } from '@thrivio/contracts';
+
+import { CommitPlan, CommitOverview, CommitRecord, ImportRow, NormalizedRow } from './lib/types';
+
+import type { CommitPlan, CommitOverview, CommitRecord, ImportRow, NormalizedRow } from './lib/types';
+
+// (No logic changes. Keep existing objects as-is; compat types accept current shape.)
+
+RUN & PRINT
+
+1) Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) Lint touched files
+echo "=== ESLINT (touched files) ==="
+npx eslint packages/contracts/src/index.ts
+apps/bff/src/modules/directory/lib/compat.ts
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.service.ts || true
+
+3) Smoke: session → preview (no behavior change)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -120
+
+4) Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: contracts types re-exported cleanly; BFF switched to type-only imports with compat wrappers; any regressions?"
+
+STOP.
+

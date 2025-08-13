@@ -1,5 +1,4 @@
-import type { directory as CDirectory } from '@thrivio/contracts';
-import type { CommitPlan, CommitRecord } from '../lib/types';
+import type { CommitPlan, CommitRecord, ImportRow } from '../lib/types';
 
 export class ImportValidateDto {
   // CSV content as a raw string in JSON body

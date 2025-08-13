@@ -1,37 +1,42 @@
-import type { directory as CDirectory } from '@thrivio/contracts';
+import type {
+  ImportRow as TImportRow,
+  CommitChange as TCommitChange,
+  CommitRecord as TCommitRecord,
+  CommitOverview as TCommitOverview,
+  CommitPlan as TCommitPlan,
+} from "@thrivio/contracts";
 
 type Extras = Record<string, unknown>;
 
-// Base contract aliases (for clarity)
-export type ImportRow = CDirectory.ImportRow;
-export type CommitChange = CDirectory.CommitChange;
-export type CommitRecordBase = CDirectory.CommitRecord;
-export type CommitOverviewBase = CDirectory.CommitOverview;
-export type CommitPlanBase = CDirectory.CommitPlan;
+export type ImportRow = TImportRow;
+export type CommitChange = TCommitChange;
 
-// Current implementation sometimes accesses record.email directly and flags like managerResolved;
-// and may stash extra counters/keys on overview/plan. Keep those optional to avoid behavior changes.
-export type CommitRecordCompat = CommitRecordBase & {
+// Allow extra fields (e.g., email, managerResolved) and tolerate missing strict ones for now
+export type CommitRecordCompat = Partial<TCommitRecord> & {
   email?: string;
   managerResolved?: boolean;
 } & Extras;
 
-export type CommitOverviewCompat = CommitOverviewBase & Extras;
-export type CommitPlanCompat = CommitPlanBase & Extras;
+export type CommitOverviewCompat = Partial<TCommitOverview> & Extras;
 
-// KEEP internal NormalizedRow shape used by normalizers (assignable from ImportRow)
+export type CommitPlanCompat = {
+  overview: CommitOverviewCompat;
+  records: CommitRecordCompat[];
+} & Extras;
+
+// Keep internal NormalizedRow (assignable from ImportRow)
 export type NormalizedRow = {
-  email: string|null;
-  givenName: string|null;
-  familyName: string|null;
-  department?: string|null;
-  location?: string|null;
-  managerEmail?: string|null;
-  jobTitle?: string|null;
-  employeeId?: string|null;
-  startDate?: string|null;
-  birthDate?: string|null;
-  nationality?: string|null;
-  gender?: string|null;
-  phone?: string|null;
+  email: string | null;
+  givenName: string | null;
+  familyName: string | null;
+  department?: string | null;
+  location?: string | null;
+  managerEmail?: string | null;
+  jobTitle?: string | null;
+  employeeId?: string | null;
+  startDate?: string | null;
+  birthDate?: string | null;
+  nationality?: string | null;
+  gender?: string | null;
+  phone?: string | null;
 };
