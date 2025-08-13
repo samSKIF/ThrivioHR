@@ -55,6 +55,7 @@
       "data": {
         "root": "packages/contracts",
         "name": "contracts",
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
         "sourceRoot": "packages/contracts/src",
         "projectType": "library",
         "tags": [
@@ -15248,5 +15249,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755071034455
+  "computedAt": 1755064973141
 }

@@ -240,6 +240,10 @@
       "packages/contracts/project.json",
       "nx/core/project-json"
     ],
+    "$schema": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
     "sourceRoot": [
       "packages/contracts/project.json",
       "nx/core/project-json"
