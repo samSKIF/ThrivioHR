@@ -1,0 +1,179 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Address outstanding Codex observations by:
+1) Seeding minimal OpenAPI specs in the `packages/contracts/openapi` folder.
+2) Adding a basic Jest test suite for the BFF (auth & directory modules) to start coverage.
+No functional changes to existing code.
+
+TOUCH ONLY
+packages/contracts/openapi/users.yaml
+packages/contracts/openapi/directory.yaml
+apps/bff/jest.config.js
+apps/bff/src/modules/auth/auth.spec.ts
+apps/bff/src/modules/directory/directory.spec.ts
+package.json
+pnpm-lock.yaml
+
+CHANGES
+// packages/contracts/openapi/users.yaml  (NEW FILE)
+openapi: "3.0.0"
+info:
+  title: "ThrivioHR Users API"
+  version: "0.1.0"
+paths:
+  /auth/login:
+    post:
+      summary: "User login"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orgId, email]
+              properties:
+                orgId: { type: string, format: uuid }
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+components:
+  schemas:
+    UserPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        email: { type: string, format: email }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        displayName: { type: string, nullable: true }
+
+// packages/contracts/openapi/directory.yaml  (NEW FILE)
+openapi: "3.0.0"
+info:
+  title: "ThrivioHR Directory Import API"
+  version: "0.1.0"
+paths:
+  /directory/import/validate:
+    post:
+      summary: "Validate CSV import"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [csv]
+              properties:
+                csv: { type: string }
+      responses:
+        "200":
+          description: "Validation result"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows: { type: integer }
+                  valid: { type: integer }
+                  invalid: { type: integer }
+                  requiredHeaders: { type: array, items: { type: string } }
+                  missingHeaders: { type: array, items: { type: string } }
+                  inferredHeaders: { type: array, items: { type: string } }
+                  preview: { type: array, items: { type: object } }
+                  sampleErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row: { type: integer }
+                        message: { type: string }
+
+// apps/bff/jest.config.js  (NEW FILE)
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  rootDir: 'src/modules',
+  testMatch: ['**/*.spec.ts'],
+};
+
+// apps/bff/src/modules/auth/auth.spec.ts  (NEW FILE)
+import request from 'supertest';
+import app from '../../../main'; // adjust import if needed
+
+describe('Auth Module', () => {
+  it('should login a user', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909', email: 'csvdemo@example.com' });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('accessToken');
+    expect(res.body).toHaveProperty('refreshToken');
+    expect(res.body).toHaveProperty('user');
+  });
+});
+
+// apps/bff/src/modules/directory/directory.spec.ts  (NEW FILE)
+import request from 'supertest';
+import app from '../../../main'; // adjust import if needed
+
+describe('Directory Module', () => {
+  it('should validate a CSV upload', async () => {
+    // login first
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909', email: 'csvdemo@example.com' });
+    const token = login.body.accessToken;
+    const csv = 'email,givenName,familyName\njohn@example.com,John,Doe';
+
+    const res = await request(app.getHttpServer())
+      .post('/directory/import/validate')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ csv });
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty('rows');
+    expect(res.body).toHaveProperty('valid');
+  });
+});
+
+// package.json  (merge with existing; keep other fields)
+{
+  "scripts": {
+    "test": "nx test bff"
+  },
+  "devDependencies": {
+    "ts-jest": "^29.0.5",
+    "supertest": "^6.3.3",
+    "@types/jest": "^29.5.3",
+    "@types/supertest": "^6.0.1",
+    "jest": "^29.6.1"
+  }
+}
+
+RUN & PRINT
+# 1) Install test deps quietly
+pnpm i -D ts-jest supertest @types/jest @types/supertest jest --silent || npm i -D ...
+
+# 2) Build & run tests (expect pass/fail print)
+npx nx build bff && echo "=== BUILD OK ==="
+npx nx test bff --skip-nx-cache && echo "=== TESTS RUN ==="
+
+# 3) Show OpenAPI files for verification
+echo "=== OPENAPI SPECS ==="
+cat packages/contracts/openapi/users.yaml
+echo "---------------------"
+cat packages/contracts/openapi/directory.yaml

@@ -1,7 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
 import * as schema from '../../../../../services/identity/src/db/schema';
+import { orgUnits } from '../../../../../services/identity/src/db/schema/org_units';
+import { orgMembership } from '../../../../../services/identity/src/db/schema/org_membership';
+import { organizations } from '../../../../../services/identity/src/db/schema/organizations';
+import { locations } from '../../../../../services/identity/src/db/schema/locations';
 import { DRIZZLE_DB } from '../db/db.module';
 
 @Injectable()
@@ -28,23 +32,6 @@ export class IdentityRepository {
       .limit(limit);
   }
 
-  async createUser(orgId: string, email: string, givenName?: string, familyName?: string) {
-    const [user] = await this.db
-      .insert(schema.users)
-      .values({
-        organizationId: orgId,
-        email,
-        firstName: givenName || '',
-        lastName: familyName || '',
-      })
-      .returning({
-        id: schema.users.id,
-        orgId: schema.users.organizationId,
-        email: schema.users.email,
-      });
-    return user;
-  }
-
   async getUsersByOrg(orgId: string, limit = 20) {
     return this.db
       .select({
@@ -56,5 +43,102 @@ export class IdentityRepository {
       .from(schema.users)
       .where(eq(schema.users.organizationId, orgId))
       .limit(limit);
+  }
+
+  async findUserByEmailOrg(email: string, orgId: string) {
+    const res = await this.db.select().from(schema.users)
+      .where(and(eq(schema.users.email, email), eq(schema.users.organizationId, orgId)))
+      .limit(1);
+    return res[0] ?? null;
+  }
+
+  async listDistinctDepartments(orgId: string): Promise<string[]> {
+    // Read org_units where type = 'department' for this org
+    const rows = await this.db.select({ name: orgUnits.name })
+      .from(orgUnits)
+      .where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department')));
+    const set = new Set<string>();
+    for (const r of rows) {
+      const d = (r.name ?? '').trim();
+      if (d) set.add(d);
+    }
+    return Array.from(set.values());
+  }
+
+  async createUser(orgId: string, email: string, firstName: string, lastName: string) {
+    const displayName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    const [row] = await this.db.insert(schema.users).values({
+      organizationId: orgId,
+      email,
+      firstName,
+      lastName,
+      displayName,
+      isActive: true,
+    }).returning();
+    return row;
+  }
+
+  async updateUserNames(userId: string, firstName: string|null|undefined, lastName: string|null|undefined) {
+    const patch: any = {};
+    if (firstName != null) patch.firstName = firstName;
+    if (lastName != null) patch.lastName = lastName;
+    if ('firstName' in patch || 'lastName' in patch) {
+      const displayName = [patch.firstName, patch.lastName].filter(Boolean).join(' ').trim();
+      if (displayName) patch.displayName = displayName;
+    }
+    if (Object.keys(patch).length === 0) return null;
+    const [row] = await this.db.update(schema.users).set(patch).where(eq(schema.users.id, userId)).returning();
+    return row;
+  }
+
+  async findOrCreateDepartment(orgId: string, name: string): Promise<{ dept: any; created: boolean }> {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return { dept: null, created: false };
+    const existing = await this.db.select().from(orgUnits)
+      .where(and(eq(orgUnits.organizationId, orgId), eq(orgUnits.type, 'department'), eq(orgUnits.name, trimmed)))
+      .limit(1);
+    if (existing[0]) return { dept: existing[0], created: false };
+    const [createdRow] = await this.db.insert(orgUnits).values({
+      organizationId: orgId,
+      type: 'department',
+      name: trimmed,
+    }).returning();
+    return { dept: createdRow, created: true };
+  }
+
+  async ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: any; created: boolean }> {
+    const existing = await this.db.select().from(orgMembership)
+      .where(and(eq(orgMembership.userId, userId), eq(orgMembership.orgUnitId, orgUnitId)))
+      .limit(1);
+    if (existing[0]) return { membership: existing[0], created: false };
+    const [createdRow] = await this.db.insert(orgMembership).values({ userId, orgUnitId }).returning();
+    return { membership: createdRow, created: true };
+  }
+
+  async listDistinctLocations(orgId: string): Promise<string[]> {
+    const rows = await this.db.select({ name: locations.name })
+      .from(locations)
+      .where(eq(locations.organizationId, orgId));
+    const set = new Set<string>();
+    for (const r of rows) {
+      const n = (r.name ?? '').trim();
+      if (n) set.add(n.toLowerCase());
+    }
+    return Array.from(set.values());
+  }
+
+  async findOrCreateLocation(orgId: string, name: string): Promise<{ loc: any; created: boolean }> {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return { loc: null, created: false };
+    const existing = await this.db.select().from(locations)
+      .where(and(eq(locations.organizationId, orgId), eq(locations.name, trimmed)))
+      .limit(1);
+    if (existing[0]) return { loc: existing[0], created: false };
+    const [createdRow] = await this.db.insert(locations).values({
+      organizationId: orgId,
+      name: trimmed,
+      type: 'site', // Default to 'site' for CSV imports (office/work locations)
+    }).returning();
+    return { loc: createdRow, created: true };
   }
 }

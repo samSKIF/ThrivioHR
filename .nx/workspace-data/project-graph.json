@@ -1819,6 +1819,15 @@
         "hash": "sha512-XP824mCbgQsK20jlXKrUpZoh/iO3vUWhMpxCz8oYeagoiZ4V0TQiKy0ASji1KK6IAe3DYGfj5RfKP6+L2020OQ=="
       }
     },
+    "npm:@noble/hashes": {
+      "type": "npm",
+      "name": "npm:@noble/hashes",
+      "data": {
+        "version": "1.8.0",
+        "packageName": "@noble/hashes",
+        "hash": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
+      }
+    },
     "npm:@nodelib/fs.scandir": {
       "type": "npm",
       "name": "npm:@nodelib/fs.scandir",
@@ -1907,6 +1916,15 @@
         "version": "21.3.11",
         "packageName": "@nx/workspace",
         "hash": "sha512-DD2iu9Ip/faNQ5MXZk+UbbBxGofYKjzHsXKRvMNQ/OAVzP/u9z2CPXEmRKlRAEQoy1lInmyopwfEUWwK1v4x0g=="
+      }
+    },
+    "npm:@paralleldrive/cuid2": {
+      "type": "npm",
+      "name": "npm:@paralleldrive/cuid2",
+      "data": {
+        "version": "2.2.2",
+        "packageName": "@paralleldrive/cuid2",
+        "hash": "sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA=="
       }
     },
     "npm:@phenomnomnominal/tsquery": {
@@ -2071,6 +2089,15 @@
         "hash": "sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q=="
       }
     },
+    "npm:@types/cookiejar": {
+      "type": "npm",
+      "name": "npm:@types/cookiejar",
+      "data": {
+        "version": "2.1.5",
+        "packageName": "@types/cookiejar",
+        "hash": "sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q=="
+      }
+    },
     "npm:@types/estree": {
       "type": "npm",
       "name": "npm:@types/estree",
@@ -2134,6 +2161,15 @@
         "hash": "sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA=="
       }
     },
+    "npm:@types/methods": {
+      "type": "npm",
+      "name": "npm:@types/methods",
+      "data": {
+        "version": "1.1.4",
+        "packageName": "@types/methods",
+        "hash": "sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ=="
+      }
+    },
     "npm:@types/ms": {
       "type": "npm",
       "name": "npm:@types/ms",
@@ -2186,6 +2222,24 @@
         "version": "2.0.3",
         "packageName": "@types/stack-utils",
         "hash": "sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw=="
+      }
+    },
+    "npm:@types/superagent": {
+      "type": "npm",
+      "name": "npm:@types/superagent",
+      "data": {
+        "version": "8.1.9",
+        "packageName": "@types/superagent",
+        "hash": "sha512-pTVjI73witn+9ILmoJdajHGW2jkSaOzhiFYF1Rd3EQ94kymLqB9PjD9ISg7WaALC7+dCHT0FGe9T2LktLq/3GQ=="
+      }
+    },
+    "npm:@types/supertest": {
+      "type": "npm",
+      "name": "npm:@types/supertest",
+      "data": {
+        "version": "6.0.3",
+        "packageName": "@types/supertest",
+        "hash": "sha512-8WzXq62EXFhJ7QsH3Ocb/iKQ/Ty9ZVWnVzoTKc9tyyFRRF3a74Tk2+TLFgaFFw364Ere+npzHKEJ6ga2LzIL7w=="
       }
     },
     "npm:@types/validator": {
@@ -2519,6 +2573,15 @@
         "version": "2.0.1",
         "packageName": "argparse",
         "hash": "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="
+      }
+    },
+    "npm:asap": {
+      "type": "npm",
+      "name": "npm:asap",
+      "data": {
+        "version": "2.0.6",
+        "packageName": "asap",
+        "hash": "sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA=="
       }
     },
     "npm:async": {
@@ -3007,6 +3070,15 @@
         "hash": "sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg=="
       }
     },
+    "npm:component-emitter": {
+      "type": "npm",
+      "name": "npm:component-emitter",
+      "data": {
+        "version": "1.3.1",
+        "packageName": "component-emitter",
+        "hash": "sha512-T0+barUSQRTUQASh8bx02dl+DhF54GtIDY13Y3m9oWTklKbb3Wv974meRpeZ3lp1JpLVECWWNHC4vaG2XHXouQ=="
+      }
+    },
     "npm:concat-map": {
       "type": "npm",
       "name": "npm:concat-map",
@@ -3086,6 +3158,15 @@
         "version": "0.7.2",
         "packageName": "cookie",
         "hash": "sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w=="
+      }
+    },
+    "npm:cookiejar": {
+      "type": "npm",
+      "name": "npm:cookiejar",
+      "data": {
+        "version": "2.1.4",
+        "packageName": "cookiejar",
+        "hash": "sha512-LDx6oHrK+PhzLKJU9j5S7/Y3jM/mUHvD/DeI1WQmJn652iPC5Y4TBzC9l+5OMOXlyTTA+SmVUPm0HQUwpD5Jqw=="
       }
     },
     "npm:core-js-compat": {
@@ -3248,6 +3329,15 @@
         "version": "1.6.1",
         "packageName": "detect-port",
         "hash": "sha512-CmnVc+Hek2egPx1PeTFVta2W78xy2K/9Rkf6cC4T59S50tVnzKj+tnx5mmx5lwvCkujZ4uRrpRSuV+IVs3f90Q=="
+      }
+    },
+    "npm:dezalgo": {
+      "type": "npm",
+      "name": "npm:dezalgo",
+      "data": {
+        "version": "1.0.4",
+        "packageName": "dezalgo",
+        "hash": "sha512-rXSP0bf+5n0Qonsb+SVVfNfIsimO4HEtmnIpPHY8Q1UCzKlQrDMfdobr8nJOOsRgWCyMRqeSBQzmWUMq7zvVig=="
       }
     },
     "npm:diff": {
@@ -3869,6 +3959,15 @@
         "version": "4.0.4",
         "packageName": "form-data",
         "hash": "sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow=="
+      }
+    },
+    "npm:formidable": {
+      "type": "npm",
+      "name": "npm:formidable",
+      "data": {
+        "version": "3.5.4",
+        "packageName": "formidable",
+        "hash": "sha512-YikH+7CUTOtP44ZTnUhR7Ic2UASBPOqmaRkRKxRbywPTe5VxF7RRCck4af9wutiZ/QKM5nME9Bie2fFaPz5Gug=="
       }
     },
     "npm:forwarded": {
@@ -5095,6 +5194,15 @@
         "hash": "sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg=="
       }
     },
+    "npm:methods": {
+      "type": "npm",
+      "name": "npm:methods",
+      "data": {
+        "version": "1.1.2",
+        "packageName": "methods",
+        "hash": "sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w=="
+      }
+    },
     "npm:micromatch": {
       "type": "npm",
       "name": "npm:micromatch",
@@ -5138,6 +5246,15 @@
         "version": "3.0.1",
         "packageName": "mime-types",
         "hash": "sha512-xRc4oEhT6eaBpU1XF7AjpOFD+xQmXNB5OVKwp4tqCuBpHLS/ZbBDrc07mYTDqVMg6PfxUjjNp85O6Cd2Z/5HWA=="
+      }
+    },
+    "npm:mime": {
+      "type": "npm",
+      "name": "npm:mime",
+      "data": {
+        "version": "2.6.0",
+        "packageName": "mime",
+        "hash": "sha512-USPkMeET31rOMiarsBNIHZKLGgvKc/LrjofAnBlOttf5ajRvqiRA8QsenbcooctK6d6Ts6aqZXBA+XbkKthiQg=="
       }
     },
     "npm:mimic-fn": {
@@ -6425,6 +6542,24 @@
         "version": "5.1.6",
         "packageName": "styled-jsx",
         "hash": "sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA=="
+      }
+    },
+    "npm:superagent": {
+      "type": "npm",
+      "name": "npm:superagent",
+      "data": {
+        "version": "10.2.3",
+        "packageName": "superagent",
+        "hash": "sha512-y/hkYGeXAj7wUMjxRbB21g/l6aAEituGXM9Rwl4o20+SX3e8YOSV6BxFXl+dL3Uk0mjSL3kCbNkwURm8/gEDig=="
+      }
+    },
+    "npm:supertest": {
+      "type": "npm",
+      "name": "npm:supertest",
+      "data": {
+        "version": "7.1.4",
+        "packageName": "supertest",
+        "hash": "sha512-tjLPs7dVyqgItVFirHYqe2T+MfWc2VOBQ8QFKKbWTA3PU7liZR8zoSpAi/C1k1ilm9RsXIKYf197oap9wXGVYg=="
       }
     },
     "npm:supports-color": {
@@ -9985,6 +10120,13 @@
         "type": "static"
       }
     ],
+    "npm:@paralleldrive/cuid2": [
+      {
+        "source": "npm:@paralleldrive/cuid2",
+        "target": "npm:@noble/hashes",
+        "type": "static"
+      }
+    ],
     "npm:@phenomnomnominal/tsquery": [
       {
         "source": "npm:@phenomnomnominal/tsquery",
@@ -10156,6 +10298,40 @@
       {
         "source": "npm:@types/react",
         "target": "npm:csstype",
+        "type": "static"
+      }
+    ],
+    "npm:@types/superagent": [
+      {
+        "source": "npm:@types/superagent",
+        "target": "npm:@types/cookiejar",
+        "type": "static"
+      },
+      {
+        "source": "npm:@types/superagent",
+        "target": "npm:@types/methods",
+        "type": "static"
+      },
+      {
+        "source": "npm:@types/superagent",
+        "target": "npm:@types/node",
+        "type": "static"
+      },
+      {
+        "source": "npm:@types/superagent",
+        "target": "npm:form-data",
+        "type": "static"
+      }
+    ],
+    "npm:@types/supertest": [
+      {
+        "source": "npm:@types/supertest",
+        "target": "npm:@types/methods",
+        "type": "static"
+      },
+      {
+        "source": "npm:@types/supertest",
+        "target": "npm:@types/superagent",
         "type": "static"
       }
     ],
@@ -11129,6 +11305,18 @@
         "type": "static"
       }
     ],
+    "npm:dezalgo": [
+      {
+        "source": "npm:dezalgo",
+        "target": "npm:asap",
+        "type": "static"
+      },
+      {
+        "source": "npm:dezalgo",
+        "target": "npm:wrappy",
+        "type": "static"
+      }
+    ],
     "npm:dotenv-expand": [
       {
         "source": "npm:dotenv-expand",
@@ -11908,6 +12096,23 @@
       {
         "source": "npm:form-data",
         "target": "npm:mime-types@2.1.35",
+        "type": "static"
+      }
+    ],
+    "npm:formidable": [
+      {
+        "source": "npm:formidable",
+        "target": "npm:@paralleldrive/cuid2",
+        "type": "static"
+      },
+      {
+        "source": "npm:formidable",
+        "target": "npm:dezalgo",
+        "type": "static"
+      },
+      {
+        "source": "npm:formidable",
+        "target": "npm:once",
         "type": "static"
       }
     ],
@@ -14777,6 +14982,65 @@
         "type": "static"
       }
     ],
+    "npm:superagent": [
+      {
+        "source": "npm:superagent",
+        "target": "npm:component-emitter",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:cookiejar",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:debug",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:fast-safe-stringify",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:form-data",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:formidable",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:methods",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:mime",
+        "type": "static"
+      },
+      {
+        "source": "npm:superagent",
+        "target": "npm:qs",
+        "type": "static"
+      }
+    ],
+    "npm:supertest": [
+      {
+        "source": "npm:supertest",
+        "target": "npm:methods",
+        "type": "static"
+      },
+      {
+        "source": "npm:supertest",
+        "target": "npm:superagent",
+        "type": "static"
+      }
+    ],
     "npm:supports-color": [
       {
         "source": "npm:supports-color",
@@ -15248,5 +15512,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755083436429
+  "computedAt": 1755084497477
 }

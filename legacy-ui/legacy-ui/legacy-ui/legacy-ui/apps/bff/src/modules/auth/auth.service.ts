@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import * as jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../../env';
 import { DRIZZLE_DB } from '../db/db.module';
 import { users, sessions } from '../../../../../services/identity/src/db/schema';
 import type { LoginDto } from './dto/login.dto';
@@ -11,7 +12,7 @@ export class AuthService {
   private readonly jwtSecret: string;
 
   constructor(@Inject(DRIZZLE_DB) private db: any) {
-    this.jwtSecret = process.env.JWT_SECRET ?? 'dev-secret';
+    this.jwtSecret = getJwtSecret();
   }
 
   async login(loginDto: LoginDto) {

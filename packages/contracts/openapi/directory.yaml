@@ -1,0 +1,39 @@
+openapi: "3.0.0"
+info:
+  title: "ThrivioHR Directory Import API"
+  version: "0.1.0"
+paths:
+  /directory/import/validate:
+    post:
+      summary: "Validate CSV import"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [csv]
+              properties:
+                csv: { type: string }
+      responses:
+        "200":
+          description: "Validation result"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows: { type: integer }
+                  valid: { type: integer }
+                  invalid: { type: integer }
+                  requiredHeaders: { type: array, items: { type: string } }
+                  missingHeaders: { type: array, items: { type: string } }
+                  inferredHeaders: { type: array, items: { type: string } }
+                  preview: { type: array, items: { type: object } }
+                  sampleErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row: { type: integer }
+                        message: { type: string }
