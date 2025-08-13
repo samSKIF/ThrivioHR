@@ -1,10 +1,11 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
-import { parse } from 'csv-parse/sync';
 import { IdentityRepository } from '../identity/identity.repository';
-import { normalizeRow, isValidEmail } from './lib/normalizers';
 import { signSession, verifySession } from './lib/token';
 import { collectNewDepartments, collectNewLocations } from './lib/depts_locs';
 import { buildEmailMap, diagnoseManagers } from './lib/managers';
+import { parseAndNormalizeCsv } from './lib/csv';
+import { computeDiff } from './lib/diff';
+import { summarize } from './lib/overview';
 import type { NormalizedRow } from './lib/types';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
@@ -93,124 +94,21 @@ export class DirectoryService {
       };
     }
 
-    const records = parse(csv, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true
-    }) as Record<string, string>[];
-
-    const headers = records.length > 0 ? Object.keys(records[0]) : [];
-    const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
-
-    const errors: { row: number; message: string }[] = [];
-    let valid = 0;
-
-    records.forEach((r, idx) => {
-      const rowNum = idx + 2; // header is line 1
-      const rowErrors: string[] = [];
-
-      // Required fields
-      REQUIRED.forEach(h => {
-        const val = (r[h] ?? '').toString().trim();
-        if (!val) rowErrors.push(`Missing required field: ${h}`);
-      });
-
-      // Basic email check
-      if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) {
-        rowErrors.push('Invalid email format');
-      }
-
-      // managerEmail: if present, validate like email
-      if (r.managerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.managerEmail)) {
-        rowErrors.push('Invalid managerEmail format');
-      }
-
-      // birthDate: if present, must be YYYY-MM-DD, not in the future, age >= 14
-      if (r.birthDate) {
-        const birthDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!birthDateRegex.test(r.birthDate)) {
-          rowErrors.push('Invalid birthDate format (must be YYYY-MM-DD)');
-        } else {
-          const birthDate = new Date(r.birthDate);
-          const today = new Date();
-          const age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          const dayDiff = today.getDate() - birthDate.getDate();
-          const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-          
-          if (birthDate > today) {
-            rowErrors.push('birthDate cannot be in the future');
-          } else if (actualAge < 14) {
-            rowErrors.push('Age must be at least 14 years');
-          }
-        }
-      }
-
-      // nationality: if present, must be ISO 3166-1 alpha-2 (A–Z, length 2)
-      if (r.nationality && !/^[A-Za-z]{2}$/.test(r.nationality)) {
-        rowErrors.push('Invalid nationality format (must be 2-letter ISO code)');
-      }
-
-      // gender: if present, accept (case-insensitive) one of: male, female, non-binary, other, prefer-not-to-say, or short forms m/f
-      if (r.gender) {
-        const genderLower = r.gender.toLowerCase();
-        const validGenders = ['male', 'female', 'non-binary', 'other', 'prefer-not-to-say', 'm', 'f'];
-        if (!validGenders.includes(genderLower)) {
-          rowErrors.push('Invalid gender (must be: male, female, non-binary, other, prefer-not-to-say, m, f)');
-        }
-      }
-
-      // phone: if present, must be E.164: ^\+[1-9]\d{7,14}$
-      if (r.phone && !/^\+[1-9]\d{7,14}$/.test(r.phone)) {
-        rowErrors.push('Invalid phone format (must be E.164: +1234567890)');
-      }
-
-      if (rowErrors.length) {
-        errors.push({ row: rowNum, message: rowErrors.join('; ') });
-      } else {
-        valid += 1;
-      }
-    });
-
-    const preview = records.slice(0, 3).map(r => {
-      // normalize gender
-      const normalizeGender = (gender: string) => {
-        if (!gender) return null;
-        const g = gender.toLowerCase();
-        if (g === 'm' || g === 'male') return 'male';
-        if (g === 'f' || g === 'female') return 'female';
-        if (g === 'non-binary') return 'non-binary';
-        if (g === 'other') return 'other';
-        if (g === 'prefer-not-to-say') return 'prefer-not-to-say';
-        return gender; // fallback to original if invalid
-      };
-      
-      return {
-        email: r.email ?? null,
-        givenName: r.givenName ?? null,
-        familyName: r.familyName ?? null,
-        department: r.department ?? null,
-        managerEmail: r.managerEmail ?? null,
-        location: r.location ?? null,
-        jobTitle: r.jobTitle ?? null,
-        employeeId: r.employeeId ?? null,
-        startDate: r.startDate ?? null,
-        birthDate: r.birthDate ?? null,
-        nationality: r.nationality ? r.nationality.toUpperCase() : null,
-        gender: normalizeGender(r.gender),
-        phone: r.phone ?? null
-      };
-    });
+    const parsed = parseAndNormalizeCsv(csv);
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
+    
+    const preview = parsed.normalized.slice(0, 3);
+    const validCount = parsed.normalized.length - parsed.errors.length;
 
     return {
-      rows: records.length,
-      valid,
-      invalid: errors.length,
+      rows: parsed.normalized.length,
+      valid: validCount,
+      invalid: parsed.errors.length,
       requiredHeaders: REQUIRED,
       missingHeaders,
-      inferredHeaders: headers,
+      inferredHeaders: parsed.headers,
       preview,
-      sampleErrors: errors.slice(0, 5)
+      sampleErrors: parsed.errors.slice(0, 5)
     };
   }
 
@@ -224,154 +122,45 @@ export class DirectoryService {
       };
     }
 
-    const records = parse(csv, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true
-    }) as Record<string, string>[];
-
-    const headers = records.length > 0 ? Object.keys(records[0]) : [];
-    const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
-
-    const errors: { row: number; message: string }[] = [];
-    let valid = 0;
-
-    // Same validation logic as validate method
-    records.forEach((r, idx) => {
-      const rowNum = idx + 2; // header is line 1
-      const rowErrors: string[] = [];
-
-      // Required fields
-      REQUIRED.forEach(h => {
-        const val = (r[h] ?? '').toString().trim();
-        if (!val) rowErrors.push(`Missing required field: ${h}`);
-      });
-
-      // Basic email check
-      if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)) {
-        rowErrors.push('Invalid email format');
-      }
-
-      // managerEmail: if present, validate like email
-      if (r.managerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.managerEmail)) {
-        rowErrors.push('Invalid managerEmail format');
-      }
-
-      // birthDate: if present, must be YYYY-MM-DD, not in the future, age >= 14
-      if (r.birthDate) {
-        const birthDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!birthDateRegex.test(r.birthDate)) {
-          rowErrors.push('Invalid birthDate format (must be YYYY-MM-DD)');
-        } else {
-          const birthDate = new Date(r.birthDate);
-          const today = new Date();
-          const age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          const dayDiff = today.getDate() - birthDate.getDate();
-          const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-          
-          if (birthDate > today) {
-            rowErrors.push('birthDate cannot be in the future');
-          } else if (actualAge < 14) {
-            rowErrors.push('Age must be at least 14 years');
-          }
-        }
-      }
-
-      // nationality: if present, must be ISO 3166-1 alpha-2 (A–Z, length 2)
-      if (r.nationality && !/^[A-Za-z]{2}$/.test(r.nationality)) {
-        rowErrors.push('Invalid nationality format (must be 2-letter ISO code)');
-      }
-
-      // gender: if present, accept (case-insensitive) one of: male, female, non-binary, other, prefer-not-to-say, or short forms m/f
-      if (r.gender) {
-        const genderLower = r.gender.toLowerCase();
-        const validGenders = ['male', 'female', 'non-binary', 'other', 'prefer-not-to-say', 'm', 'f'];
-        if (!validGenders.includes(genderLower)) {
-          rowErrors.push('Invalid gender (must be: male, female, non-binary, other, prefer-not-to-say, m, f)');
-        }
-      }
-
-      // phone: if present, must be E.164: ^\+[1-9]\d{7,14}$
-      if (r.phone && !/^\+[1-9]\d{7,14}$/.test(r.phone)) {
-        rowErrors.push('Invalid phone format (must be E.164: +1234567890)');
-      }
-
-      if (rowErrors.length) {
-        errors.push({ row: rowNum, message: rowErrors.join('; ') });
-      } else {
-        valid += 1;
-      }
-    });
-
-    // normalize gender function
-    const normalizeGender = (gender: string) => {
-      if (!gender) return null;
-      const g = gender.toLowerCase();
-      if (g === 'm' || g === 'male') return 'male';
-      if (g === 'f' || g === 'female') return 'female';
-      if (g === 'non-binary') return 'non-binary';
-      if (g === 'other') return 'other';
-      if (g === 'prefer-not-to-say') return 'prefer-not-to-say';
-      return gender; // fallback to original if invalid
-    };
-
-    const preview = records.slice(0, 3).map(r => ({
-      email: r.email ?? null,
-      givenName: r.givenName ?? null,
-      familyName: r.familyName ?? null,
-      department: r.department ?? null,
-      managerEmail: r.managerEmail ?? null,
-      location: r.location ?? null,
-      jobTitle: r.jobTitle ?? null,
-      employeeId: r.employeeId ?? null,
-      startDate: r.startDate ?? null,
-      birthDate: r.birthDate ?? null,
-      nationality: r.nationality ? r.nationality.toUpperCase() : null,
-      gender: normalizeGender(r.gender),
-      phone: r.phone ?? null
-    }));
-
-    const proposedUsers = records.filter((_, idx) => {
-      const rowNum = idx + 2;
-      return !errors.some(e => e.row === rowNum);
-    }).map(r => ({
-      email: r.email ?? null,
-      givenName: r.givenName ?? null,
-      familyName: r.familyName ?? null,
-      department: r.department ?? null,
-      managerEmail: r.managerEmail ?? null,
-      location: r.location ?? null,
-      jobTitle: r.jobTitle ?? null,
-      employeeId: r.employeeId ?? null,
-      startDate: r.startDate ?? null,
-      birthDate: r.birthDate ?? null,
-      nationality: r.nationality ? r.nationality.toUpperCase() : null,
-      gender: normalizeGender(r.gender),
-      phone: r.phone ?? null
-    }));
-
+    const parsed = parseAndNormalizeCsv(csv);
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
+    
+    const validRows = parsed.normalized.filter((_, idx) => 
+      !parsed.errors.some(e => e.row === idx + 2)
+    );
+    
     return {
-      rows: records.length,
-      valid,
-      invalid: errors.length,
+      rows: parsed.normalized.length,
+      valid: validRows.length,
+      invalid: parsed.errors.length,
       requiredHeaders: REQUIRED,
       missingHeaders,
-      inferredHeaders: headers,
-      preview,
-      proposedUsers,
-      sampleErrors: errors.slice(0, 5)
+      inferredHeaders: parsed.headers,
+      preview: parsed.normalized.slice(0, 3),
+      proposedUsers: validRows,
+      sampleErrors: parsed.errors.slice(0, 5)
     };
   }
 
 
 
   async commitPlan(csv: string, orgId: string, dryRun = false): Promise<CommitResponse> {
-    const records = csv?.trim()
-      ? (parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string,string>[])
-      : [];
-    const headers = records.length ? Object.keys(records[0]) : [];
-    const missingHeaders = REQUIRED.filter(h => !headers.includes(h));
+    if (!csv?.trim()) {
+      return {
+        overview: {
+          rows: 0, creates: 0, updates: 0, skips: 0,
+          duplicateEmails: [], managerMissing: 0, newDepartments: [], newLocations: []
+        },
+        records: [{
+          email: null, action: 'skip',
+          reason: ['CSV body is empty'],
+          incoming: {}, managerResolved: false
+        }]
+      };
+    }
+
+    const parsed = parseAndNormalizeCsv(csv);
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
     if (missingHeaders.length) {
       return {
         overview: {
@@ -385,11 +174,12 @@ export class DirectoryService {
         }]
       };
     }
+
     // CSV duplicate detection
     const seen = new Set<string>();
     const dups = new Set<string>();
-    for (const r of records) {
-      const e = (r.email ?? '').trim().toLowerCase();
+    for (const row of parsed.normalized) {
+      const e = (row.email ?? '').trim().toLowerCase();
       if (!e) continue;
       if (seen.has(e)) dups.add(e); else seen.add(e);
     }
@@ -400,10 +190,7 @@ export class DirectoryService {
     const out: CommitRecord[] = [];
     let creates = 0, updates = 0, skips = 0, managerMissing = 0;
 
-    // normalize rows
-    const normalized = records.map(r => normalizeRow(r));
-
-    for (const row of normalized) {
+    for (const row of parsed.normalized) {
       const reason: string[] = [];
       if (!row.email || !row.givenName || !row.familyName) {
         out.push({ email: row.email, action: 'skip', reason: ['Missing required fields'], incoming: row, managerResolved: false });
@@ -422,23 +209,9 @@ export class DirectoryService {
         creates++;
         out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved: false });
       } else {
-        // detect diffs across supported fields (CSV as source-of-truth on commit)
-        const diffs: string[] = [];
-        const cmp = (k: keyof typeof row, curVal: any) => {
-          const inc = (row as any)[k];
-          if ((inc ?? null) !== (curVal ?? null)) diffs.push(String(k));
-        };
-        cmp('givenName', (current as any).firstName);
-        cmp('familyName', (current as any).lastName);
-        cmp('jobTitle', (current as any).jobTitle);
-        cmp('department', (current as any).department);
-        cmp('location', (current as any).location);
-        cmp('employeeId', (current as any).employeeId);
-        cmp('startDate', (current as any).startDate);
-        cmp('birthDate', (current as any).birthDate);
-        cmp('nationality', (current as any).nationality);
-        cmp('gender', (current as any).gender);
-        cmp('phone', (current as any).phone);
+        // detect diffs using computeDiff helper
+        const diffResult = computeDiff(current, row);
+        const diffs = diffResult.changes.map(c => c.field);
 
         if (diffs.length === 0 && !row.managerEmail) {
           skips++;
@@ -471,11 +244,11 @@ export class DirectoryService {
     }
 
     // compute new departments and locations from CSV vs existing
-    const newDepartments = collectNewDepartments(normalized, existingDepts);
-    const newLocations = collectNewLocations(normalized, existingLocs);
+    const newDepartments = collectNewDepartments(parsed.normalized, existingDepts);
+    const newLocations = collectNewLocations(parsed.normalized, existingLocs);
 
     // Enhanced manager graph diagnostics
-    const emailMap = buildEmailMap(normalized);
+    const emailMap = buildEmailMap(parsed.normalized);
     const resolveManager = async (mEmail: string): Promise<'db'|'csv'|null> => {
       const key = (mEmail ?? '').trim().toLowerCase();
       if (!key) return null;
@@ -486,7 +259,7 @@ export class DirectoryService {
       if (emailMap.has(key)) return 'csv';
       return null;
     };
-    const diag = await diagnoseManagers(normalized, resolveManager);
+    const diag = await diagnoseManagers(parsed.normalized, resolveManager);
 
     // Per-record manager resolution and issues; merge diag.perRecordIssues into each record's reason[]
     const outWithManagers: CommitRecord[] = [];
@@ -520,7 +293,7 @@ export class DirectoryService {
     // Replace original out with enriched version and update overview with diag counters
     const enrichedOut = outWithManagers;
     const overview: CommitOverview = {
-      rows: normalized.length,
+      rows: parsed.normalized.length,
       creates, updates, skips,
       duplicateEmails: Array.from(dups.values()),
       managerMissing: diag.managerMissing,

@@ -1,0 +1,155 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Reduce apps/bff/src/modules/directory/directory.service.ts below 500 lines with ZERO behavior change by extracting remaining pure logic:
+
+CSV parsing, diff/changes computation, and overview aggregation move into lib/*.
+
+Service keeps the same public methods (validate, plan, session, preview, approve).
+
+TOUCH ONLY
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/lib/csv.ts
+apps/bff/src/modules/directory/lib/diff.ts
+apps/bff/src/modules/directory/lib/overview.ts
+apps/bff/src/modules/directory/lib/types.ts // (extend only if needed)
+
+CHANGES
+// Create: apps/bff/src/modules/directory/lib/csv.ts
+// Extract the CSV parse + header validation (no DB calls here).
+import { parse } from 'csv-parse/sync';
+import { NormalizedRow } from './types';
+import { normalizeRow, isValidEmail } from './normalizers';
+
+export type ParsedCsv = {
+headers: string[];
+rawRows: any[];
+normalized: NormalizedRow[];
+errors: Array<{ row: number; message: string }>;
+};
+
+export function parseAndNormalizeCsv(csv: string): ParsedCsv {
+const records = parse(csv, { columns: true, skip_empty_lines: true, trim: true });
+const headers = Object.keys(records[0] ?? {});
+const errors: Array<{ row: number; message: string }> = [];
+const normalized: NormalizedRow[] = [];
+
+records.forEach((r: any, idx: number) => {
+const n = normalizeRow(r);
+if (!n.email || !isValidEmail(n.email)) {
+errors.push({ row: idx + 2, message: 'Invalid or missing email' });
+}
+normalized.push(n);
+});
+
+return { headers, rawRows: records, normalized, errors };
+}
+
+// Create: apps/bff/src/modules/directory/lib/diff.ts
+// Extract compare/mapping logic for action & changes (no DB; pure).
+import { NormalizedRow } from './types';
+
+export type DiffResult = {
+action: 'create' | 'update' | 'skip' | 'invalid';
+changes: Array<{ field: string; from: any; to: any }>;
+};
+
+export function computeDiff(existing: any | null, row: NormalizedRow): DiffResult {
+if (!existing) return { action: 'create', changes: [] };
+
+const changes: Array<{ field: string; from: any; to: any }> = [];
+// map: givenName -> firstName, familyName -> lastName, plus safe fields we already support
+const pairs: Array<[keyof NormalizedRow, string]> = [
+['givenName', 'firstName'],
+['familyName', 'lastName'],
+['jobTitle', 'jobTitle'],
+['employeeId', 'employeeId'],
+['startDate', 'startDate'],
+['birthDate', 'birthDate'],
+['nationality', 'nationality'],
+['gender', 'gender'],
+['phone', 'phone'],
+];
+
+for (const [incomingKey, existingKey] of pairs) {
+const nextVal = (row[incomingKey] ?? null);
+const prevVal = (existing as any)[existingKey] ?? null;
+if (nextVal !== null && nextVal !== prevVal) {
+changes.push({ field: String(existingKey), from: prevVal, to: nextVal });
+}
+}
+
+return { action: changes.length ? 'update' : 'skip', changes };
+}
+
+// Create: apps/bff/src/modules/directory/lib/overview.ts
+// Extract counters aggregation to keep service small.
+export type Counters = {
+creates: number; updates: number; skips: number;
+duplicates: number; invalid: number;
+};
+
+export function summarize(records: Array<{ action: string; duplicate?: boolean; invalid?: boolean }>): Counters {
+let creates = 0, updates = 0, skips = 0, duplicates = 0, invalid = 0;
+for (const r of records) {
+if (r.invalid) { invalid++; continue; }
+if (r.duplicate) { duplicates++; }
+if (r.action === 'create') creates++;
+else if (r.action === 'update') updates++;
+else if (r.action === 'skip') skips++;
+}
+return { creates, updates, skips, duplicates, invalid };
+}
+
+// UPDATE: apps/bff/src/modules/directory/directory.service.ts
+// - Import and use lib/csv.parseAndNormalizeCsv instead of inline CSV parsing.
+// - Import and use lib/diff.computeDiff where we decide create/update/skip.
+// - Import and use lib/overview.summarize to build the high-level counters.
+// - REMOVE the corresponding in-file helper code that was moved.
+// - Keep endpoints, DTO shapes, counters, and write behavior IDENTICAL.
+// - Do not change manager diagnostics, token helpers, or identity repository calls already refactored.
+
+RUN & PRINT
+
+0) Before size
+echo "=== BEFORE SIZE ===" && wc -l apps/bff/src/modules/directory/directory.service.ts
+
+1) Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) After size (must be < 500)
+echo "=== AFTER SIZE ===" && wc -l apps/bff/src/modules/directory/directory.service.ts
+
+3) Lint (should not report max-lines on the service)
+npx eslint apps/bff/src/modules/directory/directory.service.ts || true
+
+4) Smoke: session → preview → approve (same CSV as before)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location,managerEmail\nalex@demo.com,Alex,Stone,Engineering,Dubai,boss@demo.com"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -120
+echo "=== APPROVE ===" && curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -160
+
+5) Status check
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: directory.service.ts now < 500 lines with no behavior change; any regressions?"
+
+STOP.
+
+When this is green, next slice is contracts seeding (@thrivio/contracts) so we can fully remove any BFF → services imports.
+
+
+
+
+
+
+
+Ask ChatGPT
