@@ -1281,7 +1281,7 @@
     "@types/node" "*"
     jest-regex-util "30.0.1"
 
-"@jest/reporters@30.0.5":
+"@jest/reporters@^30.0.2", "@jest/reporters@30.0.5":
   version "30.0.5"
   resolved "https://registry.npmjs.org/@jest/reporters/-/reporters-30.0.5.tgz"
   integrity sha512-mafft7VBX4jzED1FwGC1o/9QUM2xebzavImZMeqnsklgcyxBto8mV4HzNSzUrryJ+8R9MFOM3HgYuDradWR+4g==
@@ -1336,7 +1336,7 @@
     callsites "^3.1.0"
     graceful-fs "^4.2.11"
 
-"@jest/test-result@30.0.5":
+"@jest/test-result@^30.0.2", "@jest/test-result@30.0.5":
   version "30.0.5"
   resolved "https://registry.npmjs.org/@jest/test-result/-/test-result-30.0.5.tgz"
   integrity sha512-wPyztnK0gbDMQAJZ43tdMro+qblDHH1Ru/ylzUo21TBKqt88ZqnKKK2m30LKmLLoKtR2lxdpCC/P3g1vfKcawQ==
@@ -1472,6 +1472,13 @@
     path-to-regexp "8.2.0"
     tslib "2.8.1"
 
+"@nestjs/testing@^11.1.6":
+  version "11.1.6"
+  resolved "https://registry.npmjs.org/@nestjs/testing/-/testing-11.1.6.tgz"
+  integrity sha512-srYzzDNxGvVCe1j0SpTS9/ix75PKt6Sn6iMaH1rpJ6nj2g8vwNrhK0CoJJXvpCYgrnI+2WES2pprYnq8rAMYHA==
+  dependencies:
+    tslib "2.8.1"
+
 "@next/env@15.4.6":
   version "15.4.6"
   resolved "https://registry.npmjs.org/@next/env/-/env-15.4.6.tgz"
@@ -1550,6 +1557,27 @@
     jsonc-eslint-parser "^2.1.0"
     semver "^7.5.3"
     tslib "^2.3.0"
+
+"@nx/jest@^21.3.11":
+  version "21.3.11"
+  resolved "https://registry.npmjs.org/@nx/jest/-/jest-21.3.11.tgz"
+  integrity sha512-PkdNWeoUY81zr+jtUapBdvvh26lWYIhDNyUwTjIBFajX8EAlhJpvShKHs7QObmrwOMLMXwLHKINiSCw9rueOBQ==
+  dependencies:
+    "@jest/reporters" "^30.0.2"
+    "@jest/test-result" "^30.0.2"
+    "@nx/devkit" "21.3.11"
+    "@nx/js" "21.3.11"
+    "@phenomnomnominal/tsquery" "~5.0.1"
+    identity-obj-proxy "3.0.0"
+    jest-config "^30.0.2"
+    jest-resolve "^30.0.2"
+    jest-util "^30.0.2"
+    minimatch "9.0.3"
+    picocolors "^1.1.0"
+    resolve.exports "2.0.3"
+    semver "^7.5.3"
+    tslib "^2.3.0"
+    yargs-parser "21.1.1"
 
 "@nx/js@21.3.11":
   version "21.3.11"
@@ -3437,6 +3465,11 @@ handlebars@^4.7.8:
   optionalDependencies:
     uglify-js "^3.1.4"
 
+harmony-reflect@^1.4.6:
+  version "1.6.2"
+  resolved "https://registry.npmjs.org/harmony-reflect/-/harmony-reflect-1.6.2.tgz"
+  integrity sha512-HIp/n38R9kQjDEziXyDTuW3vvoxxyxjxFzXLrBr18uB47GnSt+G9D29fqrpM5ZkspMcPICud3XsBJQ4Y2URg8g==
+
 has-flag@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz"
@@ -3495,6 +3528,13 @@ iconv-lite@^0.6.3, iconv-lite@0.6.3:
   integrity sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
+
+identity-obj-proxy@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/identity-obj-proxy/-/identity-obj-proxy-3.0.0.tgz"
+  integrity sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA==
+  dependencies:
+    harmony-reflect "^1.4.6"
 
 ieee754@^1.1.13, ieee754@^1.2.1:
   version "1.2.1"
@@ -3752,7 +3792,7 @@ jest-cli@30.0.5:
     jest-validate "30.0.5"
     yargs "^17.7.2"
 
-jest-config@30.0.5:
+jest-config@^30.0.2, jest-config@30.0.5:
   version "30.0.5"
   resolved "https://registry.npmjs.org/jest-config/-/jest-config-30.0.5.tgz"
   integrity sha512-aIVh+JNOOpzUgzUnPn5FLtyVnqc3TQHVMupYtyeURSb//iLColiMIR8TxCIDKyx9ZgjKnXGucuW68hCxgbrwmA==
@@ -3901,7 +3941,7 @@ jest-resolve-dependencies@30.0.5:
     jest-regex-util "30.0.1"
     jest-snapshot "30.0.5"
 
-jest-resolve@*, jest-resolve@30.0.5:
+jest-resolve@*, jest-resolve@^30.0.2, jest-resolve@30.0.5:
   version "30.0.5"
   resolved "https://registry.npmjs.org/jest-resolve/-/jest-resolve-30.0.5.tgz"
   integrity sha512-d+DjBQ1tIhdz91B79mywH5yYu76bZuE96sSbxj8MkjWVx5WNdt1deEFRONVL4UkKLSrAbMkdhb24XN691yDRHg==
@@ -3998,7 +4038,7 @@ jest-snapshot@30.0.5:
     semver "^7.7.2"
     synckit "^0.11.8"
 
-"jest-util@^29.0.0 || ^30.0.0", jest-util@30.0.5:
+"jest-util@^29.0.0 || ^30.0.0", jest-util@^30.0.2, jest-util@30.0.5:
   version "30.0.5"
   resolved "https://registry.npmjs.org/jest-util/-/jest-util-30.0.5.tgz"
   integrity sha512-pvyPWssDZR0FlfMxCBoc0tvM8iUEskaRFALUtGQYzVEAqisAztmy+R8LnU14KT4XA0H/a5HMVTXat1jLne010g==

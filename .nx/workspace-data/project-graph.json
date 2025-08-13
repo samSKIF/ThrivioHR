@@ -1804,6 +1804,15 @@
         "hash": "sha512-HErwPmKnk+loTq8qzu1up+k7FC6Kqa8x6lJ4cDw77KnTxLzsCaPt+jBvOq6UfICmfqcqCCf3dKXg+aObQp+kIQ=="
       }
     },
+    "npm:@nestjs/testing": {
+      "type": "npm",
+      "name": "npm:@nestjs/testing",
+      "data": {
+        "version": "11.1.6",
+        "packageName": "@nestjs/testing",
+        "hash": "sha512-srYzzDNxGvVCe1j0SpTS9/ix75PKt6Sn6iMaH1rpJ6nj2g8vwNrhK0CoJJXvpCYgrnI+2WES2pprYnq8rAMYHA=="
+      }
+    },
     "npm:@next/env": {
       "type": "npm",
       "name": "npm:@next/env",
@@ -1892,6 +1901,15 @@
         "version": "21.3.11",
         "packageName": "@nx/eslint-plugin",
         "hash": "sha512-BabOp+5qZx/GgCWVALiVm4wjrUOO5sqeItsAWtpocMsvYE8YRZ4+AekS/F2knTjJdcdrh51hxqv5ua3YTNFtfA=="
+      }
+    },
+    "npm:@nx/jest": {
+      "type": "npm",
+      "name": "npm:@nx/jest",
+      "data": {
+        "version": "21.3.11",
+        "packageName": "@nx/jest",
+        "hash": "sha512-PkdNWeoUY81zr+jtUapBdvvh26lWYIhDNyUwTjIBFajX8EAlhJpvShKHs7QObmrwOMLMXwLHKINiSCw9rueOBQ=="
       }
     },
     "npm:@nx/js": {
@@ -4198,6 +4216,15 @@
         "hash": "sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ=="
       }
     },
+    "npm:harmony-reflect": {
+      "type": "npm",
+      "name": "npm:harmony-reflect",
+      "data": {
+        "version": "1.6.2",
+        "packageName": "harmony-reflect",
+        "hash": "sha512-HIp/n38R9kQjDEziXyDTuW3vvoxxyxjxFzXLrBr18uB47GnSt+G9D29fqrpM5ZkspMcPICud3XsBJQ4Y2URg8g=="
+      }
+    },
     "npm:has-flag": {
       "type": "npm",
       "name": "npm:has-flag",
@@ -4277,6 +4304,15 @@
         "version": "0.6.3",
         "packageName": "iconv-lite",
         "hash": "sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw=="
+      }
+    },
+    "npm:identity-obj-proxy": {
+      "type": "npm",
+      "name": "npm:identity-obj-proxy",
+      "data": {
+        "version": "3.0.0",
+        "packageName": "identity-obj-proxy",
+        "hash": "sha512-00n6YnVHKrinT9t0d9+5yZC6UBNJANpYEQvL2LlX6Ab9lnmxzIRcEmTPuyGScvl1+jKuCICX1Z0Ab1pPKKdikA=="
       }
     },
     "npm:ieee754": {
@@ -4594,9 +4630,9 @@
         "hash": "sha512-Sa45PGMkBZzF94HMrlX4kUyPOwUpdZasaliKN3mifvDmkhLYqLLg8HQTzn6gq7vJGahFYMQjXgyJWfYImKZzOw=="
       }
     },
-    "npm:jest-config@30.0.5": {
+    "npm:jest-config": {
       "type": "npm",
-      "name": "npm:jest-config@30.0.5",
+      "name": "npm:jest-config",
       "data": {
         "version": "30.0.5",
         "packageName": "jest-config",
@@ -9172,7 +9208,7 @@
       },
       {
         "source": "npm:@jest/core",
-        "target": "npm:jest-config@30.0.5",
+        "target": "npm:jest-config",
         "type": "static"
       },
       {
@@ -9813,6 +9849,13 @@
         "type": "static"
       }
     ],
+    "npm:@nestjs/testing": [
+      {
+        "source": "npm:@nestjs/testing",
+        "target": "npm:tslib",
+        "type": "static"
+      }
+    ],
     "npm:@nodelib/fs.scandir": [
       {
         "source": "npm:@nodelib/fs.scandir",
@@ -9940,6 +9983,83 @@
       {
         "source": "npm:@nx/eslint-plugin",
         "target": "npm:tslib",
+        "type": "static"
+      }
+    ],
+    "npm:@nx/jest": [
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:@jest/reporters",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:@jest/test-result",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:@nx/devkit",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:@nx/js",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:@phenomnomnominal/tsquery",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:identity-obj-proxy",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:jest-config",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:jest-resolve",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:jest-util",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:minimatch@9.0.3",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:picocolors",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:resolve.exports",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:semver",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:tslib",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nx/jest",
+        "target": "npm:yargs-parser",
         "type": "static"
       }
     ],
@@ -12366,6 +12486,13 @@
         "type": "static"
       }
     ],
+    "npm:identity-obj-proxy": [
+      {
+        "source": "npm:identity-obj-proxy",
+        "target": "npm:harmony-reflect",
+        "type": "static"
+      }
+    ],
     "npm:import-fresh": [
       {
         "source": "npm:import-fresh",
@@ -12677,7 +12804,7 @@
       },
       {
         "source": "npm:jest-cli",
-        "target": "npm:jest-config@30.0.5",
+        "target": "npm:jest-config",
         "type": "static"
       },
       {
@@ -12696,124 +12823,124 @@
         "type": "static"
       }
     ],
-    "npm:jest-config@30.0.5": [
+    "npm:jest-config": [
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:@babel/core",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:@jest/get-type",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:@jest/pattern",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:@jest/test-sequencer",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:@jest/types",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:babel-jest",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:chalk",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:ci-info",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:deepmerge",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:glob",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:graceful-fs",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-circus",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-docblock",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-environment-node",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-regex-util",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-resolve",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-runner",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-util",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:jest-validate",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:micromatch",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:parse-json",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:pretty-format",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:slash",
         "type": "static"
       },
       {
-        "source": "npm:jest-config@30.0.5",
+        "source": "npm:jest-config",
         "target": "npm:strip-json-comments",
         "type": "static"
       }
@@ -15524,5 +15651,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755085488371
+  "computedAt": 1755085753411
 }
