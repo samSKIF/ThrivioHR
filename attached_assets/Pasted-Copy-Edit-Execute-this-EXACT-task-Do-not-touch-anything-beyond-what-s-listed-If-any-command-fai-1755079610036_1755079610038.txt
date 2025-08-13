@@ -1,0 +1,77 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Fix the type error around CommitChange by properly exporting it as a type in the contracts index and importing it correctly in the BFF compat file.
+
+TOUCH ONLY
+packages/contracts/src/index.ts
+apps/bff/src/modules/directory/lib/compat.ts
+
+CHANGES
+// packages/contracts/src/index.ts
+// FULL REPLACEMENT: separate Zod schemas and TypeScript types to avoid name collisions.
+export * as primitiveSchemas from "./primitives";
+export * as identitySchemas from "./identity";
+export * as directorySchemas from "./directory";
+export * as mediaSchemas from "./media";
+export type {
+  UUID, Email,
+} from "./primitives";
+export type {
+  UserPublic, OrgUnitPublic, LocationPublic,
+} from "./identity";
+export type {
+  ImportRow, CommitChange, CommitRecord, CommitOverview, CommitPlan, ImportSessionToken,
+} from "./directory";
+
+// apps/bff/src/modules/directory/lib/compat.ts
+@@
+-import type {
+-  ImportRow as TImportRow,
+-  CommitChange as TCommitChange,
+-  CommitRecord as TCommitRecord,
+-  CommitOverview as TCommitOverview,
+-  CommitPlan as TCommitPlan,
+-} from "@thrivio/contracts";
++import type {
++  ImportRow as TImportRow,
++  CommitChange,
++  CommitRecord as TCommitRecord,
++  CommitOverview as TCommitOverview,
++  CommitPlan as TCommitPlan,
++} from "@thrivio/contracts";
+@@
+-export type CommitChange = TCommitChange;
++export type CommitChange = CommitChange;
+
+RUN & PRINT
+# 1) Build to ensure the type error is resolved
+npx nx build bff && echo "=== BUILD OK ==="
+
+# 2) Lint the compat file
+npx eslint apps/bff/src/modules/directory/lib/compat.ts || true
+
+# 3) Smoke test the CSV import flow to ensure no behavioural change
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' \
+  -d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session \
+  -H "content-type: application/json" -H "Authorization: Bearer $ACCESS" \
+  -d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+echo "=== PREVIEW ==="
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN" \
+  -H "Authorization: Bearer $ACCESS" | head -120
+echo "=== APPROVE ==="
+curl -s -X POST http://localhost:5000/directory/import/session/approve \
+  -H "content-type: application/json" -H "Authorization: Bearer $ACCESS" \
+  -d "{\"token\":\"$TOKEN\"}" | head -200
+
+# 4) Status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: CommitChange is now a proper type, build is green, and there’s no regression; how do we stand versus the roadmap?"
+
+STOP.
