@@ -89,13 +89,13 @@ export class IdentityRepository {
     return { loc: (ins as any).rows?.[0] ?? null, created: true };
   }
 
-  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (ins as any).rows?.[0];
   }
 
-  async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+  async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (upd as any).rows?.[0];
