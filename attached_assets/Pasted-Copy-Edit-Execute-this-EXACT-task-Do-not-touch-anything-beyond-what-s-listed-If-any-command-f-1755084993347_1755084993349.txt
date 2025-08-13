@@ -1,0 +1,174 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.  
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Finish Codex observations by:
+1) Adding a proper Jest test target to the BFF and correcting test imports.
+2) Seeding minimal OpenAPI specs for the Auth and Directory endpoints (we’ll add GraphQL/events later).
+Keep changes minimal and tests green.
+
+TOUCH ONLY
+apps/bff/project.json
+apps/bff/src/main.ts         # used to bootstrap Nest app
+apps/bff/src/modules/auth/auth.spec.ts
+apps/bff/src/modules/directory/directory.spec.ts
+packages/contracts/openapi/auth.yaml
+packages/contracts/openapi/directory.yaml
+
+CHANGES
+// apps/bff/project.json
+// Add a “test” target using Jest with ts-jest preset.
+// Don’t modify existing targets. If a test target already exists, replace it.
+{
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/bff/jest.config.js",
+        "passWithNoTests": false
+      }
+    }
+  }
+}
+
+// apps/bff/src/main.ts
+// Export the Nest application factory for tests.
+@@
+ async function bootstrap() {
+   const app = await NestFactory.create(AppModule);
+   await app.listen(5000);
+ }
+ bootstrap();
++
++// Provide a helper for tests (returns app instance)
++export async function createTestApp() {
++  const moduleFixture = await Test.createTestingModule({
++    imports: [AppModule],
++  }).compile();
++  const app = moduleFixture.createNestApplication();
++  await app.init();
++  return app;
++}
+
+// apps/bff/src/modules/auth/auth.spec.ts
+// Use createTestApp instead of importing main, and update expectations.
+@@
+-import app from '../../../main';
++import { createTestApp } from '../../../main';
+ import request from 'supertest';
+@@
+ describe('Auth Module', () => {
+   it('should login a user', async () => {
+-    const res = await request(app.getHttpServer())
++    const app = await createTestApp();
++    const res = await request(app.getHttpServer())
+       .post('/auth/login')
+       .send({ orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909', email: 'csvdemo@example.com' });
+     expect(res.status).toBe(201);
+     expect(res.body).toHaveProperty('accessToken');
+     expect(res.body).toHaveProperty('refreshToken');
+     expect(res.body).toHaveProperty('user');
+   });
+ });
+
+// apps/bff/src/modules/directory/directory.spec.ts
+@@
+-import app from '../../../main';
++import { createTestApp } from '../../../main';
+ import request from 'supertest';
+@@
+ describe('Directory Module', () => {
+   it('should validate a CSV upload', async () => {
++    const app = await createTestApp();
+     // login first
+-    const login = await request(app.getHttpServer())
++    const login = await request(app.getHttpServer())
+       .post('/auth/login')
+       .send({ orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909', email: 'csvdemo@example.com' });
+     const token = login.body.accessToken;
+     const csv = 'email,givenName,familyName\njohn@example.com,John,Doe';
+
+     const res = await request(app.getHttpServer())
+       .post('/directory/import/validate')
+       .set('Authorization', `Bearer ${token}`)
+       .send({ csv });
+     expect(res.status).toBe(201);
+     expect(res.body).toHaveProperty('rows');
+     expect(res.body).toHaveProperty('valid');
+   });
+ });
+
+// packages/contracts/openapi/auth.yaml (NEW FILE)
+openapi: "3.0.0"
+info:
+  title: "Auth API"
+  version: "0.1.0"
+paths:
+  /auth/login:
+    post:
+      summary: "Login"
+      responses:
+        "201":
+          description: "Successful login"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+components:
+  schemas:
+    UserPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        email: { type: string, format: email }
+
+// packages/contracts/openapi/directory.yaml (NEW FILE)
+openapi: "3.0.0"
+info:
+  title: "Directory API"
+  version: "0.1.0"
+paths:
+  /directory/import/validate:
+    post:
+      summary: "Validate CSV"
+      responses:
+        "201":
+          description: "Validation result"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows: { type: integer }
+                  valid: { type: integer }
+                  invalid: { type: integer }
+                  requiredHeaders: { type: array, items: { type: string } }
+                  missingHeaders: { type: array, items: { type: string } }
+                  inferredHeaders: { type: array, items: { type: string } }
+                  preview: { type: array, items: { type: object } }
+                  sampleErrors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row: { type: integer }
+                        message: { type: string }
+
+RUN & PRINT
+# install any missing test deps quietly
+pnpm i --silent || npm i --silent
+
+# run build and tests
+npx nx build bff && echo "=== BUILD OK ==="
+npx nx test bff --skip-nx-cache && echo "=== TESTS RUN ==="
+
+# show the new OpenAPI specs
+ls packages/contracts/openapi

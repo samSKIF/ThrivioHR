@@ -18,6 +18,13 @@
         "cwd": "apps/bff"
       }
     },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "apps/bff/jest.config.js",
+        "passWithNoTests": false
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

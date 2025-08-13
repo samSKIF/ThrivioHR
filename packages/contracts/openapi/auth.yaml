@@ -1,0 +1,28 @@
+openapi: "3.0.0"
+info:
+  title: "Auth API"
+  version: "0.1.0"
+paths:
+  /auth/login:
+    post:
+      summary: "Login"
+      responses:
+        "201":
+          description: "Successful login"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+components:
+  schemas:
+    UserPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        email: { type: string, format: email }

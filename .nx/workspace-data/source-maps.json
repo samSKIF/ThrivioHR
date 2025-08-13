@@ -76,6 +76,26 @@
       "apps/bff/project.json",
       "nx/core/project-json"
     ],
+    "targets.test": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.jestConfig": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
     "targets.lint": [
       "apps/bff/project.json",
       "nx/core/project-json"

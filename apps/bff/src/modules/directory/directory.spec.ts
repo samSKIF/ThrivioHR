@@ -1,8 +1,9 @@
+import { createTestApp } from '../../../main';
 import request from 'supertest';
-import app from '../../../main'; // adjust import if needed
 
 describe('Directory Module', () => {
   it('should validate a CSV upload', async () => {
+    const app = await createTestApp();
     // login first
     const login = await request(app.getHttpServer())
       .post('/auth/login')
