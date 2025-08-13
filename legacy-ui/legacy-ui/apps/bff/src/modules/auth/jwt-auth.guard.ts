@@ -1,12 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../../env';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   private readonly jwtSecret: string;
 
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET ?? 'dev-secret';
+    this.jwtSecret = getJwtSecret();
   }
 
   canActivate(context: ExecutionContext): boolean {

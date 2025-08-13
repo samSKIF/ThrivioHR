@@ -126,13 +126,13 @@ export class DirectoryService {
     if (!csv?.trim()) {
       return {
         overview: {
-          rows: 0, creates: 0, updates: 0, skips: 0,
-          duplicateEmails: [], managerMissing: 0, newDepartments: [], newLocations: []
+          creates: 0, updates: 0, skips: 0, duplicates: 0, invalid: 1,
+          newDepartments: [], newLocations: []
         },
         records: [{
-          email: null, action: 'skip',
+          action: 'invalid',
           reason: ['CSV body is empty'],
-          incoming: {}, managerResolved: false
+          incoming: { email: '', givenName: '', familyName: '' }
         }]
       };
     }
@@ -142,13 +142,13 @@ export class DirectoryService {
     if (missingHeaders.length) {
       return {
         overview: {
-          rows: 0, creates: 0, updates: 0, skips: 0,
-          duplicateEmails: [], managerMissing: 0, newDepartments: [], newLocations: []
+          creates: 0, updates: 0, skips: 0, duplicates: 0, invalid: 1,
+          newDepartments: [], newLocations: []
         },
         records: [{
-          email: null, action: 'skip',
+          action: 'invalid',
           reason: [`Missing required headers: ${missingHeaders.join(', ')}`],
-          incoming: {}, managerResolved: false
+          incoming: { email: '', givenName: '', familyName: '' }
         }]
       };
     }
@@ -166,13 +166,13 @@ export class DirectoryService {
     const existingDepts = new Set((await this.identity.listDistinctDepartments(orgId)).map(d => d.trim().toLowerCase()));
     const existingLocs = new Set((await this.identity.listDistinctLocations(orgId)).map(l => l.trim().toLowerCase()));
     const out: CommitRecord[] = [];
-    let creates = 0, updates = 0, skips = 0, managerMissing = 0;
+    let creates = 0, updates = 0, skips = 0, invalid = 0;
 
     for (const row of parsed.normalized) {
       const reason: string[] = [];
       if (!row.email || !row.givenName || !row.familyName) {
-        out.push({ email: row.email, action: 'skip', reason: ['Missing required fields'], incoming: row, managerResolved: false });
-        skips++;
+        out.push({ action: 'invalid', reason: ['Missing required fields'], incoming: row });
+        invalid++;
         continue;
       }
       if (dups.has((row.email || '').toLowerCase())) {
@@ -185,37 +185,21 @@ export class DirectoryService {
 
       if (!current) {
         creates++;
-        out.push({ email: row.email, action: 'create', reason, incoming: row, managerResolved: false });
+        out.push({ action: 'create', reason, incoming: row });
       } else {
         // detect diffs using computeDiff helper
         const diffResult = computeDiff(current, row);
-        const diffs = diffResult.changes.map(c => c.field);
+        const changes = diffResult.changes.map(c => `${c.field}: ${c.from} → ${c.to}`);
 
-        if (diffs.length === 0 && !row.managerEmail) {
+        if (changes.length === 0 && !row.managerEmail) {
           skips++;
-          out.push({ email: row.email, action: 'skip', reason, incoming: row, current: { id: (current as any).id }, managerResolved: false });
+          out.push({ action: 'skip', reason, incoming: row });
         } else {
           updates++;
           out.push({
-            email: row.email,
             action: 'update',
-            diffs, reason,
-            incoming: row,
-            current: {
-              id: (current as any).id,
-              givenName: (current as any).firstName,
-              familyName: (current as any).lastName,
-              jobTitle: (current as any).jobTitle,
-              department: (current as any).department,
-              location: (current as any).location,
-              employeeId: (current as any).employeeId,
-              startDate: (current as any).startDate,
-              birthDate: (current as any).birthDate,
-              nationality: (current as any).nationality,
-              gender: (current as any).gender,
-              phone: (current as any).phone
-            },
-            managerResolved: false
+            changes, reason,
+            incoming: row
           });
         }
       }
@@ -245,25 +229,21 @@ export class DirectoryService {
       const email = (rec.incoming?.email ?? '').trim().toLowerCase();
       const mEmail = rec.incoming?.managerEmail ?? null;
       const issues = diag.perRecordIssues.get(email) || [];
-      let resolved = false;
-      let managerUserId: string|null = null;
 
       if (mEmail) {
         const res = await resolveManager(mEmail);
         if (res === 'db') {
-          resolved = true;
-          const u = await this.identity.findUserByEmailOrg(mEmail, orgId);
-          managerUserId = (u as any)?.id ?? null;
+          issues.push('manager found in database');
         } else if (res === 'csv') {
-          resolved = true; managerUserId = null;
+          issues.push('manager will be created from CSV');
+        } else {
+          issues.push('manager not found');
         }
       }
 
-      // Merge into record
+      // Merge manager info into reason array
       outWithManagers.push({
         ...rec,
-        managerResolved: resolved,
-        managerUserId,
         reason: [...(rec.reason ?? []), ...issues],
       });
     }
@@ -271,14 +251,14 @@ export class DirectoryService {
     // Replace original out with enriched version and update overview with diag counters
     const enrichedOut = outWithManagers;
     const overview: CommitOverview = {
-      rows: parsed.normalized.length,
       creates, updates, skips,
-      duplicateEmails: Array.from(dups.values()),
+      duplicates: dups.size,
+      invalid,
+      newDepartments,
+      newLocations,
       managerMissing: diag.managerMissing,
       managerCycles: diag.managerCycles,
-      managerSelf: diag.managerSelf,
-      newDepartments,
-      newLocations
+      managerSelf: diag.managerSelf
     };
 
     return {
