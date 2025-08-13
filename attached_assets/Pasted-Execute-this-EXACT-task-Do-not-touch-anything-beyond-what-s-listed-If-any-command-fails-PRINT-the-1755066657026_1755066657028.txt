@@ -1,0 +1,171 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Seed the @thrivio/contracts package with shared types & Zod schemas used by BFF (Directory/Identity/Media). Add TS path aliases so BFF can import contracts next. No behavior changes.
+
+TOUCH ONLY
+packages/contracts/project.json
+packages/contracts/src/primitives.ts
+packages/contracts/src/identity.ts
+packages/contracts/src/directory.ts
+packages/contracts/src/media.ts
+packages/contracts/src/index.ts
+tsconfig.base.json
+package.json
+
+CHANGES
+// packages/contracts/src/primitives.ts
+import { z } from 'zod';
+export const UUID = z.string().uuid();
+export const Email = z.string().email();
+export const ISODate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/); // YYYY-MM-DD
+export const Timestamp = z.string(); // ISO8601
+export type UUID = z.infer<typeof UUID>;
+export type Email = z.infer<typeof Email>;
+
+// packages/contracts/src/identity.ts
+import { z } from 'zod';
+import { UUID, Email } from './primitives';
+export const UserPublic = z.object({
+id: UUID, organizationId: UUID, email: Email,
+firstName: z.string().nullable(), lastName: z.string().nullable(),
+displayName: z.string().nullable()
+});
+export type UserPublic = z.infer<typeof UserPublic>;
+
+export const OrgUnitPublic = z.object({
+id: UUID, organizationId: UUID, type: z.enum(['company','department','team']),
+name: z.string(), parentId: UUID.nullable()
+});
+export type OrgUnitPublic = z.infer<typeof OrgUnitPublic>;
+
+export const LocationPublic = z.object({
+id: UUID, organizationId: UUID, name: z.string()
+});
+export type LocationPublic = z.infer<typeof LocationPublic>;
+
+// packages/contracts/src/directory.ts
+import { z } from 'zod';
+import { Email, ISODate } from './primitives';
+
+export const ImportRow = z.object({
+email: Email,
+givenName: z.string().nullable().optional(),
+familyName: z.string().nullable().optional(),
+department: z.string().nullable().optional(),
+location: z.string().nullable().optional(),
+managerEmail: z.string().email().nullable().optional(),
+jobTitle: z.string().nullable().optional(),
+employeeId: z.string().nullable().optional(),
+startDate: ISODate.nullable().optional(),
+birthDate: ISODate.nullable().optional(),
+nationality: z.string().nullable().optional(),
+gender: z.string().nullable().optional(),
+phone: z.string().nullable().optional(),
+});
+export type ImportRow = z.infer<typeof ImportRow>;
+
+export const CommitChange = z.object({ field: z.string(), from: z.any(), to: z.any() });
+export const CommitRecord = z.object({
+incoming: ImportRow,
+action: z.enum(['create','update','skip','invalid']),
+reason: z.array(z.string()).optional(),
+changes: z.array(CommitChange).optional(),
+});
+export type CommitRecord = z.infer<typeof CommitRecord>;
+
+export const CommitOverview = z.object({
+creates: z.number(), updates: z.number(), skips: z.number(),
+duplicates: z.number(), invalid: z.number(),
+newDepartments: z.array(z.string()).optional(),
+newLocations: z.array(z.string()).optional(),
+managerMissing: z.number().optional(),
+managerSelf: z.number().optional(),
+managerCycles: z.number().optional(),
+});
+export type CommitOverview = z.infer<typeof CommitOverview>;
+
+export const CommitPlan = z.object({
+overview: CommitOverview,
+records: z.array(CommitRecord),
+});
+export type CommitPlan = z.infer<typeof CommitPlan>;
+
+export const ImportSessionToken = z.object({
+orgId: z.string(),
+csvSha256: z.string(),
+createdAt: z.number(),
+exp: z.number().optional()
+});
+export type ImportSessionToken = z.infer<typeof ImportSessionToken>;
+
+// packages/contracts/src/media.ts
+import { z } from 'zod';
+import { UUID } from './primitives';
+export const MediaKind = z.enum(['avatar','cover']);
+export const UserMedia = z.object({
+userId: UUID,
+kind: MediaKind,
+storageKey: z.string(),
+version: z.number(),
+width: z.number().optional(),
+height: z.number().optional(),
+mime: z.string().optional(),
+isDefault: z.boolean().optional(),
+});
+export type UserMedia = z.infer<typeof UserMedia>;
+
+// packages/contracts/src/index.ts
+export * as primitives from './primitives';
+export * as identity from './identity';
+export * as directory from './directory';
+export * as media from './media';
+
+// packages/contracts/project.json (ensure tags already exist; keep existing fields; add a build target if missing)
+{
+"name": "contracts",
+"sourceRoot": "packages/contracts/src",
+"projectType": "library",
+"targets": {},
+"tags": ["type:lib","scope:contracts"]
+}
+
+// tsconfig.base.json — add path aliases (merge with existing)
+{
+"compilerOptions": {
+"paths": {
+"@thrivio/contracts": ["packages/contracts/src/index.ts"],
+"@thrivio/contracts/": ["packages/contracts/src/"]
+}
+}
+}
+
+// package.json — ensure zod is available (devDependency is fine in monorepo root)
+{
+"devDependencies": {
+"zod": "^3.23.8"
+}
+}
+
+RUN & PRINT
+
+Install zod quietly (fallback to npm if pnpm not available)
+pnpm i -D zod --silent || npm i -D zod --silent
+
+Show created files
+echo "=== CONTRACTS: FILES ===" && find packages/contracts/src -maxdepth 2 -type f -print | sort
+
+Print key schemas
+echo "=== CONTRACTS: INDEX ===" && sed -n '1,200p' packages/contracts/src/index.ts
+echo "=== CONTRACTS: DIRECTORY TYPES ===" && sed -n '1,220p' packages/contracts/src/directory.ts
+
+Verify TS path alias resolves by type-checking a tiny inline file (no code changes elsewhere)
+node -e "require('fs').writeFileSync('tmp_contracts_check.ts','import * as C from "@thrivio/contracts"; console.log(Object.keys(C));');"
+npx tsc tmp_contracts_check.ts --noEmit && echo '=== TS PATH ALIAS OK ===' || echo '=== TS PATH ALIAS FAILED ==='
+
+Status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: @thrivio/contracts seeded (types + Zod) and path alias working; any regressions?"
+
+STOP.

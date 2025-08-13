@@ -20,7 +20,8 @@
       "@thrivio/types": ["packages/types/src"],
       "@thrivio/config": ["packages/config/src"],
       "@thrivio/ui": ["packages/ui/src"],
-      "@thrivio/contracts": ["packages/contracts/src"],
+      "@thrivio/contracts": ["packages/contracts/src/index.ts"],
+      "@thrivio/contracts/*": ["packages/contracts/src/*"],
       "@thrivio/testing": ["packages/testing/src"]
     }
   },
