@@ -1,4 +1,5 @@
 import type { directory as CDirectory } from '@thrivio/contracts';
+import type { CommitPlan, CommitRecord } from '../lib/types';
 
 export class ImportValidateDto {
   // CSV content as a raw string in JSON body
@@ -6,4 +7,4 @@ export class ImportValidateDto {
 }
 
 // Type annotation for contracts alignment  
-export interface ValidateResponse extends CDirectory.CommitPlan {}
+export interface ValidateResponse extends CommitPlan {}

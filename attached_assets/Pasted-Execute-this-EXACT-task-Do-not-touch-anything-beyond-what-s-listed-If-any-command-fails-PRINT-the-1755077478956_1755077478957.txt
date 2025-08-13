@@ -1,0 +1,124 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Adopt @thrivio/contracts types via compatibility wrappers so the current BFF compiles with ZERO runtime changes.
+
+Add compat types that extend contract types with the extra fields our implementation uses (email, managerResolved, possible extra keys on overview/plan).
+
+Switch BFF Directory module to use these compat types.
+
+Ensure all @thrivio/contracts imports used in type positions are import type.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/lib/compat.ts
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// CREATE: apps/bff/src/modules/directory/lib/compat.ts
+import type { directory as CDirectory } from '@thrivio/contracts';
+
+type Extras = Record<string, unknown>;
+
+// Base contract aliases (for clarity)
+export type ImportRow = CDirectory.ImportRow;
+export type CommitChange = CDirectory.CommitChange;
+export type CommitRecordBase = CDirectory.CommitRecord;
+export type CommitOverviewBase = CDirectory.CommitOverview;
+export type CommitPlanBase = CDirectory.CommitPlan;
+
+// Current implementation sometimes accesses record.email directly and flags like managerResolved;
+// and may stash extra counters/keys on overview/plan. Keep those optional to avoid behavior changes.
+export type CommitRecordCompat = CommitRecordBase & {
+email?: string;
+managerResolved?: boolean;
+} & Extras;
+
+export type CommitOverviewCompat = CommitOverviewBase & Extras;
+export type CommitPlanCompat = CommitPlanBase & Extras;
+
+// KEEP internal NormalizedRow shape used by normalizers (assignable from ImportRow)
+export type NormalizedRow = {
+email: string|null;
+givenName: string|null;
+familyName: string|null;
+department?: string|null;
+location?: string|null;
+managerEmail?: string|null;
+jobTitle?: string|null;
+employeeId?: string|null;
+startDate?: string|null;
+birthDate?: string|null;
+nationality?: string|null;
+gender?: string|null;
+phone?: string|null;
+};
+
+// UPDATE: apps/bff/src/modules/directory/lib/types.ts
+// Replace previous exports with re-exports from compat types to minimize code churn.
+export {
+ImportRow,
+CommitChange,
+CommitRecordCompat as CommitRecord,
+CommitOverviewCompat as CommitOverview,
+CommitPlanCompat as CommitPlan,
+NormalizedRow,
+} from './compat';
+
+// UPDATE: apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+// Ensure we only use type imports; do not change runtime DTO decorators/classes.
+-import { directory as CDirectory } from '@thrivio/contracts';
++import type { directory as CDirectory } from '@thrivio/contracts';
+// If this file referenced local CommitPlan/CommitRecord, import from lib/types (which now maps to compat)
++import type { CommitPlan, CommitRecord } from '../lib/types';
+
+// UPDATE: apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+-import { directory as CDirectory } from '@thrivio/contracts';
++import type { directory as CDirectory } from '@thrivio/contracts';
++import type { CommitPlan, CommitRecord } from '../lib/types';
+
+// UPDATE: apps/bff/src/modules/directory/directory.service.ts
+// Make all @thrivio/contracts imports type-only and point internal types to lib/types.
+
+import { directory as CDirectory } from '@thrivio/contracts';
+
+import type { directory as CDirectory } from '@thrivio/contracts';
+
+import { /* local types */ } from './lib/types';
+
+import type { CommitPlan, CommitOverview, CommitRecord, ImportRow, NormalizedRow } from './lib/types';
+// Do NOT change any logic. If the code assigns extra properties (e.g., record.email or overview.rows),
+// it will still compile because compat types allow extras.
+
+RUN & PRINT
+
+1) Build (expect success)
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) Lint touched files (shouldn’t report module-boundaries/type import issues)
+echo "=== ESLINT (touched files) ==="
+npx eslint apps/bff/src/modules/directory/lib/compat.ts
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.service.ts || true
+
+3) Quick smoke: session → preview (behavior unchanged)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department\nalex@demo.com,Alex,Stone,Engineering"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -120
+
+4) Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: contracts compat types adopted; build stable; any regressions?"
+
+STOP.

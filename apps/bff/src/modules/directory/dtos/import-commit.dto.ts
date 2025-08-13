@@ -1,4 +1,5 @@
 import type { directory as CDirectory } from '@thrivio/contracts';
+import type { CommitPlan, CommitRecord } from '../lib/types';
 
 export class ImportCommitDto {
   csv!: string;
@@ -8,5 +9,5 @@ export class ImportCommitDto {
 // Type annotations for contracts alignment
 export interface CommitResponse {
   overview: CDirectory.CommitOverview;
-  records: CDirectory.CommitRecord[];
+  records: CommitRecord[];
 }

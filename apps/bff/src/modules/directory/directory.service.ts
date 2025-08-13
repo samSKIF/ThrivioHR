@@ -6,7 +6,7 @@ import { buildEmailMap, diagnoseManagers } from './lib/managers';
 import { parseAndNormalizeCsv } from './lib/csv';
 import { computeDiff } from './lib/diff';
 import { summarize } from './lib/overview';
-import type { NormalizedRow, CommitRecord, CommitOverview, ImportRow } from './lib/types';
+import type { CommitPlan, CommitOverview, CommitRecord, ImportRow, NormalizedRow } from './lib/types';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
 
