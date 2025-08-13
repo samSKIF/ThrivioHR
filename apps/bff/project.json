@@ -19,11 +19,12 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "apps/bff/jest.config.js",
+        "jestConfig": "apps/bff/jest.config.ts",
         "passWithNoTests": false
-      }
+      },
+      "outputs": ["{workspaceRoot}/coverage/apps/bff"]
     },
     "lint": {
       "executor": "nx:run-commands",

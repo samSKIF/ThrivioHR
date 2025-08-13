@@ -181,11 +181,14 @@
             ]
           },
           "test": {
-            "executor": "@nrwl/jest:jest",
+            "executor": "@nx/jest:jest",
             "options": {
-              "jestConfig": "apps/bff/jest.config.js",
+              "jestConfig": "apps/bff/jest.config.ts",
               "passWithNoTests": false
             },
+            "outputs": [
+              "{workspaceRoot}/coverage/apps/bff"
+            ],
             "configurations": {},
             "parallelism": true
           },
@@ -15521,5 +15524,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755085107313
+  "computedAt": 1755085488371
 }

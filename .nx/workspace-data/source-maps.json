@@ -88,6 +88,10 @@
       "apps/bff/project.json",
       "nx/core/project-json"
     ],
+    "targets.test.outputs": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
     "targets.test.options.jestConfig": [
       "apps/bff/project.json",
       "nx/core/project-json"

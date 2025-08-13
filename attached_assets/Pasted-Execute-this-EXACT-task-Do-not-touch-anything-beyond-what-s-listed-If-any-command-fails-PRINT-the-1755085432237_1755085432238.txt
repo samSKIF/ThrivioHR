@@ -1,0 +1,120 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Enable Nx/Jest for the BFF and land 2 passing, low-flake tests (unauthorized checks) so Codex’s “no tests” finding is resolved.
+
+TOUCH ONLY
+apps/bff/jest.config.ts
+apps/bff/tsconfig.spec.json
+apps/bff/project.json
+apps/bff/src/modules/auth/auth.spec.ts
+apps/bff/src/modules/directory/directory.spec.ts
+
+CHANGES
+// apps/bff/jest.config.ts (new)
+import { pathsToModuleNameMapper } from 'ts-jest';
+import tsconfig from '../../tsconfig.base.json';
+
+export default {
+preset: 'ts-jest',
+testEnvironment: 'node',
+rootDir: '.',
+testMatch: ['<rootDir>/src/**/*.spec.ts'],
+moduleFileExtensions: ['ts', 'js', 'json'],
+transform: {
+'^.+\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+},
+moduleNameMapper: pathsToModuleNameMapper(
+(tsconfig as any).compilerOptions?.paths || {},
+{ prefix: '<rootDir>/../../' }
+),
+};
+
+// apps/bff/tsconfig.spec.json (new)
+{
+"extends": "./tsconfig.json",
+"compilerOptions": {
+"types": ["jest", "node"],
+"esModuleInterop": true,
+"allowJs": false
+},
+"include": ["src/**/*.ts"],
+"exclude": ["dist", "node_modules"]
+}
+
+// apps/bff/project.json (merge: add a "test" target; keep existing fields)
+{
+"name": "bff",
+"targets": {
+"test": {
+"executor": "@nx/jest:jest",
+"options": {
+"jestConfig": "apps/bff/jest.config.ts",
+"passWithNoTests": false
+},
+"outputs": ["{workspaceRoot}/coverage/apps/bff"]
+}
+}
+}
+
+// apps/bff/src/modules/auth/auth.spec.ts (replace file)
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../main';
+
+describe('Auth module (smoke)', () => {
+let app: INestApplication;
+
+beforeAll(async () => {
+app = await createTestApp();
+await app.init();
+});
+
+afterAll(async () => {
+await app.close();
+});
+
+it('GET /auth/me without token -> 401', async () => {
+await request(app.getHttpServer()).get('/auth/me').expect(401);
+});
+});
+
+// apps/bff/src/modules/directory/directory.spec.ts (replace file)
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../main';
+
+describe('Directory module (smoke)', () => {
+let app: INestApplication;
+
+beforeAll(async () => {
+app = await createTestApp();
+await app.init();
+});
+
+afterAll(async () => {
+await app.close();
+});
+
+it('POST /directory/import/validate without token -> 401', async () => {
+await request(app.getHttpServer())
+.post('/directory/import/validate')
+.set('content-type', 'application/json')
+.send({ csv: 'email,givenName,familyName\nno@token.com,No,Token' })
+.expect(401);
+});
+});
+
+RUN & PRINT
+
+1) Install missing dev deps for Nx/Jest + Nest test utilities
+pnpm add -D @nx/jest jest ts-jest @types/jest @nestjs/testing --silent
+
+2) Build should still pass
+npx nx build bff && echo "=== BUILD OK ==="
+
+3) Run tests for bff and print summary
+npx nx test bff --skip-nx-cache --runInBand && echo "=== TESTS RUN ==="
+
+STOP.

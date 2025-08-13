@@ -1,6 +1,6 @@
 import type {
   ImportRow as TImportRow,
-  CommitChange as TCommitChange,
+  CommitChange,
   CommitRecord as TCommitRecord,
   CommitOverview as TCommitOverview,
   CommitPlan as TCommitPlan,
@@ -9,7 +9,7 @@ import type {
 type Extras = Record<string, unknown>;
 
 export type ImportRow = TImportRow;
-export type CommitChange = TCommitChange;
+export { CommitChange };
 
 // Allow extra fields (e.g., email, managerResolved) and tolerate missing strict ones for now
 export type CommitRecordCompat = Partial<TCommitRecord> & {
