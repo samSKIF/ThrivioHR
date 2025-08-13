@@ -24,6 +24,14 @@
       "apps/bff/project.json",
       "nx/core/project-json"
     ],
+    "tags.type:app": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.scope:bff": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
     "targets": [
       "apps/bff/project.json",
       "nx/core/project-json"
@@ -223,6 +231,44 @@
       "nx/target-defaults"
     ]
   },
+  "packages/contracts": {
+    "root": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:lib": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.scope:contracts": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "packages/contracts/project.json",
+      "nx/core/project-json"
+    ]
+  },
   "services/identity": {
     "root": [
       "services/identity/project.json",
@@ -245,6 +291,14 @@
       "nx/core/project-json"
     ],
     "tags": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:service": [
+      "services/identity/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.scope:identity": [
       "services/identity/project.json",
       "nx/core/project-json"
     ],

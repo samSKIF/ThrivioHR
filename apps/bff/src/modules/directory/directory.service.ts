@@ -1,7 +1,12 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { IdentityRepository } from '../identity/identity.repository';
-import crypto from 'crypto';
+import { normalizeRow, isValidEmail } from './lib/normalizers';
+import { signSession, verifySession } from './lib/token';
+import { collectNewDepartments, collectNewLocations } from './lib/depts_locs';
+import { buildEmailMap, diagnoseManagers } from './lib/managers';
+import type { NormalizedRow } from './lib/types';
+import * as crypto from 'crypto';
 
 type ValidationResult = {
   rows: number;
@@ -67,21 +72,7 @@ type ApplyReport = {
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
-function signPayload(payload: object, secret: string) {
-  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = crypto.createHmac('sha256', secret).update(data).digest('base64url');
-  return `${data}.${sig}`;
-}
 
-function verifyToken(token: string, secret: string) {
-  const [data, sig] = token.split('.');
-  if (!data || !sig) throw new Error('Malformed token');
-  const expected = crypto.createHmac('sha256', secret).update(data).digest('base64url');
-  if (expected !== sig) throw new Error('Bad signature');
-  const json = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
-  if (Date.now() > json.exp) throw new Error('Expired token');
-  return json;
-}
 
 const REQUIRED = ['email', 'givenName', 'familyName'];
 const OPTIONAL = [
@@ -372,35 +363,9 @@ export class DirectoryService {
     };
   }
 
-  private normGender(g?: string|null) {
-    const v = (g ?? '').trim().toLowerCase();
-    if (v === 'm' || v === 'male') return 'male';
-    if (v === 'f' || v === 'female') return 'female';
-    if (['non-binary','nonbinary'].includes(v)) return 'non-binary';
-    if (v === 'other') return 'other';
-    if (v === 'prefer-not-to-say') return 'prefer-not-to-say';
-    return v || null;
-  }
 
-  private normalizeRow(r: Record<string,string>) {
-    return {
-      email: r.email ?? null,
-      givenName: r.givenName ?? null,
-      familyName: r.familyName ?? null,
-      department: r.department ?? null,
-      managerEmail: r.managerEmail ?? null,
-      location: r.location ?? null,
-      jobTitle: r.jobTitle ?? null,
-      employeeId: r.employeeId ?? null,
-      startDate: r.startDate ?? null,
-      birthDate: r.birthDate ?? null,
-      nationality: r.nationality ? r.nationality.toUpperCase() : null,
-      gender: this.normGender(r.gender),
-      phone: r.phone ?? null,
-    };
-  }
 
-  async commitPlan(csv: string, orgId: string): Promise<CommitResponse> {
+  async commitPlan(csv: string, orgId: string, dryRun = false): Promise<CommitResponse> {
     const records = csv?.trim()
       ? (parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string,string>[])
       : [];
@@ -435,7 +400,7 @@ export class DirectoryService {
     let creates = 0, updates = 0, skips = 0, managerMissing = 0;
 
     // normalize rows
-    const normalized = records.map(r => this.normalizeRow(r));
+    const normalized = records.map(r => normalizeRow(r));
 
     for (const row of normalized) {
       const reason: string[] = [];
@@ -505,92 +470,40 @@ export class DirectoryService {
     }
 
     // compute new departments and locations from CSV vs existing
-    const csvDeptSet = new Set<string>();
-    const csvLocSet = new Set<string>();
-    for (const r of normalized) {
-      const d = (r.department ?? '').trim().toLowerCase();
-      const l = (r.location ?? '').trim().toLowerCase();
-      if (d) csvDeptSet.add(d);
-      if (l) csvLocSet.add(l);
-    }
-    const newDepartments = Array.from(csvDeptSet.values()).filter(d => !existingDepts.has(d));
-    const newLocations = Array.from(csvLocSet.values()).filter(l => !existingLocs.has(l));
+    const newDepartments = collectNewDepartments(normalized, existingDepts);
+    const newLocations = collectNewLocations(normalized, existingLocs);
 
     // Enhanced manager graph diagnostics
-    const emailToRow = new Map<string, any>();
-    for (const r of normalized) {
-      const e = (r.email ?? '').trim().toLowerCase();
-      if (e) emailToRow.set(e, r);
-    }
-
-    // Resolve function (DB + batch)
-    const resolveManager = async (mEmail: string): Promise<{userId: string|null, from: 'db'|'csv'|null}> => {
+    const emailMap = buildEmailMap(normalized);
+    const resolveManager = async (mEmail: string): Promise<'db'|'csv'|null> => {
       const key = (mEmail ?? '').trim().toLowerCase();
-      if (!key) return { userId: null, from: null };
+      if (!key) return null;
       // 1) Try DB
       const u = await this.identity.findUserByEmailOrg(key, orgId);
-      if (u) return { userId: (u as any).id ?? null, from: 'db' };
-      // 2) Try batch: if the manager will be created in this CSV, mark as 'csv' with null userId (to be created)
-      if (emailToRow.has(key)) return { userId: null, from: 'csv' };
-      return { userId: null, from: null };
+      if (u) return 'db';
+      // 2) Try batch: if the manager will be created in this CSV
+      if (emailMap.has(key)) return 'csv';
+      return null;
     };
+    const diag = await diagnoseManagers(normalized, resolveManager);
 
-    // Build graph edges from CSV batch only (for cycle detection)
-    const edges: Array<[string,string]> = [];
-    for (const r of normalized) {
-      const e = (r.email ?? '').trim().toLowerCase();
-      const m = (r.managerEmail ?? '').trim().toLowerCase();
-      if (e && m) edges.push([e, m]);
-    }
-
-    // Cycle detection (DFS with colors or Kahn's). Self-manager counts too.
-    let managerSelf = 0;
-    const nodes = new Set<string>();
-    for (const [a,b] of edges) { nodes.add(a); nodes.add(b); }
-    const adj = new Map<string,string[]>();
-    for (const n of nodes) adj.set(n, []);
-    for (const [a,b] of edges) (adj.get(a)!).push(b);
-
-    const WHITE=0, GRAY=1, BLACK=2;
-    const color = new Map<string,number>();
-    for (const n of nodes) color.set(n, WHITE);
-
-    let cycles = 0;
-    function dfs(u: string) {
-      color.set(u, GRAY);
-      for (const v of (adj.get(u) || [])) {
-        if (u === v) { managerSelf++; cycles++; continue; }
-        const c = color.get(v);
-        if (c === GRAY) { cycles++; }
-        else if (c === WHITE) dfs(v);
-      }
-      color.set(u, BLACK);
-    }
-    for (const n of nodes) if (color.get(n) === WHITE) dfs(n);
-
-    // Per-record manager resolution and issues; also tally managerMissing
-    managerMissing = 0; // Reset counter for accurate tracking
+    // Per-record manager resolution and issues; merge diag.perRecordIssues into each record's reason[]
     const outWithManagers: CommitRecord[] = [];
     for (const rec of out) {
-      // rec.incoming.email, rec.incoming.managerEmail are already set
-      const issues: string[] = [];
+      const email = (rec.incoming?.email ?? '').trim().toLowerCase();
+      const mEmail = rec.incoming?.managerEmail ?? null;
+      const issues = diag.perRecordIssues.get(email) || [];
       let resolved = false;
       let managerUserId: string|null = null;
 
-      const mEmail = rec.incoming?.managerEmail ?? null;
       if (mEmail) {
-        if ((rec.incoming?.email ?? '').trim().toLowerCase() === (mEmail ?? '').trim().toLowerCase()) {
-          issues.push('self-manager');
-        }
         const res = await resolveManager(mEmail);
-        if (res.from === 'db') {
-          resolved = true; managerUserId = res.userId;
-        } else if (res.from === 'csv') {
-          // Manager will be created in this batch; treat as tentatively resolved
+        if (res === 'db') {
+          resolved = true;
+          const u = await this.identity.findUserByEmailOrg(mEmail, orgId);
+          managerUserId = (u as any)?.id ?? null;
+        } else if (res === 'csv') {
           resolved = true; managerUserId = null;
-          issues.push('manager-in-batch');
-        } else {
-          managerMissing++; issues.push('manager-not-found');
         }
       }
 
@@ -603,15 +516,15 @@ export class DirectoryService {
       });
     }
 
-    // Replace original out with enriched version and update overview with new counters
+    // Replace original out with enriched version and update overview with diag counters
     const enrichedOut = outWithManagers;
     const overview: CommitOverview = {
       rows: normalized.length,
       creates, updates, skips,
       duplicateEmails: Array.from(dups.values()),
-      managerMissing,
-      managerCycles: cycles,
-      managerSelf,
+      managerMissing: diag.managerMissing,
+      managerCycles: diag.managerCycles,
+      managerSelf: diag.managerSelf,
       newDepartments,
       newLocations
     };
@@ -623,7 +536,7 @@ export class DirectoryService {
   }
 
   async createImportSession(csv: string, orgId: string, userId: string) {
-    const plan = await this.commitPlan(csv, orgId); // reuses dry-run planner
+    const plan = await this.commitPlan(csv, orgId, true); // reuses dry-run planner
     const payload = {
       v: 1,
       orgId,
@@ -634,19 +547,19 @@ export class DirectoryService {
       overview: plan.overview,
       records: plan.records, // embed records for preview
     };
-    const token = signPayload(payload, process.env.JWT_SECRET || 'dev-secret');
+    const token = signSession(payload, process.env.JWT_SECRET || 'dev-secret');
     return { token, overview: plan.overview };
   }
 
   previewImportSession(token: string) {
-    const { overview, records } = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+    const { overview, records } = verifySession(token, process.env.JWT_SECRET || 'dev-secret');
     return { overview, records };
   }
 
   async applyImportSession(token: string, orgIdFromJwt: string): Promise<ApplyReport> {
     let payload: any;
     try {
-      payload = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+      payload = verifySession(token, process.env.JWT_SECRET || 'dev-secret');
     } catch (e: any) {
       throw new BadRequestException(`Invalid or expired session token: ${e?.message || 'unknown'}`);
     }

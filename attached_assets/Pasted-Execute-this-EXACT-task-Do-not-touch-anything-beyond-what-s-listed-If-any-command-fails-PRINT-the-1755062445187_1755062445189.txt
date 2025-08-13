@@ -1,0 +1,176 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Reduce apps/bff/src/modules/directory/directory.service.ts below 500 logical lines with ZERO behavior changes:
+
+Extract pure helpers (normalization, token sign/verify, department/location set building, manager graph diagnostics) into lib files.
+
+Keep public service API the same (validate/plan/session/preview/approve). Tests and smoke flows must still pass.
+
+TOUCH ONLY
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/lib/normalizers.ts
+apps/bff/src/modules/directory/lib/token.ts
+apps/bff/src/modules/directory/lib/depts_locs.ts
+apps/bff/src/modules/directory/lib/managers.ts
+
+CHANGES
+// Create: apps/bff/src/modules/directory/lib/types.ts
+// (centralize shared types used by helpers and service; copy the shapes already used in service)
+export type NormalizedRow = {
+email: string|null;
+givenName: string|null;
+familyName: string|null;
+department?: string|null;
+location?: string|null;
+managerEmail?: string|null;
+jobTitle?: string|null;
+employeeId?: string|null;
+startDate?: string|null;
+birthDate?: string|null;
+nationality?: string|null;
+gender?: string|null;
+phone?: string|null;
+};
+export type ManagerDiag = {
+managerMissing: number;
+managerSelf: number;
+managerCycles: number;
+perRecordIssues: Map<string, string[]>; // key=email
+};
+
+// Create: apps/bff/src/modules/directory/lib/normalizers.ts
+// (move ONLY existing pure helpers from service here; import nothing from identity)
+export function normalizeEmail(v: any): string|null { /* MOVE impl from service / }
+export function normalizeGender(v: any): string|null { / MOVE impl / }
+export function normalizeNationality(v: any): string|null { / MOVE impl / }
+export function normalizePhoneE164(v: any): string|null { / MOVE impl / }
+export function normalizeDatestr(v: any): string|null { / MOVE impl / }
+export function normalizeRow(input: any): NormalizedRow { / MOVE impl that calls the above / }
+export function isValidEmail(v: any): boolean { / MOVE impl */ }
+
+// Create: apps/bff/src/modules/directory/lib/token.ts
+// (wrap the sign/verify used for stateless sessions)
+import jwt from 'jsonwebtoken';
+export function signSession(payload: object, secret: string): string {
+return jwt.sign(payload as any, secret, { algorithm: 'HS256', expiresIn: '24h' });
+}
+export function verifySession(token: string, secret: string): any {
+return jwt.verify(token, secret, { algorithms: ['HS256'] });
+}
+
+// Create: apps/bff/src/modules/directory/lib/depts_locs.ts
+// (helpers to compute newDepartments/newLocations from a list of normalized rows and DB-provided sets)
+import { NormalizedRow } from './types';
+export function collectNewDepartments(rows: NormalizedRow[], existingLower: Set<string>): string[] {
+const set = new Set<string>();
+for (const r of rows) {
+const n = (r.department ?? '').trim().toLowerCase();
+if (n) set.add(n);
+}
+return Array.from(set).filter(n => !existingLower.has(n));
+}
+export function collectNewLocations(rows: NormalizedRow[], existingLower: Set<string>): string[] {
+const set = new Set<string>();
+for (const r of rows) {
+const n = (r.location ?? '').trim().toLowerCase();
+if (n) set.add(n);
+}
+return Array.from(set).filter(n => !existingLower.has(n));
+}
+
+// Create: apps/bff/src/modules/directory/lib/managers.ts
+// (pure cycle detection; take callbacks for resolution so lib stays DB-agnostic)
+import { NormalizedRow, ManagerDiag } from './types';
+export type ResolveManagerFn = (email: string) => Promise<'db'|'csv'|null>;
+export function buildEmailMap(rows: NormalizedRow[]): Map<string, NormalizedRow> {
+const m = new Map<string, NormalizedRow>();
+for (const r of rows) { const e=(r.email??'').trim().toLowerCase(); if (e) m.set(e, r); }
+return m;
+}
+export async function diagnoseManagers(
+rows: NormalizedRow[],
+resolveManager: ResolveManagerFn
+): Promise<ManagerDiag> {
+const perRecordIssues = new Map<string, string[]>();
+const edges: Array<[string,string]> = [];
+for (const r of rows) {
+const e=(r.email??'').trim().toLowerCase();
+const m=(r.managerEmail??'').trim().toLowerCase();
+if (!e) continue;
+if (m) edges.push([e,m]);
+perRecordIssues.set(e, []);
+if (m && e===m) perRecordIssues.get(e)!.push('self-manager');
+}
+// cycle detection
+const nodes = new Set<string>(); edges.forEach(([a,b])=>{nodes.add(a);nodes.add(b);});
+const adj = new Map<string,string[]>(); nodes.forEach(n=>adj.set(n,[])); edges.forEach(([a,b])=>adj.get(a)!.push(b));
+const WHITE=0,GRAY=1,BLACK=2; const color=new Map<string,number>(); nodes.forEach(n=>color.set(n,WHITE));
+let cycles=0, self=0;
+function dfs(u:string){ color.set(u,GRAY); for(const v of adj.get(u) || []){ if(u===v){self++;cycles++;continue;} const c=color.get(v); if(c===GRAY){cycles++;} else if(c===WHITE){dfs(v);} } color.set(u,BLACK); }
+nodes.forEach(n=>{ if(color.get(n)===WHITE) dfs(n); });
+// missing managers via resolver
+let missing=0;
+for (const [email, issues] of perRecordIssues.entries()) {
+const row = rows.find(r => (r.email??'').trim().toLowerCase()===email)!;
+const m = (row.managerEmail ?? '').trim().toLowerCase();
+if (!m) continue;
+const res = await resolveManager(m);
+if (res === null) { issues.push('manager-not-found'); missing++; }
+else if (res === 'csv') { issues.push('manager-in-batch'); }
+}
+return { managerMissing: missing, managerSelf: self, managerCycles: cycles, perRecordIssues };
+}
+
+// UPDATE: apps/bff/src/modules/directory/directory.service.ts
+// - REMOVE the duplicated helper implementations you just moved.
+// - IMPORT from lib/* where they were used.
+// - Keep method signatures and returned JSON exactly the same.
+// - For session tokens, replace direct jwt usage with lib/token.signSession & verifySession.
+// - For collecting newDepartments/newLocations, use lib/depts_locs functions.
+// - For manager diagnostics inside commitPlan(), use lib/managers:
+// const emailMap = buildEmailMap(normalized);
+// const resolveManager = async (mEmail:string)=>{ /* call this.identity.findUserByEmailOrg OR csv map */ };
+// const diag = await diagnoseManagers(normalized, resolveManager);
+// merge diag.perRecordIssues into each record’s reason[], and include diag.managerMissing/managerSelf/managerCycles in overview.
+
+// IMPORTANT: Do not change business logic, counters, or endpoint mappings.
+
+RUN & PRINT
+
+0) Before/after size
+echo "=== BEFORE SIZE (if file exists in cache, ignore) ===" && wc -l apps/bff/src/modules/directory/directory.service.ts || true
+
+1) Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) After size
+echo "=== AFTER SIZE ===" && wc -l apps/bff/src/modules/directory/directory.service.ts
+
+3) Quick lint on service (expect no max-lines error now)
+npx eslint apps/bff/src/modules/directory/directory.service.ts || true
+
+4) Smoke: create session & preview (tiny CSV)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location,managerEmail\nalex@demo.com,Alex,Stone,Engineering,Dubai,boss@demo.com"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -200
+
+5) Approve (writes still work)
+curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -200
+
+6) Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: Directory service refactor below 500 LoC with no behavior change — where are we vs the roadmap, and any regression?"
+
+STOP.
+
