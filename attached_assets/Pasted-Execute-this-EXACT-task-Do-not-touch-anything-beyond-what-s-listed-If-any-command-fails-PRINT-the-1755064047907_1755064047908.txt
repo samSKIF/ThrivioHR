@@ -1,0 +1,104 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Eliminate the hardcoded 'dev-secret' fallback and centralize JWT secret handling.
+
+In non-dev envs: MISSING secret should THROW at runtime.
+
+In dev: allow fallback 'dev-secret' but LOG a clear warning once.
+
+Update all secret usages (auth service, guard, directory session tokens).
+
+TOUCH ONLY
+apps/bff/src/env.ts
+apps/bff/src/modules/auth/auth.service.ts
+apps/bff/src/modules/auth/jwt-auth.guard.ts
+apps/bff/src/modules/directory/directory.service.ts
+
+CHANGES
+// Create: apps/bff/src/env.ts
+// Central helper for JWT secret with safe defaults only in dev.
+let _cachedSecret: string | null = null;
+export function getJwtSecret(): string {
+if (_cachedSecret) return _cachedSecret;
+const s = process.env.JWT_SECRET;
+const isDev = (process.env.NODE_ENV ?? 'development') === 'development';
+if (!s) {
+if (!isDev) {
+throw new Error('JWT_SECRET is required in non-development environments.');
+}
+// Dev fallback with one-time warning
+console.warn('[WARN] Using development JWT secret fallback. Set JWT_SECRET for safer behavior.');
+_cachedSecret = 'dev-secret';
+return _cachedSecret;
+}
+_cachedSecret = s;
+return _cachedSecret;
+}
+
+// apps/bff/src/modules/auth/auth.service.ts
+// Replace secret reads with getJwtSecret()
+-import * as jwt from 'jsonwebtoken';
++import * as jwt from 'jsonwebtoken';
++import { getJwtSecret } from '../../../env';
+...
+
+this.jwtSecret = process.env.JWT_SECRET ?? 'dev-secret';
+
+this.jwtSecret = getJwtSecret();
+
+// apps/bff/src/modules/auth/jwt-auth.guard.ts
++import { getJwtSecret } from '../../../env';
+...
+
+this.jwtSecret = process.env.JWT_SECRET ?? 'dev-secret';
+
+this.jwtSecret = getJwtSecret();
+
+// apps/bff/src/modules/directory/directory.service.ts
+// For stateless import-session token sign/verify, use getJwtSecret()
++import { getJwtSecret } from '../../env';
+...
+
+const token = signPayload(payload, process.env.JWT_SECRET || 'dev-secret');
+
+const token = signPayload(payload, getJwtSecret());
+...
+
+const overview = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+
+const overview = verifyToken(token, getJwtSecret());
+...
+
+const payload = verifyToken(token, process.env.JWT_SECRET || 'dev-secret');
+
+const payload = verifyToken(token, getJwtSecret());
+
+RUN & PRINT
+
+Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+Prove there are NO remaining literal 'dev-secret' references in BFF src
+echo "=== GREP dev-secret (should be empty) ===" && ! grep -n "dev-secret" -R apps/bff/src || true
+
+Sanity: login + create session + preview + approve (dev fallback still works locally)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department\njohn@demo.com,John,Doe,Marketing\nsara@demo.com,Sara,Smith,Sales"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -80
+echo "=== APPROVE ===" && curl -s -X POST http://localhost:5000/directory/import/session/approve
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d "{"token":"$TOKEN"}" | head -120
+
+Status question
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: JWT secret fallback removed (centralized helper). Where are we vs the roadmap, and any regression from this change?"
+
+STOP.

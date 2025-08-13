@@ -7,6 +7,7 @@ import { collectNewDepartments, collectNewLocations } from './lib/depts_locs';
 import { buildEmailMap, diagnoseManagers } from './lib/managers';
 import type { NormalizedRow } from './lib/types';
 import * as crypto from 'crypto';
+import { getJwtSecret } from '../../env';
 
 type ValidationResult = {
   rows: number;
@@ -547,19 +548,19 @@ export class DirectoryService {
       overview: plan.overview,
       records: plan.records, // embed records for preview
     };
-    const token = signSession(payload, process.env.JWT_SECRET || 'dev-secret');
+    const token = signSession(payload, getJwtSecret());
     return { token, overview: plan.overview };
   }
 
   previewImportSession(token: string) {
-    const { overview, records } = verifySession(token, process.env.JWT_SECRET || 'dev-secret');
+    const { overview, records } = verifySession(token, getJwtSecret());
     return { overview, records };
   }
 
   async applyImportSession(token: string, orgIdFromJwt: string): Promise<ApplyReport> {
     let payload: any;
     try {
-      payload = verifySession(token, process.env.JWT_SECRET || 'dev-secret');
+      payload = verifySession(token, getJwtSecret());
     } catch (e: any) {
       throw new BadRequestException(`Invalid or expired session token: ${e?.message || 'unknown'}`);
     }
