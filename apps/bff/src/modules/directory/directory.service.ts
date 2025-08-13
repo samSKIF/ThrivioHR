@@ -6,7 +6,7 @@ import { buildEmailMap, diagnoseManagers } from './lib/managers';
 import { parseAndNormalizeCsv } from './lib/csv';
 import { computeDiff } from './lib/diff';
 import { summarize } from './lib/overview';
-import type { NormalizedRow } from './lib/types';
+import type { NormalizedRow, CommitRecord, CommitOverview, ImportRow } from './lib/types';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
 
@@ -22,28 +22,6 @@ type ValidationResult = {
 };
 
 type CommitAction = 'create' | 'update' | 'skip';
-type CommitRecord = {
-  email: string | null;
-  action: CommitAction;
-  diffs?: string[];
-  reason?: string[];
-  incoming: any;
-  current?: any;
-  managerResolved: boolean;
-  managerUserId?: string | null;
-};
-type CommitOverview = {
-  rows: number;
-  creates: number;
-  updates: number;
-  skips: number;
-  duplicateEmails: string[];
-  managerMissing: number;
-  managerCycles?: number;
-  managerSelf?: number;
-  newDepartments: string[];
-  newLocations: string[];
-};
 type CommitResponse = {
   overview: CommitOverview;
   records: CommitRecord[];

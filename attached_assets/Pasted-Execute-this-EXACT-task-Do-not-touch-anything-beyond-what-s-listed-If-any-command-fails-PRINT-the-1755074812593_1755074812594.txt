@@ -1,0 +1,115 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Adopt @thrivio/contracts types in the BFF Directory module (types only; ZERO behavior change).
+
+Replace local type definitions with imports from @thrivio/contracts/directory.
+
+Keep endpoints, logic, and responses identical.
+
+Do not add Zod pipes or validators yet (types only).
+
+TOUCH ONLY
+apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.controller.ts
+
+CHANGES
+// apps/bff/src/modules/directory/lib/types.ts
+// Replace existing type declarations by re-exporting contracts types used elsewhere.
+// Keep NormalizedRow if it's a purely internal shape; otherwise re-use ImportRow for external-facing types.
+-import type { /* existing local types / } from '...';
+-export type NormalizedRow = { / keep if used internally for normalization */
+
+email: string|null; givenName: string|null; familyName: string|null;
+
+department?: string|null; location?: string|null; managerEmail?: string|null;
+
+jobTitle?: string|null; employeeId?: string|null; startDate?: string|null;
+
+birthDate?: string|null; nationality?: string|null; gender?: string|null; phone?: string|null;
+-};
+-export type ManagerDiag = { managerMissing: number; managerSelf: number; managerCycles: number; perRecordIssues: Map<string, string[]>; };
++import type { directory as CDirectory } from '@thrivio/contracts';
++export type ImportRow = CDirectory.ImportRow;
++export type CommitChange = CDirectory.CommitChange;
++export type CommitRecord = CDirectory.CommitRecord;
++export type CommitOverview = CDirectory.CommitOverview;
++export type CommitPlan = CDirectory.CommitPlan;
+// Keep NormalizedRow ONLY if needed internally; otherwise remove. If kept, ensure it is assignable from ImportRow.
++export type NormalizedRow = {
+
+email: string|null;
+
+givenName: string|null;
+
+familyName: string|null;
+
+department?: string|null;
+
+location?: string|null;
+
+managerEmail?: string|null;
+
+jobTitle?: string|null;
+
+employeeId?: string|null;
+
+startDate?: string|null;
+
+birthDate?: string|null;
+
+nationality?: string|null;
+
+gender?: string|null;
+
+phone?: string|null;
++};
+
+// apps/bff/src/modules/directory/directory.service.ts
+// Update type imports to use @thrivio/contracts forms where applicable.
+// No logic changes — only type references (CommitRecord/CommitOverview/CommitPlan/ImportRow).
+// If service previously referenced local CommitRecord/CommitPlan, switch imports to lib/types re-exports that now point to contracts types.
+
+// apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+// Ensure any exported TS interfaces/types align with CDirectory.ImportRow or CDirectory.CommitPlan as appropriate (types only; do not change runtime decorators or DTO class fields if present).
+// Prefer: import type { directory as CDirectory } from '@thrivio/contracts'; and use CDirectory.CommitPlan in type positions.
+
+// apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+// Same treatment: reference CDirectory.CommitPlan / CommitRecord / ImportRow in type positions only.
+
+// apps/bff/src/modules/directory/directory.controller.ts
+// Update type annotations (if any) to use contracts types via the lib/types re-exports. No handler signature or behavior changes.
+
+RUN & PRINT
+
+1) Build to ensure types wire up
+npx nx build bff && echo "=== BUILD OK ==="
+
+2) Lint the touched files (we expect no boundary violations)
+echo "=== ESLINT (touched files) ==="
+npx eslint apps/bff/src/modules/directory/lib/types.ts
+apps/bff/src/modules/directory/directory.service.ts
+apps/bff/src/modules/directory/dtos/import-validate.dto.ts
+apps/bff/src/modules/directory/dtos/import-commit.dto.ts
+apps/bff/src/modules/directory/directory.controller.ts || true
+
+3) Quick smoke: session → preview (no behavior change expected)
+AUTH=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d '{"orgId":"9e2e7679-e33e-4cbe-9edc-195f13e9f909","email":"csvdemo@example.com"}')
+ACCESS=$(echo "$AUTH" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location\nalex@demo.com,Alex,Stone,Engineering,Dubai"}')
+TOKEN=$(echo "$SESSION" | grep -o '"token":"[^"]"' | cut -d'"' -f4)
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$TOKEN"
+-H "Authorization: Bearer $ACCESS" | head -120
+
+4) Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: Directory now uses @thrivio/contracts types (no behavior change). Any regressions?"
+
+STOP.

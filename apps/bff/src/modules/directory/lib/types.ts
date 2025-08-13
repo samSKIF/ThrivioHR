@@ -1,3 +1,12 @@
+import type { directory as CDirectory } from '@thrivio/contracts';
+
+export type ImportRow = CDirectory.ImportRow;
+export type CommitChange = CDirectory.CommitChange;
+export type CommitRecord = CDirectory.CommitRecord;
+export type CommitOverview = CDirectory.CommitOverview;
+export type CommitPlan = CDirectory.CommitPlan;
+
+// Keep NormalizedRow for internal normalization processing
 export type NormalizedRow = {
   email: string | null;
   givenName: string | null;
