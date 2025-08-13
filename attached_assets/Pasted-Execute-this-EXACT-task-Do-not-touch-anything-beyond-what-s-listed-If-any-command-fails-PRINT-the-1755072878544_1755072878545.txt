@@ -1,0 +1,83 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make @thrivio/contracts resolvable in the BFF build:
+
+Ensure BFF tsconfig extends the repo base and has the path aliases (local to the app).
+
+Provide a minimal tsconfig for the contracts package (so tsc can resolve it cleanly).
+
+Prove build works end-to-end.
+
+TOUCH ONLY
+apps/bff/tsconfig.json
+apps/bff/tsconfig.app.json
+packages/contracts/tsconfig.json
+
+CHANGES
+// apps/bff/tsconfig.json (merge with existing; keep other fields/targets intact)
+{
+"extends": "../../tsconfig.base.json",
+"compilerOptions": {
+"baseUrl": ".",
+"paths": {
+"@thrivio/contracts": ["../../packages/contracts/src/index.ts"],
+"@thrivio/contracts/": ["../../packages/contracts/src/"]
+}
+}
+}
+
+// apps/bff/tsconfig.app.json (merge with existing; keep other settings)
+{
+"extends": "./tsconfig.json",
+"compilerOptions": {
+"baseUrl": ".",
+"paths": {
+"@thrivio/contracts": ["../../packages/contracts/src/index.ts"],
+"@thrivio/contracts/": ["../../packages/contracts/src/"]
+}
+}
+}
+
+// packages/contracts/tsconfig.json (NEW; minimal project config for editor/tsc resolution)
+{
+"extends": "../../tsconfig.base.json",
+"compilerOptions": {
+"composite": false,
+"declaration": false,
+"emitDeclarationOnly": false,
+"noEmit": true
+},
+"include": ["src/**/*"]
+}
+
+RUN & PRINT
+echo "=== SHOW BFF TSCONFIGS ===" &&
+(echo "--- apps/bff/tsconfig.json" && sed -n '1,200p' apps/bff/tsconfig.json || true;
+echo "--- apps/bff/tsconfig.app.json" && sed -n '1,200p' apps/bff/tsconfig.app.json || true)
+
+echo "=== SHOW CONTRACTS TSCONFIG ===" && sed -n '1,200p' packages/contracts/tsconfig.json
+
+Typecheck the BFF app directly (uses its tsconfigs)
+echo "=== TSC CHECK BFF ===" && npx tsc -p apps/bff/tsconfig.app.json --noEmit || true
+
+Build BFF via Nx (should succeed now)
+npx nx build bff && echo "=== BUILD OK ==="
+
+Sanity: quick smoke (login -> create session -> preview)
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]"' | head -1 | cut -d'"' -f4)
+LOGIN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json'
+-d "{"orgId":"$ORG_ID","email":"csvdemo@example.com"}")
+ACCESS=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]"' | cut -d'"' -f4)
+SESSION=$(curl -s -X POST http://localhost:5000/directory/import/session
+-H "content-type: application/json" -H "Authorization: Bearer $ACCESS"
+-d '{"csv":"email,givenName,familyName,department,location\nalex@demo.com,Alex,Stone,Engineering,Dubai"}')
+echo "=== PREVIEW ===" && curl -s "http://localhost:5000/directory/import/session/preview?token=$(echo $SESSION | grep -o '"token":"[^"]*"' | cut -d'"' -f4)"
+-H "Authorization: Bearer $ACCESS" | head -100
+
+Status
+echo "=== STATUS QUESTION ==="
+echo "Replit, confirm: BFF build now resolves @thrivio/contracts; any regressions from this config change?"
+
+STOP.
