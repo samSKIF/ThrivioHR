@@ -1,0 +1,88 @@
+Task: Enforce query depth and complexity with configurable limits; keep responses GraphQL-standard (200 with errors[]), and don’t use absolute paths.
+
+Changes
+
+Install deps (if not already):
+
+npm i graphql-depth-limit graphql-validation-complexity
+
+
+Create apps/bff/src/graphql/limits.ts
+
+import depthLimit from 'graphql-depth-limit';
+import { createComplexityRule } from 'graphql-validation-complexity';
+
+const toInt = (v: string | undefined, fallback: number) =>
+  Number.isFinite(Number(v)) ? Number(v) : fallback;
+
+/**
+ * Builds validation rules for GraphQL queries:
+ * - Depth limit (default 8, env GQL_MAX_DEPTH)
+ * - Complexity limit (default 1000, env GQL_MAX_COMPLEXITY)
+ * Logs cost in non-test environments for visibility.
+ */
+export function makeValidationRules() {
+  const maxDepth = toInt(process.env.GQL_MAX_DEPTH, 8);
+  const maxComplexity = toInt(process.env.GQL_MAX_COMPLEXITY, 1000);
+  const isTest = process.env.NODE_ENV === 'test';
+
+  const complexityRule = createComplexityRule({
+    maximumComplexity: maxComplexity,
+    onComplete: (complexity: number) => {
+      if (!isTest) console.log(`[GraphQL] cost=${complexity}`);
+    },
+    // reasonable defaults; tweak if needed
+    estimators: [
+      // falls back to 1 per field if nothing else matches
+    ],
+  });
+
+  return [depthLimit(maxDepth), complexityRule];
+}
+
+
+Wire it in apps/bff/src/graphql/graphql.module.ts
+
+import { makeValidationRules } from './limits';
+
+// inside GraphQLModule.forRoot({...})
+validationRules: makeValidationRules(),
+
+
+Definition of Done (DoD)
+
+Build passes:
+
+npx nx build bff && echo "=== BUILD OK ==="
+
+
+Happy path works:
+
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"{ __typename }"}'
+
+
+Returns {"data":{"__typename":"Query"}}.
+
+Depth limit triggers validation (example asks ~>8 nested levels):
+
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"query { __schema { queryType { fields { type { ofType { ofType { ofType { ofType { ofType { name } } } } } } } } } }"}'
+
+
+Response contains errors[0].message mentioning depth/validation (status 200).
+
+Complexity limit triggers validation (lower the env to prove it):
+
+GQL_MAX_COMPLEXITY=5 curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"query { currentUser { id email displayName } }"}'
+
+
+Response contains errors[0].message about complexity (status 200).
+
+Existing Jest tests remain green:
+
+npx nx test bff --runInBand && echo "=== TESTS OK ==="
