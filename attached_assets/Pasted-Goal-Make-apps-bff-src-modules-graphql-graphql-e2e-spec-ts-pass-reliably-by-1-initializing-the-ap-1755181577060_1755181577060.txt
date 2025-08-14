@@ -1,0 +1,95 @@
+Goal: Make apps/bff/src/modules/graphql/graphql.e2e.spec.ts pass reliably by (1) initializing the app correctly, (2) authenticating with a real JWT, and (3) seeding unique org/user data per test run to avoid users_org_email_unique violations.
+
+Exact changes
+
+Use createTestApp() correctly
+Ensure we await app.init() once, and reuse the same app for the suite.
+
+// apps/bff/src/modules/graphql/graphql.e2e.spec.ts
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../../main';
+
+describe('GraphQL E2E', () => {
+  let app: INestApplication;
+  let http: request.SuperTest<request.Test>;
+  let orgId: string;
+  let accessToken: string;
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    await app.init();                // <- ensure proper init
+    http = request(app.getHttpServer());
+
+    // seed org (idempotent)
+    const orgRes = await http.post('/orgs')
+      .set('content-type', 'application/json')
+      .send({ name: `Test Org ${Date.now()}` });
+    expect(orgRes.status).toBeLessThan(400);
+    orgId = orgRes.body?.id ?? orgRes.body?.data?.id;
+
+    // seed a unique user for login to avoid unique-email collisions
+    const email = `gqltest-${Date.now()}@example.com`;
+    await http.post('/users')
+      .set('content-type', 'application/json')
+      .send({
+        orgId,
+        email,
+        givenName: 'Graph',
+        familyName: 'QL',
+      });
+
+    // login to get real JWT
+    const loginRes = await http.post('/auth/login')
+      .set('content-type', 'application/json')
+      .send({ orgId, email });
+    expect(loginRes.status).toBe(201);
+    accessToken = loginRes.body?.accessToken;
+    expect(typeof accessToken).toBe('string');
+    expect(accessToken.length).toBeGreaterThan(10);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('rejects unauthenticated GraphQL requests', async () => {
+    const res = await http.post('/graphql')
+      .set('content-type', 'application/json')
+      .send({ query: '{ __typename }' });
+
+    // Expect the guard to block: 401 + "Unauthorized"
+    expect([401, 400]).toContain(res.status);
+    const text = JSON.stringify(res.body);
+    expect(text.toLowerCase()).toContain('unauthorized');
+  });
+
+  it('accepts authenticated GraphQL requests', async () => {
+    const res = await http.post('/graphql')
+      .set('content-type', 'application/json')
+      .set('authorization', `Bearer ${accessToken}`)
+      .send({ query: '{ __typename }' });
+
+    expect(res.status).toBe(200);
+    expect(res.body?.data?.__typename).toBe('Query');
+  });
+});
+
+
+Make the JWT guard work for GraphQL & HTTP
+(You already added GraphQL context handling; no change needed if it returns 401 with missing/invalid headers and doesn’t crash. If not, ensure it uses GqlExecutionContext.create(context) to read ctx.getContext().req.headers and falls back to context.switchToHttp().getRequest().)
+
+Keep SDL loading as you implemented (contracts-based, no absolute path)
+No change here—your loadContractSDL() via createRequire is good. It fixes the earlier 404s in tests.
+
+Acceptance checks
+
+Run:
+
+npx nx build bff → succeeds.
+
+npx nx test bff --skip-nx-cache --runInBand → both E2E tests pass; no users_org_email_unique errors; no “headers undefined” errors; no 404 on /graphql.
+
+Unauthenticated GraphQL request returns 401 Unauthorized (or 400 with “unauthorized” in body if Nest wraps the error).
+
+Authenticated GraphQL request to { __typename } returns 200 with { data: { __typename: "Query" } }.
