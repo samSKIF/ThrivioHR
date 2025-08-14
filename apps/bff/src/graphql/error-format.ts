@@ -5,7 +5,7 @@ export function formatGraphQLError(
   error: GraphQLFormattedError,
   env = process.env.NODE_ENV
 ): GraphQLFormattedError {
-  const isDevelopment = env === 'development';
+  const isProd = env === 'production';
   
   // Extract the original exception from extensions
   const originalError = error.extensions?.originalError as any;
@@ -31,7 +31,7 @@ export function formatGraphQLError(
   }
   
   // In production, mask internal errors
-  if (!isDevelopment && code === 'INTERNAL_SERVER_ERROR') {
+  if (isProd && code === 'INTERNAL_SERVER_ERROR') {
     message = 'Internal server error';
   }
   
@@ -41,8 +41,8 @@ export function formatGraphQLError(
     ...error.extensions
   };
   
-  // In development, preserve more debugging info
-  if (isDevelopment) {
+  // In non-production, preserve more debugging info
+  if (!isProd) {
     const exceptionData = error.extensions?.exception as any;
     if (exceptionData?.stacktrace) {
       extensions.stacktrace = exceptionData.stacktrace;

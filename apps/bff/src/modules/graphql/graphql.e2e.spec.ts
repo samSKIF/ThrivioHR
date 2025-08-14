@@ -157,7 +157,8 @@ describe('GraphQL E2E', () => {
       expect(res.status).toBe(200);
       expect(res.body.errors).toBeDefined();
       expect(res.body.errors).toHaveLength(1);
-      expect(res.body.errors[0].extensions.code).toBe('UNAUTHENTICATED');
+      expect(res.body.errors?.[0]?.message).toMatch(/No authorization header/i);
+      expect(res.body.errors?.[0]?.extensions?.code).toBe('UNAUTHENTICATED');
     });
 
     it('handles connection-style pagination correctly', async () => {
