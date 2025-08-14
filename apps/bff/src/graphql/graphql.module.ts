@@ -21,6 +21,7 @@ import { DirectoryModule } from '../modules/directory/directory.module';
       // Load SDL directly; avoids fragile path globs in all environments.
       typeDefs: loadContractSDL(),
       path: '/graphql',
+      context: ({ req, res }) => ({ req, res }),
       // keep your existing settings (playground/introspection toggles etc.)
       playground: process.env.NODE_ENV !== 'production',
       introspection: process.env.NODE_ENV !== 'production',
