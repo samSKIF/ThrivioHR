@@ -1,0 +1,143 @@
+Objective
+
+Expose a connection-style (cursor-based) endpoint for employees to support scalable UIs. Keep the old listEmployees for backward compatibility, add a new listEmployeesConnection. Deterministic ordering, opaque cursors, total count, and proper pageInfo.
+
+Constraints
+
+Non-breaking: keep existing resolvers; add a new field.
+
+Contract-first: update SDL in @thrivio/contracts (no absolute paths).
+
+Stable order: ORDER BY created_at, id (tie-breaker by id).
+
+Opaque cursors: base64 of a small JSON payload (e.g., {createdAt, id}) or a string "emp:<createdAt>:<id>".
+
+Auth unchanged: same JWT guard.
+
+Limits: enforce first ∈ [1..100]; default 20 when omitted.
+
+No N+1 introduced.
+
+Steps
+
+Contracts (SDL)
+
+File: packages/contracts/src/graphql/schema.graphql
+
+Add:
+
+type EmployeeEdge { cursor: String!, node: Employee! }
+type EmployeeConnection {
+  totalCount: Int!
+  edges: [EmployeeEdge!]!
+  pageInfo: PageInfo!
+}
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+extend type Query {
+  listEmployeesConnection(first: Int = 20, after: String): EmployeeConnection!
+  # keep existing listEmployees (deprecated)
+}
+
+
+Mark listEmployees as @deprecated(reason: "Use listEmployeesConnection").
+
+BFF Resolver
+
+File: apps/bff/src/graphql/resolvers/directory.resolver.ts
+
+Implement listEmployeesConnection(first?: number, after?: string):
+
+Validate first (min 1, max 100; default 20).
+
+Decode after (base64). If present, parse {createdAt, id} (or split string).
+
+Query repo with cursor condition:
+
+If no cursor: fetch first first + 1 rows ordered by (created_at ASC, id ASC).
+
+With cursor: WHERE (created_at, id) > (cursor.createdAt, cursor.id) (or equivalent two-clause condition), same ordering, LIMIT first + 1.
+
+Compute hasNextPage by over-fetching (first + 1).
+
+Build edges with cursor = base64(JSON.stringify({createdAt, id})).
+
+endCursor = cursor of last returned edge (or null).
+
+totalCount: separate COUNT(*) for the org (same filters).
+
+Auth: keep @UseGuards(JwtAuthGuard) at class or method level.
+
+Repository helpers (if needed)
+
+File: apps/bff/src/modules/identity/identity.repository.ts
+
+Add methods:
+
+countUsersByOrg(orgId: string): Promise<number>
+
+listUsersByOrgAfter(orgId: string, cursor?: { createdAt: string, id: string }, limit: number): Promise<UserPublic[]>
+
+Use raw SQL with stable ordering and a cursor condition:
+
+SELECT * FROM users
+WHERE organization_id = $1
+  AND (created_at, id) > ($2, $3) -- when cursor provided
+ORDER BY created_at ASC, id ASC
+LIMIT $4
+
+
+Tests (Jest E2E)
+
+File: apps/bff/src/modules/graphql/graphql.e2e.spec.ts
+
+Seed 3 distinct users for the org (use timestamped emails to avoid unique conflicts).
+
+Test A (unauth): call listEmployeesConnection(first:2) without token → GraphQL 200 with errors[0].extensions.code === "UNAUTHENTICATED".
+
+Test B (paginated auth):
+
+Login via REST, get accessToken.
+
+Query listEmployeesConnection(first: 2) with Authorization: Bearer <token>.
+
+Assert: edges.length === 2, pageInfo.hasNextPage === true, pageInfo.endCursor non-null, totalCount >= 3.
+
+Query again with after: endCursor, first: 2.
+
+Assert: edges.length === 1, pageInfo.hasNextPage === false.
+
+Keep existing tests green.
+
+No regressions
+
+Keep the old listEmployees resolver intact and still passing.
+
+Acceptance checks (run exactly)
+# Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+# Tests (should include the new pagination tests)
+npx nx test bff --skip-nx-cache --runInBand && echo "=== TESTS OK ==="
+
+# Live smoke (unauth → UNAUTHENTICATED)
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"query { listEmployeesConnection(first:2) { totalCount pageInfo { hasNextPage endCursor } edges { cursor node { id email displayName } } } }"}' \
+  | python3 -m json.tool | head -80
+
+
+Done criteria
+
+Build succeeds.
+
+All existing tests pass; new pagination tests pass.
+
+Live unauth smoke returns GraphQL 200 with errors[0].extensions.code = "UNAUTHENTICATED".
+
+With auth (manually, if you wish), pagination yields edges + pageInfo behaving as specified.
+
+No absolute paths; SDL still loaded from @thrivio/contracts; limits unchanged.

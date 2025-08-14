@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { loadContractSDL } from './schema-loader';
 import { makeValidationRules } from './limits';
+import { formatGraphQLError } from './error-format';
 
 // Export for use in tests
 export { loadContractSDL };
@@ -22,6 +23,7 @@ import { DirectoryModule } from '../modules/directory/directory.module';
       typeDefs: loadContractSDL(),
       path: '/graphql',
       context: ({ req, res }) => ({ req, res }),
+      formatError: (err) => formatGraphQLError(err, process.env.NODE_ENV),
       // keep your existing settings (playground/introspection toggles etc.)
       playground: process.env.NODE_ENV !== 'production',
       introspection: process.env.NODE_ENV !== 'production',

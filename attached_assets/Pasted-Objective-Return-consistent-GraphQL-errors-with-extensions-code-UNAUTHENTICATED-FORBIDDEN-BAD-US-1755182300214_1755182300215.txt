@@ -1,0 +1,80 @@
+Objective
+
+Return consistent GraphQL errors with extensions.code (UNAUTHENTICATED, FORBIDDEN, BAD_USER_INPUT) and mask internal errors in non‐dev. Keep REST behavior untouched. All existing tests must remain green and add a focused GraphQL error test.
+
+Constraints
+
+No absolute paths.
+
+Do not change resolver business logic.
+
+Only touch BFF (apps/bff) files.
+
+Keep all current limits (depth/complexity) and SDL loader intact.
+
+Steps
+
+Create an error formatter
+
+File: apps/bff/src/graphql/error-format.ts
+
+Export formatGraphQLError(error: GraphQLFormattedError, env = process.env.NODE_ENV) that:
+
+Maps Nest exceptions:
+
+UnauthorizedException → extensions.code = 'UNAUTHENTICATED'
+
+ForbiddenException → extensions.code = 'FORBIDDEN'
+
+BadRequestException / validation → extensions.code = 'BAD_USER_INPUT'
+
+In non-development env, replace unknown/internal messages with "Internal server error" and include a stable extensions.code = 'INTERNAL_SERVER_ERROR'. Preserve extensions.path and extensions.exception?.stack only in dev.
+
+Never leak raw stack traces in CI/prod.
+
+Wire formatter into GraphQLModule
+
+File: apps/bff/src/graphql/graphql.module.ts
+
+Import and set formatError: (err) => formatGraphQLError(err, process.env.NODE_ENV) in the existing GraphQLModule.forRoot options.
+
+Do not remove validationRules or the SDL loader.
+
+Add focused E2E tests
+
+File: apps/bff/src/modules/graphql/graphql.e2e.spec.ts
+
+Test A (unauth): call currentUser without Authorization; assert res.status === 200, errors[0].extensions.code === 'UNAUTHENTICATED'.
+
+Test B (forbidden): (temporarily) protect a trivial field with a guard that throws ForbiddenException or reuse an existing resolver path that requires org scope; assert extensions.code === 'FORBIDDEN'. (If no such path exists, add a tiny test-only resolver within the spec file using the actual app container and a throw—scoped only to the test, no production code changes.)
+
+Test C (masking): set NODE_ENV=production for a single test block, trigger an unknown error (e.g., a resolver that throws a plain Error('boom') created inside the spec). Assert message is "Internal server error" and extensions.code === 'INTERNAL_SERVER_ERROR' with no stack in extensions.
+
+Keep everything else green
+
+Ensure all existing BFF tests continue to pass.
+
+No changes to REST, depth/complexity, SDL loader, or JWT guard.
+
+Acceptance checks (run exactly)
+# Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+# Run all BFF tests (should include new GraphQL error tests)
+npx nx test bff --skip-nx-cache --runInBand && echo "=== TESTS OK ==="
+
+# Live smoke (unauth) should return GraphQL 200 with errors[0].extensions.code === "UNAUTHENTICATED"
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"query{ currentUser { id } }"}' | python3 -m json.tool | head -80
+
+
+Done criteria
+
+Build succeeds.
+
+All tests pass, including the 3 new assertions (UNAUTHENTICATED, FORBIDDEN, masked INTERNAL_SERVER_ERROR).
+
+Live unauth smoke returns 200 with errors[0].extensions.code = "UNAUTHENTICATED" (message format may differ; the code is authoritative).
+
+No stack traces leak in prod-mode masking test.

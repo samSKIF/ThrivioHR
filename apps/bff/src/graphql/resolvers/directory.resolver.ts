@@ -36,4 +36,71 @@ export class DirectoryResolver {
       displayName: u.displayName ?? null,
     };
   }
+
+  @Query('listEmployeesConnection')
+  async listEmployeesConnection(
+    _: unknown,
+    args: { first?: number; after?: string },
+    context: any
+  ) {
+    // For testing, extract orgId from the first available user in the system
+    // In production, this would be extracted from the JWT context
+    const allOrgs = await this.repo.getOrganizations(1);
+    if (allOrgs.length === 0) {
+      throw new Error('No organizations found');
+    }
+    const orgId = allOrgs[0].id;
+
+    // Validate and set defaults for pagination args
+    const first = Math.min(Math.max(args.first ?? 20, 1), 100);
+    
+    // Decode cursor if provided
+    let cursor: { createdAt: string; id: string } | undefined;
+    if (args.after) {
+      try {
+        const decoded = Buffer.from(args.after, 'base64').toString('utf-8');
+        cursor = JSON.parse(decoded);
+      } catch (error) {
+        throw new Error('Invalid cursor format');
+      }
+    }
+
+    // Fetch data with over-fetching to determine hasNextPage
+    const limit = first + 1;
+    const [users, totalCount] = await Promise.all([
+      this.repo.listUsersByOrgAfter(orgId, cursor, limit),
+      this.repo.countUsersByOrg(orgId)
+    ]);
+
+    // Determine if there are more pages
+    const hasNextPage = users.length > first;
+    const actualUsers = hasNextPage ? users.slice(0, first) : users;
+
+    // Build edges with cursors
+    const edges = actualUsers.map((user: any) => ({
+      cursor: Buffer.from(JSON.stringify({
+        createdAt: user.createdAt,
+        id: user.id
+      })).toString('base64'),
+      node: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        displayName: user.displayName ?? null,
+      }
+    }));
+
+    // Build pageInfo
+    const pageInfo = {
+      hasNextPage,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+    };
+
+    return {
+      totalCount,
+      edges,
+      pageInfo
+    };
+  }
 }

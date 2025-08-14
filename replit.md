@@ -100,11 +100,12 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-14**: **GraphQL E2E Testing COMPLETE** - All BFF tests now pass reliably (3/3 test suites, 4/4 tests)
-- **JWT Authentication Fixed**: GraphQL context properly configured for both HTTP and GraphQL requests
-- **E2E Test Reliability**: Unique data seeding prevents constraint violations, proper app initialization
-- **Authentication Flow**: JWT guard works for both REST and GraphQL endpoints with proper error handling
-- **Testing Excellence**: Reliable test data setup using timestamps to avoid unique constraint violations
-- **Zero Regressions**: All existing functionality preserved, Identity tests maintain 100% coverage
-- **Infrastructure Complete**: Both Identity service and BFF have operational test suites with full coverage
-- **Production Ready**: GraphQL endpoint with SDL loading, security limits, and comprehensive testing
+- **2025-08-14**: **Connection-Style Pagination COMPLETE** - Scalable employee pagination with cursor-based endpoints
+- **GraphQL Connections**: Added `listEmployeesConnection` with proper Edge/Connection pattern, opaque cursors, totalCount
+- **Error Formatting System**: Consistent GraphQL errors with extension codes (UNAUTHENTICATED, FORBIDDEN, BAD_USER_INPUT, INTERNAL_SERVER_ERROR)
+- **Production Security**: Error masking in non-dev environments, stack trace removal for security
+- **Backward Compatibility**: Original `listEmployees` marked deprecated but fully functional 
+- **Cursor Pagination**: Base64-encoded JSON cursors with deterministic ordering (created_at, id)
+- **Comprehensive Testing**: All pagination scenarios tested, unauthenticated requests properly blocked
+- **Zero Regressions**: All existing functionality preserved, complete test coverage maintained
+- **Schema Evolution**: Contract-first approach with SDL updates in @thrivio/contracts package

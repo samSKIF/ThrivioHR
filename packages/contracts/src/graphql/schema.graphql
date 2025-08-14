@@ -14,8 +14,25 @@ type Employee {
   displayName: String
 }
 
+type EmployeeEdge {
+  cursor: String!
+  node: Employee!
+}
+
+type EmployeeConnection {
+  totalCount: Int!
+  edges: [EmployeeEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
 type Query {
   currentUser: User
-  listEmployees(orgId: ID!, limit: Int = 20, cursor: String): [Employee!]!
+  listEmployees(orgId: ID!, limit: Int = 20, cursor: String): [Employee!]! @deprecated(reason: "Use listEmployeesConnection")
+  listEmployeesConnection(first: Int = 20, after: String): EmployeeConnection!
   getEmployee(id: ID!): Employee
 }
