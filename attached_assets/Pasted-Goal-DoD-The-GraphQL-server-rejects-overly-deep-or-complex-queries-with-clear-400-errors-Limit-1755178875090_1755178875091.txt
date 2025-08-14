@@ -1,0 +1,92 @@
+Goal (DoD):
+
+The GraphQL server rejects overly deep or complex queries with clear 400 errors.
+
+Limits are env‑driven (defaults shown below).
+
+Jest passes unchanged. curl to /graphql still returns { "__typename":"Query" }.
+
+A quick abuse test returns a validation error message mentioning “depth” or “complexity”.
+
+Tasks
+
+Install runtime guards
+
+Add deps: graphql-depth-limit, graphql-validation-complexity.
+
+Create apps/bff/src/graphql/limits.ts:
+
+import depthLimit from 'graphql-depth-limit';
+import { createComplexityLimitRule } from 'graphql-validation-complexity';
+
+export function makeValidationRules() {
+  const maxDepth = Number(process.env.GQL_MAX_DEPTH ?? 8);
+  const maxComplexity = Number(process.env.GQL_MAX_COMPLEXITY ?? 1000);
+  return [
+    depthLimit(maxDepth),
+    createComplexityLimitRule(maxComplexity, {
+      onCost: (cost: number) => {
+        if (process.env.NODE_ENV !== 'test') {
+          // eslint-disable-next-line no-console
+          console.log(`[GraphQL] cost=${cost}`);
+        }
+      },
+    }),
+  ];
+}
+
+
+Wire rules into the module
+
+In apps/bff/src/graphql/graphql.module.ts, import makeValidationRules and provide validationRules: makeValidationRules() in your GraphQLModule.forRoot... options.
+
+Keep your existing SDL loader; do not reintroduce absolute paths.
+
+Ensure this works for both ts-node and compiled dist.
+
+Env defaults & prod knobs
+
+No new config files. Use envs only:
+
+GQL_MAX_DEPTH (default 8)
+
+GQL_MAX_COMPLEXITY (default 1000)
+
+Smoke tests (manual)
+
+Build: npx nx build bff → succeeds.
+
+Jest: npx nx test bff --runInBand → succeeds.
+
+Happy path:
+
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"{ __typename }"}'
+
+
+Expect {"data":{"__typename":"Query"}}.
+
+Abuse path (should be rejected; tune N as needed):
+
+DEPTH=20
+q='query q { a: __typename '; for i in $(seq 1 $DEPTH); do q="$q{ __typename"; done
+for i in $(seq 1 $DEPTH); do q="$q }"; done; q="$q }"
+curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d "{\"query\":\"$q\"}"
+
+
+Expect JSON error mentioning depth or complexity with 400.
+
+Acceptance checklist
+
+ graphql.module.ts includes validationRules: makeValidationRules().
+
+ No absolute paths added/returned.
+
+ Limits are configurable via env; defaults apply when unset.
+
+ Happy-path query works; abuse-path returns 400 with depth/complexity error.
+
+ All existing tests still green.

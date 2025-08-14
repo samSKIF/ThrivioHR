@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { loadContractSDL } from './schema-loader';
+import { makeValidationRules } from './limits';
 
 // resolvers & modules already present in your file:
 import { IdentityResolver } from './resolvers/identity.resolver';
@@ -20,6 +21,7 @@ import { DirectoryModule } from '../modules/directory/directory.module';
       // keep your existing settings (playground/introspection toggles etc.)
       playground: process.env.NODE_ENV !== 'production',
       introspection: process.env.NODE_ENV !== 'production',
+      validationRules: makeValidationRules(),
     }),
     IdentityModule,
     DirectoryModule,

@@ -3091,6 +3091,15 @@
         "hash": "sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg=="
       }
     },
+    "npm:arrify": {
+      "type": "npm",
+      "name": "npm:arrify",
+      "data": {
+        "version": "1.0.1",
+        "packageName": "arrify",
+        "hash": "sha512-3CYzex9M9FGQjCGMGyi6/31c8GJbgb0qGyrx5HWxPd0aCwh4cB2YjMb2Xf9UuoogrMrlO9cTqnB5rI5GHZTcUA=="
+      }
+    },
     "npm:asap": {
       "type": "npm",
       "name": "npm:asap",
@@ -4891,6 +4900,15 @@
         "hash": "sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag=="
       }
     },
+    "npm:graphql-depth-limit": {
+      "type": "npm",
+      "name": "npm:graphql-depth-limit",
+      "data": {
+        "version": "1.1.0",
+        "packageName": "graphql-depth-limit",
+        "hash": "sha512-+3B2BaG8qQ8E18kzk9yiSdAa75i/hnnOwgSeAxVJctGQPvmeiLtqKOYF6HETCyRjiF7Xfsyal0HbLlxCQkgkrw=="
+      }
+    },
     "npm:graphql-tag": {
       "type": "npm",
       "name": "npm:graphql-tag",
@@ -4898,6 +4916,15 @@
         "version": "2.12.6",
         "packageName": "graphql-tag",
         "hash": "sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg=="
+      }
+    },
+    "npm:graphql-validation-complexity": {
+      "type": "npm",
+      "name": "npm:graphql-validation-complexity",
+      "data": {
+        "version": "0.4.2",
+        "packageName": "graphql-validation-complexity",
+        "hash": "sha512-4tzmN/70a06c2JH5fvISkoLX6oBDpqK22cvr2comge3HZHtBLD3n5Sl6MnQYMVhQqKGlpZWcCgD00MnyKNzYYg=="
       }
     },
     "npm:graphql-ws": {
@@ -5951,6 +5978,15 @@
         "version": "4.0.0",
         "packageName": "long",
         "hash": "sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA=="
+      }
+    },
+    "npm:loose-envify": {
+      "type": "npm",
+      "name": "npm:loose-envify",
+      "data": {
+        "version": "1.4.0",
+        "packageName": "loose-envify",
+        "hash": "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="
       }
     },
     "npm:lru-cache@10.4.3": {
@@ -8066,6 +8102,15 @@
         "version": "1.0.8",
         "packageName": "walker",
         "hash": "sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ=="
+      }
+    },
+    "npm:warning": {
+      "type": "npm",
+      "name": "npm:warning",
+      "data": {
+        "version": "4.0.3",
+        "packageName": "warning",
+        "hash": "sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w=="
       }
     },
     "npm:wcwidth": {
@@ -14471,10 +14516,24 @@
         "type": "static"
       }
     ],
+    "npm:graphql-depth-limit": [
+      {
+        "source": "npm:graphql-depth-limit",
+        "target": "npm:arrify",
+        "type": "static"
+      }
+    ],
     "npm:graphql-tag": [
       {
         "source": "npm:graphql-tag",
         "target": "npm:tslib",
+        "type": "static"
+      }
+    ],
+    "npm:graphql-validation-complexity": [
+      {
+        "source": "npm:graphql-validation-complexity",
+        "target": "npm:warning",
         "type": "static"
       }
     ],
@@ -15987,6 +16046,13 @@
       {
         "source": "npm:log-symbols",
         "target": "npm:is-unicode-supported",
+        "type": "static"
+      }
+    ],
+    "npm:loose-envify": [
+      {
+        "source": "npm:loose-envify",
+        "target": "npm:js-tokens",
         "type": "static"
       }
     ],
@@ -17864,6 +17930,13 @@
         "type": "static"
       }
     ],
+    "npm:warning": [
+      {
+        "source": "npm:warning",
+        "target": "npm:loose-envify",
+        "type": "static"
+      }
+    ],
     "npm:wcwidth": [
       {
         "source": "npm:wcwidth",
@@ -18042,5 +18115,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755178483719
+  "computedAt": 1755178953587
 }
