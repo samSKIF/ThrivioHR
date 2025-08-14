@@ -100,4 +100,26 @@ export class IdentityRepository {
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (upd as any).rows?.[0];
   }
+
+  async listUsersByOrg(orgId: string, limit = 20, cursor: string | null = null) {
+    // raw SQL to avoid schema coupling; pagination by id (lexicographic)
+    if (cursor) {
+      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
+      return ((rows as any).rows ?? []).map((r: any) => ({
+        id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName,
+      }));
+    } else {
+      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
+      return ((rows as any).rows ?? []).map((r: any) => ({
+        id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName,
+      }));
+    }
+  }
+
+  async getUserById(id: string) {
+    const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
+    const r = ((rows as any).rows ?? [])[0];
+    if (!r) return null;
+    return { id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName };
+  }
 }

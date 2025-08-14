@@ -1,0 +1,256 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Stand up a minimal GraphQL layer in the BFF for Identity (current user) and Directory (employees), with JWT guard enforcement and passing Jest tests.
+
+TOUCH ONLY
+apps/bff/jest.config.ts
+apps/bff/src/app.module.ts
+apps/bff/src/main.ts (read-only for imports; do not change logic)
+apps/bff/src/graphql/schema.graphql
+apps/bff/src/graphql/graphql.module.ts
+apps/bff/src/graphql/resolvers/identity.resolver.ts
+apps/bff/src/graphql/resolvers/directory.resolver.ts
+apps/bff/src/graphql/types/graphql.context.ts
+apps/bff/src/modules/identity/identity.repository.ts // add read-only list/query helpers only
+apps/bff/src/modules/graphql/graphql.e2e.spec.ts
+
+CHANGES
+// 1) Install dependencies (GraphQL + Apollo for Nest).
+// Use the package manager available in this workspace. If pnpm fails, try npm, then yarn, then the packager helper.
+// Do NOT modify package.json manually; rely on the installer to write deps.
+RUN & PRINT
+pnpm add @nestjs/graphql @apollo/server graphql graphql-tag @nestjs/apollo --silent || npm i -S @nestjs/graphql @apollo/server graphql graphql-tag @nestjs/apollo || yarn add @nestjs/graphql @apollo/server graphql graphql-tag @nestjs/apollo || echo "INSTALL_FAILED" && exit 1
+
+// 2) Add schema-first GraphQL setup files.
+CREATE FILE apps/bff/src/graphql/schema.graphql WITH CONTENT:
+"""
+type User {
+id: ID!
+email: String!
+firstName: String
+lastName: String
+displayName: String
+}
+
+type Employee {
+id: ID!
+email: String!
+firstName: String
+lastName: String
+displayName: String
+}
+
+type Query {
+currentUser: User
+listEmployees(orgId: ID!, limit: Int = 20, cursor: String): [Employee!]!
+getEmployee(id: ID!): Employee
+}
+"""
+
+CREATE FILE apps/bff/src/graphql/types/graphql.context.ts WITH CONTENT:
+import { Request } from 'express';
+export type GraphQLContext = {
+req: Request;
+};
+
+// 3) GraphQL module wiring (schema-first).
+CREATE FILE apps/bff/src/graphql/graphql.module.ts WITH CONTENT:
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
+import { IdentityResolver } from './resolvers/identity.resolver';
+import { DirectoryResolver } from './resolvers/directory.resolver';
+import { IdentityModule } from '../modules/identity/identity.module';
+import { DirectoryModule } from '../modules/directory/directory.module';
+
+@Module({
+imports: [
+GraphQLModule.forRoot<ApolloDriverConfig>({
+driver: ApolloDriver,
+typePaths: [join(process.cwd(), 'apps/bff/src/graphql/**/*.graphql')],
+path: '/graphql',
+context: ({ req }) => ({ req }),
+}),
+IdentityModule,
+DirectoryModule,
+],
+providers: [IdentityResolver, DirectoryResolver],
+})
+export class BffGraphqlModule {}
+
+// 4) Identity resolver (protected currentUser).
+CREATE FILE apps/bff/src/graphql/resolvers/identity.resolver.ts WITH CONTENT:
+import { Resolver, Query } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { Request } from 'express';
+
+@Resolver('User')
+export class IdentityResolver {
+@UseGuards(JwtAuthGuard)
+@Query('currentUser')
+async currentUser(_: unknown, __: unknown, ctx: { req: Request }) {
+// JwtAuthGuard already validated; claims are in req.user
+const claims: any = (ctx.req as any).user ?? null;
+if (!claims) return null;
+// Minimal shape matching schema.graphql
+return {
+id: claims.sub,
+email: claims.email ?? '',
+firstName: claims.givenName ?? claims.firstName ?? null,
+lastName: claims.familyName ?? claims.lastName ?? null,
+displayName: claims.displayName ?? null,
+};
+}
+}
+
+// 5) Directory resolver (protected queries).
+CREATE FILE apps/bff/src/graphql/resolvers/directory.resolver.ts WITH CONTENT:
+import { Resolver, Query, Args } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { IdentityRepository } from '../../modules/identity/identity.repository';
+
+@Resolver('Employee')
+export class DirectoryResolver {
+constructor(private readonly repo: IdentityRepository) {}
+
+@UseGuards(JwtAuthGuard)
+@Query('listEmployees')
+async listEmployees(
+_: unknown,
+args: { orgId: string; limit?: number; cursor?: string },
+) {
+const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
+const rows = await this.repo.listUsersByOrg(args.orgId, limit, args.cursor ?? null);
+return rows.map(r => ({
+id: r.id,
+email: r.email,
+firstName: r.firstName ?? null,
+lastName: r.lastName ?? null,
+displayName: r.displayName ?? null,
+}));
+}
+
+@UseGuards(JwtAuthGuard)
+@Query('getEmployee')
+async getEmployee(_: unknown, args: { id: string }) {
+const u = await this.repo.getUserById(args.id);
+if (!u) return null;
+return {
+id: u.id,
+email: u.email,
+firstName: u.firstName ?? null,
+lastName: u.lastName ?? null,
+displayName: u.displayName ?? null,
+};
+}
+}
+
+// 6) Import GraphQL module into AppModule.
+PATCH FILE apps/bff/src/app.module.ts REPLACE the first module imports block ONLY to add BffGraphqlModule import (do not remove existing modules). Add these lines:
+// near other imports
+import { BffGraphqlModule } from './graphql/graphql.module';
+// inside @Module({ imports: [...] })
+, BffGraphqlModule
+
+// 7) Identity repository: add read-only helpers (no breaking changes).
+PATCH FILE apps/bff/src/modules/identity/identity.repository.ts BY APPENDING the following methods at the end of the class:
+async listUsersByOrg(orgId: string, limit = 20, cursor: string | null = null) {
+// raw SQL to avoid schema coupling; pagination by id (lexicographic)
+const whereCursor = cursor ? AND id > $2 : '';
+const params: any[] = cursor ? [orgId, cursor, limit] : [orgId, limit];
+const sql = SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = $1 ${whereCursor} ORDER BY id ASC LIMIT $${cursor ? 3 : 2} ;
+const rows = await this.db.execute(sql as any, params);
+// normalize driver return shape (db.execute may differ; keep it generic)
+return (rows as any[]).map((r: any) => ({
+id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName,
+}));
+}
+
+async getUserById(id: string) {
+const sql = SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = $1 LIMIT 1 ;
+const rows = await this.db.execute(sql as any, [id]);
+const r = Array.isArray(rows) ? rows[0] : (rows as any)?.[0];
+if (!r) return null;
+return { id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName };
+}
+
+// 8) E2E tests for GraphQL (unauthorized and authorized flows).
+CREATE FILE apps/bff/src/modules/graphql/graphql.e2e.spec.ts WITH CONTENT:
+import request from 'supertest';
+import { createTestApp } from '../../main';
+
+describe('GraphQL BFF (e2e)', () => {
+let app: any;
+let server: any;
+
+beforeAll(async () => {
+app = await createTestApp();
+server = app.getHttpServer();
+});
+
+afterAll(async () => {
+await app.close();
+});
+
+it('rejects protected GraphQL queries without JWT', async () => {
+const res = await request(server)
+.post('/graphql')
+.send({ query: '{ currentUser { id email } }' })
+.set('content-type', 'application/json');
+// JwtAuthGuard should trigger 401
+expect([401, 200]).toContain(res.status);
+if (res.status === 200) {
+// some guard implementations return errors in 200; check error
+expect(res.body.errors?.[0]?.message).toMatch(/Unauthorized/i);
+}
+});
+
+it('returns data for protected queries with JWT', async () => {
+// Prepare org/user, then login via REST to get JWT
+const orgId = (await request(server).get('/orgs?limit=1')).body?.[0]?.id
+?? (await request(server).post('/orgs').send({ name: 'GQL Demo Org' })).body.id;
+
+await request(server)
+  .post('/users')
+  .send({ orgId, email: 'gqltester@example.com', givenName: 'Gql', familyName: 'Tester' });
+
+const login = await request(server)
+  .post('/auth/login')
+  .send({ orgId, email: 'gqltester@example.com' });
+
+const token = login.body?.accessToken;
+expect(token).toBeTruthy();
+
+const res = await request(server)
+  .post('/graphql')
+  .set('Authorization', `Bearer ${token}`)
+  .send({ query: '{ currentUser { id email displayName } }' });
+
+expect(res.status).toBe(200);
+expect(res.body.data.currentUser.email).toBe('gqltester@example.com');
+
+
+});
+});
+
+RUN & PRINT
+
+Build to ensure wiring is correct
+
+npx nx build bff || (echo "BUILD_FAILED" && exit 1)
+
+Run Jest (Nx) in-band (no ports bound; uses createTestApp)
+
+npx nx test bff --skip-nx-cache --runInBand || (echo "TESTS_FAILED" && exit 1)
+
+Smoke a live /graphql call if the dev server is running (non-blocking)
+
+echo "=== OPTIONAL LIVE GRAPHQL SMOKE ==="
+curl -s -X POST http://localhost:5000/graphql -H 'content-type: application/json' -d '{"query":"{ __typename }"}' | head -120 || true
+
+STOP.
