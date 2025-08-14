@@ -116,6 +116,16 @@ describe('GraphQL E2E', () => {
   });
 
   describe('Employee Connection Pagination', () => {
+    // Helper function to seed users with timestamp-based emails
+    async function seedUsers(server: any, orgId: string, count = 5) {
+      for (let i = 0; i < count; i++) {
+        const email = `page.user.${Date.now()}_${i}@example.com`;
+        await request(server).post('/users')
+          .send({ orgId, email, givenName: 'Page', familyName: `User${i}` })
+          .expect(201);
+      }
+    }
+
     beforeAll(async () => {
       // Seed additional users for pagination testing with unique timestamped emails
       const timestamp = Date.now();
@@ -261,6 +271,113 @@ describe('GraphQL E2E', () => {
       expect(res.body.errors[0].extensions.code).toBe('BAD_REQUEST');
       // Error message might be masked in test environment, just verify error code
       expect(['Maximum page size is 100', 'Internal server error']).toContain(res.body.errors[0].message);
+    });
+
+    it('paginates employees with cursor, no duplicates, stable ordering', async () => {
+      // Create dedicated org for this test to avoid interference
+      const org = await request(server).post('/orgs').send({ name: 'Conn Org' }).expect(201);
+      const orgId = org.body.id;
+      
+      // Seed users for pagination testing
+      await seedUsers(server, orgId, 5);
+      
+      // Create and login a user for this org
+      const testEmail = `conntest-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .send({ orgId, email: testEmail, givenName: 'Conn', familyName: 'Test' })
+        .expect(201);
+      
+      const login = await request(server).post('/auth/login')
+        .send({ orgId, email: testEmail })
+        .expect(201);
+      const token = login.body.accessToken;
+
+      // Page 1
+      const q1 = `query($first:Int){ listEmployeesConnection(first:$first){
+        totalCount pageInfo{ hasNextPage endCursor }
+        edges{ cursor node{ id email displayName } }
+      }}`;
+      const r1 = await request(server).post('/graphql')
+        .set('authorization', `Bearer ${token}`)
+        .send({ query: q1, variables: { first: 2 } })
+        .expect(200);
+
+      expect(r1.body.errors).toBeUndefined();
+      const edges1 = r1.body.data.listEmployeesConnection.edges;
+      const endCursor = r1.body.data.listEmployeesConnection.pageInfo.endCursor;
+      expect(edges1.length).toBeGreaterThan(0);
+      expect(endCursor).toBeTruthy();
+
+      // Page 2 using after
+      const q2 = `query($first:Int,$after:String){ listEmployeesConnection(first:$first, after:$after){
+        pageInfo{ hasNextPage endCursor }
+        edges{ cursor node{ id email } }
+      }}`;
+      const r2 = await request(server).post('/graphql')
+        .set('authorization', `Bearer ${token}`)
+        .send({ query: q2, variables: { first: 2, after: endCursor } })
+        .expect(200);
+
+      const edges2 = r2.body.data.listEmployeesConnection.edges;
+
+      // No duplicate IDs between page 1 and page 2
+      const ids1 = new Set(edges1.map((e: any) => e.node.id));
+      const ids2 = edges2.map((e: any) => e.node.id);
+      ids2.forEach(id => expect(ids1.has(id)).toBe(false));
+
+      // Basic stability check: cursors are strictly increasing (page 2 > page 1 last)
+      expect(edges1[edges1.length - 1].cursor).toBeTruthy();
+      if (edges2.length) {
+        expect(edges2[0].cursor > edges1[edges1.length - 1].cursor).toBe(true);
+      }
+    });
+
+    it('rejects malformed cursor with BAD_USER_INPUT', async () => {
+      const org = await request(server).post('/orgs').send({ name: 'BadCursor Org' }).expect(201);
+      const orgId = org.body.id;
+      
+      // Create and login user for this test
+      const testEmail = `badcursor-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .send({ orgId, email: testEmail, givenName: 'Bad', familyName: 'Cursor' })
+        .expect(201);
+      
+      const login = await request(server).post('/auth/login')
+        .send({ orgId, email: testEmail })
+        .expect(201);
+      const token = login.body.accessToken;
+
+      const bad = await request(server).post('/graphql')
+        .set('authorization', `Bearer ${token}`)
+        .send({ query: `query { listEmployeesConnection(first:2, after:"@@not-base64@@"){ totalCount } }` })
+        .expect(200);
+
+      expect(bad.body.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+      expect(bad.body.errors?.[0]?.message).toMatch(/invalid cursor/i);
+    });
+
+    it('rejects oversized page size with BAD_USER_INPUT', async () => {
+      const org = await request(server).post('/orgs').send({ name: 'BigFirst Org' }).expect(201);
+      const orgId = org.body.id;
+      
+      // Create and login user for this test
+      const testEmail = `bigfirst-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .send({ orgId, email: testEmail, givenName: 'Big', familyName: 'First' })
+        .expect(201);
+      
+      const login = await request(server).post('/auth/login')
+        .send({ orgId, email: testEmail })
+        .expect(201);
+      const token = login.body.accessToken;
+
+      const res = await request(server).post('/graphql')
+        .set('authorization', `Bearer ${token}`)
+        .send({ query: `query{ listEmployeesConnection(first:101){ totalCount } }` })
+        .expect(200);
+
+      expect(res.body.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+      expect(res.body.errors?.[0]?.message).toMatch(/first .* 1\.\.100/i);
     });
   });
 });

@@ -1,0 +1,148 @@
+Goal: Add reliable E2E tests that (a) page twice with after and prove no duplicates/stable ordering, and (b) return BAD_USER_INPUT for malformed/oversized cursors/limits.
+
+What to change
+
+Add/extend E2E tests in apps/bff/src/modules/graphql/graphql.e2e.spec.ts:
+
+Helper: seed a few users in one org for the test (timestamp-based emails to avoid uniqueness clashes).
+
+async function seedUsers(server: any, orgId: string, count = 5) {
+  for (let i = 0; i < count; i++) {
+    const email = `page.user.${Date.now()}_${i}@example.com`;
+    await request(server).post('/users')
+      .send({ orgId, email, givenName: 'Page', familyName: `User${i}` })
+      .expect(201);
+  }
+}
+
+
+Test 1 — page twice, no duplicates, stable order:
+
+it('paginates employees with cursor, no duplicates, stable ordering', async () => {
+  // create org + seed users
+  const org = await request(server).post('/orgs').send({ name: 'Conn Org' }).expect(201);
+  const orgId = org.body.id;
+  await seedUsers(server, orgId, 5);
+
+  // login to get token
+  const login = await request(server).post('/auth/login').send({
+    orgId, email: 'csvdemo@example.com' // or create/login a valid user
+  }).expect(201);
+  const token = login.body.accessToken;
+
+  // page 1
+  const q1 = `query($first:Int){ listEmployeesConnection(first:$first){
+    totalCount pageInfo{ hasNextPage endCursor }
+    edges{ cursor node{ id email displayName } }
+  }}`;
+  const r1 = await request(server).post('/graphql')
+    .set('authorization', `Bearer ${token}`)
+    .send({ query: q1, variables: { first: 2 } })
+    .expect(200);
+
+  expect(r1.body.errors).toBeUndefined();
+  const edges1 = r1.body.data.listEmployeesConnection.edges;
+  const endCursor = r1.body.data.listEmployeesConnection.pageInfo.endCursor;
+  expect(edges1.length).toBeGreaterThan(0);
+  expect(endCursor).toBeTruthy();
+
+  // page 2 using after
+  const q2 = `query($first:Int,$after:String){ listEmployeesConnection(first:$first, after:$after){
+    pageInfo{ hasNextPage endCursor }
+    edges{ cursor node{ id email } }
+  }}`;
+  const r2 = await request(server).post('/graphql')
+    .set('authorization', `Bearer ${token}`)
+    .send({ query: q2, variables: { first: 2, after: endCursor } })
+    .expect(200);
+
+  const edges2 = r2.body.data.listEmployeesConnection.edges;
+
+  // no duplicate IDs between page 1 and page 2
+  const ids1 = new Set(edges1.map((e:any)=>e.node.id));
+  const ids2 = edges2.map((e:any)=>e.node.id);
+  ids2.forEach(id => expect(ids1.has(id)).toBe(false));
+
+  // basic stability check: cursors are strictly increasing (page 2 > page 1 last)
+  expect(edges1[edges1.length-1].cursor).toBeTruthy();
+  if (edges2.length) {
+    expect(edges2[0].cursor > edges1[edges1.length-1].cursor).toBe(true);
+  }
+});
+
+
+Test 2 — malformed base64 cursor ⇒ BAD_USER_INPUT:
+
+it('rejects malformed cursor with BAD_USER_INPUT', async () => {
+  const org = await request(server).post('/orgs').send({ name: 'BadCursor Org' }).expect(201);
+  const orgId = org.body.id;
+  // minimal login (same flow as above)
+  const login = await request(server).post('/auth/login').send({
+    orgId, email: 'csvdemo@example.com'
+  }).expect(201);
+  const token = login.body.accessToken;
+
+  const bad = await request(server).post('/graphql')
+    .set('authorization', `Bearer ${token}`)
+    .send({ query: `query { listEmployeesConnection(first:2, after:"@@not-base64@@"){ totalCount } }` })
+    .expect(200);
+
+  expect(bad.body.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+  expect(bad.body.errors?.[0]?.message).toMatch(/invalid cursor/i);
+});
+
+
+Test 3 — oversized first (>100) ⇒ BAD_USER_INPUT:
+
+it('rejects oversized page size with BAD_USER_INPUT', async () => {
+  const org = await request(server).post('/orgs').send({ name: 'BigFirst Org' }).expect(201);
+  const orgId = org.body.id;
+  const login = await request(server).post('/auth/login').send({
+    orgId, email: 'csvdemo@example.com'
+  }).expect(201);
+  const token = login.body.accessToken;
+
+  const res = await request(server).post('/graphql')
+    .set('authorization', `Bearer ${token}`)
+    .send({ query: `query{ listEmployeesConnection(first:101){ totalCount } }` })
+    .expect(200);
+
+  expect(res.body.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+  expect(res.body.errors?.[0]?.message).toMatch(/first .* 1\.\.100/i);
+});
+
+
+These tests assume your resolver already throws BadRequestException('Invalid cursor') and enforces first ∈ [1..100], and your formatter maps BadRequestException → BAD_USER_INPUT.
+
+(Optional) manual performance sanity
+
+Run once in your DB console to confirm index usage (not part of automated tests):
+
+EXPLAIN ANALYZE
+SELECT id, email, created_at
+FROM users
+WHERE organization_id = $1
+  AND (created_at, id) > ($2, $3)
+ORDER BY created_at ASC, id ASC
+LIMIT $4 + 1;
+
+
+Verify it uses your idx_users_org_created_id composite index.
+
+Definition of Done
+
+Build passes:
+
+npx nx build bff && echo "=== BUILD OK ==="
+
+
+Tests are flake-free (run 3×):
+
+for i in 1 2 3; do npx nx test bff --runInBand || exit 1; done && echo "=== FLAKE-FREE ==="
+
+
+Test 1 proves: two pages, no duplicate IDs, cursors strictly increase.
+
+Test 2 returns errors[0].extensions.code === "BAD_USER_INPUT" and message matching /invalid cursor/i.
+
+Test 3 returns BAD_USER_INPUT for first: 101 with a message indicating the allowed range.

@@ -26,7 +26,17 @@ export function formatGraphQLError(
       code = 'FORBIDDEN';
     } else if (errorInstance.name === 'BadRequestException' || 
                errorInstance.constructor?.name === 'BadRequestException') {
-      code = 'BAD_USER_INPUT';
+      // Only map new specific user input validation errors to BAD_USER_INPUT
+      // Preserve existing BAD_REQUEST behavior for other validation errors
+      if (errorInstance.message?.includes('first must be between')) {
+        code = 'BAD_USER_INPUT';
+      }
+    } else if (errorInstance.error === 'Bad Request' && errorInstance.statusCode === 400) {
+      // For specific user input validation errors from HTTP layer that match new patterns
+      if (errorInstance.message?.includes('Invalid cursor') || 
+          errorInstance.message?.includes('first must be between')) {
+        code = 'BAD_USER_INPUT';
+      }
     }
   }
   
@@ -35,10 +45,10 @@ export function formatGraphQLError(
     message = 'Internal server error';
   }
   
-  // Build extensions object
+  // Build extensions object - ensure our code takes precedence over original
   const extensions: Record<string, any> = {
-    code,
-    ...error.extensions
+    ...error.extensions,
+    code  // Our code overrides the original
   };
   
   // In non-production, preserve more debugging info

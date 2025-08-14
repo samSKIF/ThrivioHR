@@ -1,12 +1,12 @@
 import { Resolver, Query, Args } from '@nestjs/graphql';
 import { UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
-import { IdentityRepository } from '../../modules/identity/identity.repository';
+import { DirectoryService } from '../../modules/directory/directory.service';
 
 @Resolver('Employee')
 @UseGuards(JwtAuthGuard)
 export class DirectoryResolver {
-  constructor(private readonly repo: IdentityRepository) {}
+  constructor(private readonly directoryService: DirectoryService) {}
 
   @Query('listEmployees')
   async listEmployees(
@@ -14,7 +14,7 @@ export class DirectoryResolver {
     args: { orgId: string; limit?: number; cursor?: string },
   ) {
     const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
-    const rows = await this.repo.listUsersByOrg(args.orgId, limit, args.cursor ?? null);
+    const rows = await this.directoryService.listUsersByOrg(args.orgId, limit, args.cursor ?? null);
     return rows.map(r => ({
       id: r.id,
       email: r.email,
@@ -26,7 +26,7 @@ export class DirectoryResolver {
 
   @Query('getEmployee')
   async getEmployee(_: unknown, args: { id: string }) {
-    const u = await this.repo.getUserById(args.id);
+    const u = await this.directoryService.getUserById(args.id);
     if (!u) return null;
     return {
       id: u.id,
@@ -43,9 +43,11 @@ export class DirectoryResolver {
     args: { first?: number; after?: string },
     context: any
   ) {
+
+    
     // For testing, extract orgId from the first available user in the system
     // In production, this would be extracted from the JWT context
-    const allOrgs = await this.repo.getOrganizations(1);
+    const allOrgs = await this.directoryService.getOrganizations(1);
     if (allOrgs.length === 0) {
       throw new Error('No organizations found');
     }
@@ -56,7 +58,7 @@ export class DirectoryResolver {
     
     // Enforce upper bound for performance
     if (args.first && args.first > 100) {
-      throw new BadRequestException('Maximum page size is 100');
+      throw new BadRequestException('first must be between 1..100');
     }
     
     // Decode cursor if provided
@@ -78,8 +80,8 @@ export class DirectoryResolver {
     // Fetch data with over-fetching to determine hasNextPage
     const limit = first + 1;
     const [users, totalCount] = await Promise.all([
-      this.repo.listUsersByOrgAfter(orgId, cursor, limit),
-      this.repo.countUsersByOrg(orgId)
+      this.directoryService.listUsersByOrgAfter(orgId, cursor, limit),
+      this.directoryService.countUsersByOrg(orgId)
     ]);
 
     // Determine if there are more pages
