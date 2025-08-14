@@ -4,8 +4,8 @@ import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
 import { Request } from 'express';
 
 @Resolver('User')
+@UseGuards(JwtAuthGuard)
 export class IdentityResolver {
-  @UseGuards(JwtAuthGuard)
   @Query('currentUser')
   async currentUser(_: unknown, __: unknown, ctx: { req: Request }) {
     // JwtAuthGuard already validated; claims are in req.user

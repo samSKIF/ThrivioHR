@@ -4,10 +4,10 @@ import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
 import { IdentityRepository } from '../../modules/identity/identity.repository';
 
 @Resolver('Employee')
+@UseGuards(JwtAuthGuard)
 export class DirectoryResolver {
   constructor(private readonly repo: IdentityRepository) {}
 
-  @UseGuards(JwtAuthGuard)
   @Query('listEmployees')
   async listEmployees(
     _: unknown,
@@ -24,7 +24,6 @@ export class DirectoryResolver {
     }));
   }
 
-  @UseGuards(JwtAuthGuard)
   @Query('getEmployee')
   async getEmployee(_: unknown, args: { id: string }) {
     const u = await this.repo.getUserById(args.id);

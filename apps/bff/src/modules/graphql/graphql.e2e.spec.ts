@@ -19,15 +19,16 @@ describe('GraphQL BFF (e2e)', () => {
       .post('/graphql')
       .send({ query: '{ currentUser { id email } }' })
       .set('content-type', 'application/json');
-    // JwtAuthGuard should trigger 401 or GraphQL errors
-    expect([401, 200, 404]).toContain(res.status);
-    if (res.status === 200) {
-      // some guard implementations return errors in 200; check error
-      expect(res.body.errors?.[0]?.message).toMatch(/Unauthorized/i);
-    }
+    
+    // Test 1 (UNAUTH): call a protected query -> expect authorization error
+    expect(res.status).toBe(200); // GraphQL returns 200 with errors
+    expect(res.body.errors).toBeDefined();
+    expect(res.body.errors[0].message).toMatch(/Unauthorized|unauthenticated|forbidden/i);
   });
 
   it('returns data for protected queries with JWT', async () => {
+    // Test 2 (AUTH): obtain JWT via REST /auth/login, call the same protected query with Authorization: Bearer <token> -> expect 200 and minimal shape assertions
+    
     // Prepare org/user, then login via REST to get JWT
     const orgsResp = await request(server).get('/orgs?limit=1');
     const orgId = orgsResp.body?.[0]?.id ?? 
@@ -42,21 +43,17 @@ describe('GraphQL BFF (e2e)', () => {
       .send({ orgId, email: 'gqltester@example.com' });
 
     const token = login.body?.accessToken;
-    if (!token) {
-      // Skip GraphQL test if auth setup failed
-      console.log('Skipping GraphQL JWT test - login failed:', login.body);
-      return;
-    }
+    expect(token).toBeTruthy();
 
     const res = await request(server)
       .post('/graphql')
       .set('Authorization', `Bearer ${token}`)
       .send({ query: '{ currentUser { id email displayName } }' });
 
-    // Accept multiple status codes as GraphQL might not be fully configured
-    expect([200, 404]).toContain(res.status);
-    if (res.status === 200 && res.body.data) {
-      expect(res.body.data.currentUser.email).toBe('gqltester@example.com');
-    }
+    expect(res.status).toBe(200);
+    expect(res.body.data).toBeDefined();
+    expect(res.body.data.currentUser).toBeDefined();
+    expect(res.body.data.currentUser.email).toBe('gqltester@example.com');
+    expect(res.body.data.currentUser.id).toBeTruthy();
   });
 });

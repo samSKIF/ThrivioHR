@@ -1,0 +1,21 @@
+type User {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  displayName: String
+}
+
+type Employee {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  displayName: String
+}
+
+type Query {
+  currentUser: User
+  listEmployees(orgId: ID!, limit: Int = 20, cursor: String): [Employee!]!
+  getEmployee(id: ID!): Employee
+}
