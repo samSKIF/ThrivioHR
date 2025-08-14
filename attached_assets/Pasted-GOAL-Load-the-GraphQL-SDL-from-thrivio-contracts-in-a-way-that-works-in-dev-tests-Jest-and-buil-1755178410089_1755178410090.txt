@@ -1,0 +1,110 @@
+GOAL
+Load the GraphQL SDL from @thrivio/contracts in a way that works in dev, tests (Jest), and built CI artifacts (no absolute paths, no env‑specific hacks).
+
+TOUCH ONLY
+
+apps/bff/src/graphql/graphql.module.ts
+
+apps/bff/src/graphql/schema-loader.ts (new)
+
+CHANGES
+
+Create apps/bff/src/graphql/schema-loader.ts with this content:
+
+// apps/bff/src/graphql/schema-loader.ts
+import { existsSync, readFileSync } from 'fs';
+import { createRequire } from 'module';
+
+const req = createRequire(typeof __filename !== 'undefined' ? __filename : import.meta.url);
+
+/**
+ * Robustly load the contract-first SDL from @thrivio/contracts across:
+ *  - ts-node/dev
+ *  - Jest (ts-jest)
+ *  - compiled dist in CI
+ */
+export function loadContractSDL(): string {
+  const candidates = [
+    // TS sources (dev/jest)
+    '@thrivio/contracts/src/graphql/schema.graphql',
+    // Built outputs (CI/dist)
+    '@thrivio/contracts/dist/src/graphql/schema.graphql',
+    // Fallback legacy (in case package exposes a flat path)
+    '@thrivio/contracts/graphql/schema.graphql',
+  ];
+
+  for (const specifier of candidates) {
+    try {
+      const resolved = req.resolve(specifier);
+      if (existsSync(resolved)) {
+        return readFileSync(resolved, 'utf8');
+      }
+    } catch {
+      // ignore and try next
+    }
+  }
+
+  throw new Error(
+    'Cannot locate GraphQL SDL from @thrivio/contracts. Checked TS and dist paths.'
+  );
+}
+
+
+Update apps/bff/src/graphql/graphql.module.ts to use typeDefs loaded via the helper (replace existing typePaths usage):
+
+// apps/bff/src/graphql/graphql.module.ts
+import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { loadContractSDL } from './schema-loader';
+
+// resolvers & modules already present in your file:
+import { IdentityResolver } from './resolvers/identity.resolver';
+import { DirectoryResolver } from './resolvers/directory.resolver';
+import { IdentityModule } from '../modules/identity/identity.module';
+import { DirectoryModule } from '../modules/directory/directory.module';
+
+@Module({
+  imports: [
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      // Load SDL directly; avoids fragile path globs in all environments.
+      typeDefs: loadContractSDL(),
+      path: '/graphql',
+      // keep your existing settings (playground/introspection toggles etc.)
+      playground: process.env.NODE_ENV !== 'production',
+      introspection: process.env.NODE_ENV !== 'production',
+    }),
+    IdentityModule,
+    DirectoryModule,
+  ],
+  providers: [IdentityResolver, DirectoryResolver],
+})
+export class BffGraphqlModule {}
+
+
+RUN & PRINT
+
+# Build
+npx nx build bff && echo "=== BUILD OK ==="
+
+# Run Jest (should still pass)
+npx nx test bff --skip-nx-cache --runInBand && echo "=== TESTS OK ==="
+
+# Live GraphQL smoke (should return {__typename:"Query"})
+echo "=== GRAPHQL SMOKE ===" && curl -s -X POST http://localhost:5000/graphql \
+  -H 'content-type: application/json' \
+  -d '{"query":"{ __typename }"}' | python3 -m json.tool
+
+
+STOP.
+
+Definition of Done (DoD)
+
+No absolute file paths anywhere for SDL.
+
+nx build bff passes.
+
+Jest tests pass unchanged.
+
+POST /graphql with { __typename } returns a JSON payload (not 404) both locally and under Jest.

@@ -1,8 +1,10 @@
+// apps/bff/src/graphql/graphql.module.ts
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
-// Note: depth/complexity imports will be handled with basic plugins for now
+import { loadContractSDL } from './schema-loader';
+
+// resolvers & modules already present in your file:
 import { IdentityResolver } from './resolvers/identity.resolver';
 import { DirectoryResolver } from './resolvers/directory.resolver';
 import { IdentityModule } from '../modules/identity/identity.module';
@@ -12,14 +14,12 @@ import { DirectoryModule } from '../modules/directory/directory.module';
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      typePaths: ['/home/runner/workspace/packages/contracts/src/graphql/schema.graphql'],
+      // Load SDL directly; avoids fragile path globs in all environments.
+      typeDefs: loadContractSDL(),
       path: '/graphql',
-      context: ({ req }) => ({ req }),
+      // keep your existing settings (playground/introspection toggles etc.)
       playground: process.env.NODE_ENV !== 'production',
       introspection: process.env.NODE_ENV !== 'production',
-      // Basic depth/complexity protection
-      // validationRules: [depthLimit(8)], // Enable when graphql-depth-limit is installed
-      // plugins: [costAnalysis({ maximumCost: 1000 })], // Enable when graphql-cost-analysis is installed
     }),
     IdentityModule,
     DirectoryModule,
