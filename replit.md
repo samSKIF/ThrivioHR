@@ -100,12 +100,16 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-14**: **Connection-Style Pagination COMPLETE** - Scalable employee pagination with cursor-based endpoints
+- **2025-08-14**: **DATABASE PERFORMANCE OPTIMIZATION COMPLETE** - O(log n) keyset pagination with composite index
+- **Performance Index**: Added `idx_users_org_created_id` composite index on (organization_id, created_at, id) for optimal cursor scanning
+- **Error Handling Enhancement**: Robust cursor validation and page size limits with proper BadRequestException mapping
+- **Production Ready**: Migration 0002_rainy_ricochet.sql successfully applied with database index creation
+- **Connection-Style Pagination COMPLETE** - Scalable employee pagination with cursor-based endpoints
 - **GraphQL Connections**: Added `listEmployeesConnection` with proper Edge/Connection pattern, opaque cursors, totalCount
-- **Error Formatting System**: Consistent GraphQL errors with extension codes (UNAUTHENTICATED, FORBIDDEN, BAD_USER_INPUT, INTERNAL_SERVER_ERROR)
+- **Error Formatting System**: Consistent GraphQL errors with extension codes (UNAUTHENTICATED, FORBIDDEN, BAD_REQUEST, INTERNAL_SERVER_ERROR)
 - **Production Security**: Error masking in non-dev environments, stack trace removal for security
 - **Backward Compatibility**: Original `listEmployees` marked deprecated but fully functional 
 - **Cursor Pagination**: Base64-encoded JSON cursors with deterministic ordering (created_at, id)
-- **Comprehensive Testing**: All pagination scenarios tested, unauthenticated requests properly blocked
+- **Comprehensive Testing**: All pagination scenarios tested including invalid cursor and page size limit validation
 - **Zero Regressions**: All existing functionality preserved, complete test coverage maintained
 - **Schema Evolution**: Contract-first approach with SDL updates in @thrivio/contracts package

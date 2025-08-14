@@ -1,5 +1,5 @@
 import { Resolver, Query, Args } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
 import { IdentityRepository } from '../../modules/identity/identity.repository';
 
@@ -54,14 +54,24 @@ export class DirectoryResolver {
     // Validate and set defaults for pagination args
     const first = Math.min(Math.max(args.first ?? 20, 1), 100);
     
+    // Enforce upper bound for performance
+    if (args.first && args.first > 100) {
+      throw new BadRequestException('Maximum page size is 100');
+    }
+    
     // Decode cursor if provided
     let cursor: { createdAt: string; id: string } | undefined;
     if (args.after) {
       try {
         const decoded = Buffer.from(args.after, 'base64').toString('utf-8');
         cursor = JSON.parse(decoded);
+        
+        // Validate cursor structure
+        if (!cursor || typeof cursor.createdAt !== 'string' || typeof cursor.id !== 'string') {
+          throw new Error('Invalid cursor structure');
+        }
       } catch (error) {
-        throw new Error('Invalid cursor format');
+        throw new BadRequestException('Invalid cursor');
       }
     }
 
