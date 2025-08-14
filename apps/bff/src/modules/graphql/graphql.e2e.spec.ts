@@ -4,17 +4,17 @@ import { createTestApp } from '../../main';
 
 describe('GraphQL E2E', () => {
   let app: INestApplication;
-  let http: any;
+  let server: any;
   let orgId: string;
   let accessToken: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     await app.init();                // <- ensure proper init
-    http = request(app.getHttpServer());
+    server = app.getHttpServer();
 
     // seed org (idempotent)
-    const orgRes = await http.post('/orgs')
+    const orgRes = await request(server).post('/orgs')
       .set('content-type', 'application/json')
       .send({ name: `Test Org ${Date.now()}` });
     expect(orgRes.status).toBeLessThan(400);
@@ -22,7 +22,7 @@ describe('GraphQL E2E', () => {
 
     // seed a unique user for login to avoid unique-email collisions
     const email = `gqltest-${Date.now()}@example.com`;
-    await http.post('/users')
+    await request(server).post('/users')
       .set('content-type', 'application/json')
       .send({
         orgId,
@@ -32,7 +32,7 @@ describe('GraphQL E2E', () => {
       });
 
     // login to get real JWT
-    const loginRes = await http.post('/auth/login')
+    const loginRes = await request(server).post('/auth/login')
       .set('content-type', 'application/json')
       .send({ orgId, email });
     expect(loginRes.status).toBe(201);
@@ -46,38 +46,35 @@ describe('GraphQL E2E', () => {
   });
 
   it('rejects unauthenticated GraphQL requests', async () => {
-    const res = await http.post('/graphql')
-      .set('content-type', 'application/json')
-      .send({ query: '{ currentUser { id email } }' });
+    const res = await request(server)
+      .post('/graphql')
+      .send({ query: 'query { currentUser { id } }' })
+      .expect(200);
 
-    // Test A: Assert UNAUTHENTICATED error code
-    expect(res.status).toBe(200);
-    expect(res.body.errors).toBeDefined();
-    expect(res.body.errors).toHaveLength(1);
-    expect(res.body.errors[0].extensions.code).toBe('UNAUTHENTICATED');
+    expect(res.body.errors?.[0]?.extensions?.code).toBe('UNAUTHENTICATED');
+    expect(res.body.errors?.[0]?.message).toMatch(/No authorization header/i);
   });
 
   it('accepts authenticated GraphQL requests', async () => {
-    const res = await http.post('/graphql')
-      .set('content-type', 'application/json')
+    const res = await request(server)
+      .post('/graphql')
       .set('authorization', `Bearer ${accessToken}`)
-      .send({ query: '{ currentUser { id email } }' });
+      .send({ query: 'query { currentUser { id email displayName } }' })
+      .expect(200);
 
-    expect(res.status).toBe(200);
-    expect(res.body.data).toBeDefined();
-    expect(res.body.data.currentUser).toBeDefined();
-    expect(res.body.data.currentUser.id).toBeTruthy();
+    expect(res.body.errors).toBeUndefined();
+    expect(res.body.data?.currentUser?.id).toBeDefined();
   });
 
   it('returns FORBIDDEN error code for forbidden requests', async () => {
     // Test B: Create a simple test that triggers forbidden
     // Using an invalid/expired token should trigger forbidden in some resolvers
-    const res = await http.post('/graphql')
-      .set('content-type', 'application/json')
+    const res = await request(server)
+      .post('/graphql')
       .set('authorization', 'Bearer invalid-token-format')
-      .send({ query: '{ currentUser { id email } }' });
+      .send({ query: '{ currentUser { id email } }' })
+      .expect(200);
 
-    expect(res.status).toBe(200);
     expect(res.body.errors).toBeDefined();
     expect(res.body.errors).toHaveLength(1);
     // Invalid token format should still be UNAUTHENTICATED, let's check what we get
@@ -93,11 +90,11 @@ describe('GraphQL E2E', () => {
       // Create a test app with production env
       const prodApp = await createTestApp();
       await prodApp.init();
-      const prodHttp = request(prodApp.getHttpServer());
+      const prodServer = prodApp.getHttpServer();
       
       // Trigger an internal error by sending malformed GraphQL
-      const res = await prodHttp.post('/graphql')
-        .set('content-type', 'application/json')
+      const res = await request(prodServer)
+        .post('/graphql')
         .send({ query: 'invalid graphql syntax {{{' });
 
       expect(res.status).toBe(400); // GraphQL syntax errors return 400
@@ -129,7 +126,7 @@ describe('GraphQL E2E', () => {
       ];
 
       for (const userData of users) {
-        await http.post('/users')
+        await request(server).post('/users')
           .set('content-type', 'application/json')
           .send({
             orgId,
@@ -142,8 +139,8 @@ describe('GraphQL E2E', () => {
 
     it('rejects unauthenticated connection requests', async () => {
       // Test A: Unauth request should return UNAUTHENTICATED
-      const res = await http.post('/graphql')
-        .set('content-type', 'application/json')
+      const res = await request(server)
+        .post('/graphql')
         .send({ 
           query: `query { 
             listEmployeesConnection(first: 2) { 
@@ -152,9 +149,9 @@ describe('GraphQL E2E', () => {
               edges { cursor node { id email displayName } } 
             } 
           }` 
-        });
+        })
+        .expect(200);
 
-      expect(res.status).toBe(200);
       expect(res.body.errors).toBeDefined();
       expect(res.body.errors).toHaveLength(1);
       expect(res.body.errors?.[0]?.message).toMatch(/No authorization header/i);
@@ -165,8 +162,8 @@ describe('GraphQL E2E', () => {
       // Test B: Paginated auth requests
       
       // First page: get first 2 employees
-      const firstPageRes = await http.post('/graphql')
-        .set('content-type', 'application/json')
+      const firstPageRes = await request(server)
+        .post('/graphql')
         .set('authorization', `Bearer ${accessToken}`)
         .send({ 
           query: `query { 
@@ -189,8 +186,8 @@ describe('GraphQL E2E', () => {
       expect(firstPage.totalCount).toBeGreaterThanOrEqual(3);
 
       // Second page: use endCursor from first page
-      const secondPageRes = await http.post('/graphql')
-        .set('content-type', 'application/json')
+      const secondPageRes = await request(server)
+        .post('/graphql')
         .set('authorization', `Bearer ${accessToken}`)
         .send({ 
           query: `query($after: String) { 
@@ -222,8 +219,8 @@ describe('GraphQL E2E', () => {
 
     it('rejects invalid cursor format', async () => {
       // Test C: Invalid cursor should return BAD_USER_INPUT
-      const res = await http.post('/graphql')
-        .set('content-type', 'application/json')
+      const res = await request(server)
+        .post('/graphql')
         .set('authorization', `Bearer ${accessToken}`)
         .send({ 
           query: `query { 
@@ -233,9 +230,9 @@ describe('GraphQL E2E', () => {
               edges { cursor node { id email displayName } } 
             } 
           }` 
-        });
+        })
+        .expect(200);
 
-      expect(res.status).toBe(200);
       expect(res.body.errors).toBeDefined();
       expect(res.body.errors).toHaveLength(1);
       expect(res.body.errors[0].extensions.code).toBe('BAD_REQUEST');
@@ -245,8 +242,8 @@ describe('GraphQL E2E', () => {
 
     it('rejects excessive page size', async () => {
       // Test D: Upper bound enforcement should return BAD_USER_INPUT
-      const res = await http.post('/graphql')
-        .set('content-type', 'application/json')
+      const res = await request(server)
+        .post('/graphql')
         .set('authorization', `Bearer ${accessToken}`)
         .send({ 
           query: `query { 
@@ -256,9 +253,9 @@ describe('GraphQL E2E', () => {
               edges { cursor node { id email displayName } } 
             } 
           }` 
-        });
+        })
+        .expect(200);
 
-      expect(res.status).toBe(200);
       expect(res.body.errors).toBeDefined();
       expect(res.body.errors).toHaveLength(1);
       expect(res.body.errors[0].extensions.code).toBe('BAD_REQUEST');

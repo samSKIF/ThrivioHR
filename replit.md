@@ -100,16 +100,17 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-14**: **DATABASE PERFORMANCE OPTIMIZATION COMPLETE** - O(log n) keyset pagination with composite index
-- **Performance Index**: Added `idx_users_org_created_id` composite index on (organization_id, created_at, id) for optimal cursor scanning
-- **Error Handling Enhancement**: Robust cursor validation and page size limits with proper BadRequestException mapping
-- **Production Ready**: Migration 0002_rainy_ricochet.sql successfully applied with database index creation
-- **Connection-Style Pagination COMPLETE** - Scalable employee pagination with cursor-based endpoints
-- **GraphQL Connections**: Added `listEmployeesConnection` with proper Edge/Connection pattern, opaque cursors, totalCount
+- **2025-08-14**: **JEST E2E CONFIGURATION ALIGNMENT COMPLETE** - Tests now use identical GraphQL setup as production
+- **Test Reliability**: E2E tests run flake-free with consistent authentication and error handling patterns  
+- **Production Parity**: Jest apps use same SDL loader, path `/graphql`, validation rules, and error formatter as runtime
+- **Authentication Testing**: Verified UNAUTHENTICATED error codes with "No authorization header" messages
+- **Request Patterns**: All tests use `request(server)` with `.expect(200)` pattern for GraphQL responses
+- **No 404 Errors**: GraphQL endpoint consistently responds with proper status codes in both test and runtime
+- **Configuration Unity**: Test app relies on same AppModule configuration without separate GraphQL reconfiguration
+- **Query Validation**: Depth and complexity limits enforced consistently across test and production environments
+- **DATABASE PERFORMANCE**: O(log n) keyset pagination with composite index (organization_id, created_at, id)
+- **Connection-Style Pagination**: Scalable employee pagination with proper Edge/Connection pattern
 - **Error Formatting System**: Consistent GraphQL errors with extension codes (UNAUTHENTICATED, FORBIDDEN, BAD_REQUEST, INTERNAL_SERVER_ERROR)
-- **Production Security**: Error masking in non-dev environments, stack trace removal for security
-- **Backward Compatibility**: Original `listEmployees` marked deprecated but fully functional 
-- **Cursor Pagination**: Base64-encoded JSON cursors with deterministic ordering (created_at, id)
-- **Comprehensive Testing**: All pagination scenarios tested including invalid cursor and page size limit validation
-- **Zero Regressions**: All existing functionality preserved, complete test coverage maintained
+- **Production Security**: Error masking in production environments, stack trace removal for security
+- **Comprehensive Testing**: All pagination scenarios tested with invalid cursor and page size validation
 - **Schema Evolution**: Contract-first approach with SDL updates in @thrivio/contracts package

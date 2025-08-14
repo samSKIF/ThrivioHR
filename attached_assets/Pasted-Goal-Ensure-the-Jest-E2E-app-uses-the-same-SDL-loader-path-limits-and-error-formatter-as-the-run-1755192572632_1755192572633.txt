@@ -1,0 +1,106 @@
+Goal: Ensure the Jest E2E app uses the same SDL loader, path, limits, and error formatter as the running server so /graphql never 404s and auth behaves identically.
+
+What to change
+
+GraphQL module (runtime + tests must be identical)
+
+In apps/bff/src/graphql/graphql.module.ts, make sure you’re exporting a module that configures all of these in GraphQLModule.forRoot():
+
+typeDefs: loadContractSDL() (the robust loader you built from @thrivio/contracts)
+
+path: '/graphql'
+
+validationRules: makeValidationRules()
+
+formatError: formatGraphQLError
+
+(keep your existing playground/introspection env guards)
+
+Test app boot
+
+In apps/bff/src/main.ts, ensure you export:
+
+export async function createTestApp(): Promise<INestApplication> {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  // DO NOT .listen() in tests; just init and return the in-memory server
+  return app;
+}
+
+
+Do not reconfigure GraphQL differently in tests. The test must rely on the same AppModule you use in production.
+
+E2E test wiring
+
+In apps/bff/src/modules/graphql/graphql.e2e.spec.ts, make these patterns consistent:
+
+let app: INestApplication;
+let server: any;
+
+beforeAll(async () => {
+  app = await createTestApp();
+  await app.init();
+  server = app.getHttpServer();
+});
+
+afterAll(async () => {
+  await app.close();
+});
+
+
+Unauth case (should get GraphQL 200 + error code):
+
+const res = await request(server)
+  .post('/graphql')
+  .send({ query: 'query { currentUser { id } }' })
+  .expect(200);
+
+expect(res.body.errors?.[0]?.extensions?.code).toBe('UNAUTHENTICATED');
+expect(res.body.errors?.[0]?.message).toMatch(/No authorization header/i);
+
+
+Auth case (login via REST, then call GraphQL):
+
+const login = await request(server)
+  .post('/auth/login')
+  .send({ orgId: ORG_ID, email: 'csvdemo@example.com' })
+  .expect(201);
+
+const token = login.body.accessToken;
+
+const gql = await request(server)
+  .post('/graphql')
+  .set('authorization', `Bearer ${token}`)
+  .send({ query: 'query { currentUser { id email displayName } }' })
+  .expect(200);
+
+expect(gql.body.errors).toBeUndefined();
+expect(gql.body.data?.currentUser?.id).toBeDefined();
+
+
+Test env
+
+Keep apps/bff/test.setup.ts with process.env.JWT_SECRET='test-secret'.
+
+Ensure jest.config.ts includes setupFiles: ['<rootDir>/test.setup.ts'].
+
+Definition of Done
+
+Build passes:
+
+npx nx build bff && echo "=== BUILD OK ==="
+
+
+Run the E2E test three times to prove stability (no intermittent 404s or header crashes):
+
+for i in 1 2 3; do npx nx test bff --runInBand || exit 1; done && echo "=== FLAKE-FREE ==="
+
+
+Unauth request to a protected field returns GraphQL 200 with:
+
+errors[0].extensions.code === "UNAUTHENTICATED"
+
+message matches /No authorization header/i
+
+Authenticated request to the same field returns 200 with data and no errors.
+
+No absolute paths are used in SDL loading; tests and runtime both use loadContractSDL().
