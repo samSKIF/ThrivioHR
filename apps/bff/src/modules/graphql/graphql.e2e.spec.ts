@@ -7,6 +7,7 @@ describe('GraphQL BFF (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+    await app.init(); // Initialize the app properly for testing
     server = app.getHttpServer();
   });
 

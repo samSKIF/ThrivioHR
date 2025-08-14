@@ -5,6 +5,9 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { loadContractSDL } from './schema-loader';
 import { makeValidationRules } from './limits';
 
+// Export for use in tests
+export { loadContractSDL };
+
 // resolvers & modules already present in your file:
 import { IdentityResolver } from './resolvers/identity.resolver';
 import { DirectoryResolver } from './resolvers/directory.resolver';
