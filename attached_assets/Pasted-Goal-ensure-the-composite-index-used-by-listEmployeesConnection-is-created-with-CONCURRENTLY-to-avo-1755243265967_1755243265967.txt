@@ -1,0 +1,61 @@
+Goal: ensure the composite index used by listEmployeesConnection is created with CONCURRENTLY to avoid long-write locks in production.
+
+Exact changes
+
+Add a raw SQL migration (Postgres requires this op outside a transaction):
+
+Create a new migration file in services/identity/drizzle/migrations/ named like:
+
+00XX_add_idx_users_org_created_id_concurrently.sql
+
+
+File contents (exactly):
+
+-- Create concurrently to avoid table write locks in prod
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_org_created_id
+ON users (organization_id, created_at, id);
+
+
+Make sure this migration runs OUTSIDE a transaction.
+If your migration runner wraps everything in a single transaction, run this one separately (or configure per-migration “no transaction” if supported). If needed, execute the SQL directly on deploy.
+
+(Optional) remove/replace any earlier non-concurrent version of the same index in previous migrations to avoid confusion (do not drop a live index in prod unless planned).
+
+Acceptance checks
+
+Apply migration in dev:
+
+# whichever command you use in this repo to run identity migrations
+npx drizzle-kit up --config=services/identity/drizzle.config.ts || true
+# or the project’s existing migrate task/Make/PNPM script
+
+
+Verify the index exists and is valid:
+
+psql "$DATABASE_URL" -c "
+  SELECT indexname, indexdef
+  FROM pg_indexes
+  WHERE schemaname='public' AND tablename='users'
+    AND indexname='idx_users_org_created_id';
+"
+# should show: CREATE INDEX CONCURRENTLY idx_users_org_created_id ON public.users ...
+
+
+(Optional) sanity EXPLAIN (should use your composite index):
+
+EXPLAIN ANALYZE
+SELECT id, email, created_at
+FROM users
+WHERE organization_id = $1
+  AND (created_at, id) > ($2, $3)
+ORDER BY created_at ASC, id ASC
+LIMIT $4 + 1;
+
+
+Keep guards green:
+
+npx nx build bff && echo "=== BUILD OK ==="
+for i in 1 2 3; do npx nx test bff --runInBand || exit 1; done && echo "=== FLAKE-FREE ==="
+
+
+Done = index shows up as CREATE INDEX CONCURRENTLY ..., queries still pass, and tests remain flake-free.

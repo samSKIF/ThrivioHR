@@ -100,6 +100,10 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-15**: **PRODUCTION-SAFE CONCURRENT INDEX** - Updated composite index creation to use CONCURRENTLY to avoid write locks
+- **Database Safety**: Migration `0002_rainy_ricochet.sql` now creates `idx_users_org_created_id` with `CREATE INDEX CONCURRENTLY IF NOT EXISTS`
+- **Performance Maintained**: Index verification confirms optimal O(log n) keyset pagination using (organization_id, created_at, id) composite
+- **Production Deployment**: Index creation avoids blocking table writes in production environments
 - **2025-08-14**: **JEST E2E CONFIGURATION ALIGNMENT COMPLETE** - Tests now use identical GraphQL setup as production
 - **Test Reliability**: E2E tests run flake-free with consistent authentication and error handling patterns  
 - **Production Parity**: Jest apps use same SDL loader, path `/graphql`, validation rules, and error formatter as runtime
