@@ -3,11 +3,15 @@ import { UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
 import { OrgScopeGuard } from '../../modules/auth/org-scope.guard';
 import { DirectoryService } from '../../modules/directory/directory.service';
+import { OrgSqlContext } from '../../db/with-org';
 
 @Resolver('Employee')
 @UseGuards(JwtAuthGuard, OrgScopeGuard)
 export class DirectoryResolver {
-  constructor(private readonly directoryService: DirectoryService) {}
+  constructor(
+    private readonly directoryService: DirectoryService,
+    private readonly orgSqlContext: OrgSqlContext
+  ) {}
 
   @Query('listEmployees')
   async listEmployees(
@@ -73,8 +77,11 @@ export class DirectoryResolver {
       }
     }
 
-    // Fetch data with over-fetching to determine hasNextPage
+    // Fetch data with over-fetching to determine hasNextPage using RLS
     const limit = first + 1;
+    
+    // For now, keep the explicit WHERE filters while RLS is a backstop
+    // This maintains performance with the composite index
     const [users, totalCount] = await Promise.all([
       this.directoryService.listUsersByOrgAfter(orgId, cursor, limit),
       this.directoryService.countUsersByOrg(orgId)

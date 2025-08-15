@@ -2,6 +2,9 @@ import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { createTestApp } from '../../main';
 import { sql } from 'drizzle-orm';
+import { OrgSqlContext } from '../../db/with-org';
+import { IdentityRepository } from '../identity/identity.repository';
+import { DRIZZLE_DB } from '../db/db.module';
 
 describe('GraphQL E2E', () => {
   let app: INestApplication;
@@ -574,6 +577,134 @@ describe('GraphQL E2E', () => {
       
       // Results should still include our original org users
       expect(allEmails.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('RLS Database Backstop', () => {
+    it('prevents cross-org data leakage at database level', async () => {
+      // Create users in different orgs using REST endpoints
+      const orgA = await request(server).post('/orgs').send({ name: 'TestOrgA' }).expect(201);
+      const orgB = await request(server).post('/orgs').send({ name: 'TestOrgB' }).expect(201);
+      
+      const userAResp = await request(server)
+        .post('/users')
+        .send({
+          orgId: orgA.body.id,
+          email: 'user-a@orga.com',
+          givenName: 'User',
+          familyName: 'A'
+        })
+        .expect(201);
+      
+      const userBResp = await request(server)
+        .post('/users')
+        .send({
+          orgId: orgB.body.id,
+          email: 'user-b@orgb.com', 
+          givenName: 'User',
+          familyName: 'B'
+        })
+        .expect(201);
+
+      // Login as Org A user
+      const loginA = await request(server)
+        .post('/auth/login')
+        .send({ orgId: orgA.body.id, email: 'user-a@orga.com' })
+        .expect(201);
+
+      // Try to list employees as Org A - should not see Org B users
+      const employeesQuery = `
+        query {
+          listEmployeesConnection(first: 50) {
+            edges {
+              node {
+                id
+                email
+              }
+            }
+          }
+        }
+      `;
+      
+      const res = await request(server)
+        .post('/graphql')
+        .set('Authorization', `Bearer ${loginA.body.accessToken}`)
+        .send({ query: employeesQuery })
+        .expect(200);
+
+      // Verify only Org A users are returned
+      const userEmails = res.body.data.listEmployeesConnection.edges.map((e: any) => e.node.email);
+      expect(userEmails).toContain('user-a@orga.com');
+      expect(userEmails).not.toContain('user-b@orgb.com');
+    });
+
+    it('repository direct bypass test - RLS protects even direct DB calls', async () => {
+      // This test simulates what would happen if someone tried to bypass GraphQL resolvers
+      // and call the repository directly with the wrong org context
+      const orgA = await request(server).post('/orgs').send({ name: 'TestOrgRLS_A' }).expect(201);
+      const orgB = await request(server).post('/orgs').send({ name: 'TestOrgRLS_B' }).expect(201);
+      
+      const userB = await request(server)
+        .post('/users')
+        .send({
+          orgId: orgB.body.id,
+          email: 'rls-test@orgb.com',
+          givenName: 'RLS',
+          familyName: 'Test'
+        })
+        .expect(201);
+
+      // Get instances for direct database testing
+      const orgSqlContext = app.get(OrgSqlContext);
+      const db = app.get(DRIZZLE_DB);
+
+      // Test RLS: Try to query users table directly with wrong org context set
+      const resultWithWrongOrg = await orgSqlContext.runWithOrg(orgA.body.id, async (txDb) => {
+        // This query should not return Org B users because RLS is active
+        const res = await txDb.execute(sql`
+          SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName"
+          FROM users
+          WHERE organization_id = ${orgB.body.id}
+          ORDER BY id ASC 
+          LIMIT 10
+        `);
+        return (res as any).rows ?? [];
+      });
+
+      // RLS should prevent this - should return empty results
+      expect(resultWithWrongOrg).toEqual([]);
+
+      // Verify the user exists when queried with correct org context
+      const resultWithCorrectOrg = await orgSqlContext.runWithOrg(orgB.body.id, async (txDb) => {
+        const res = await txDb.execute(sql`
+          SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName"
+          FROM users
+          WHERE organization_id = ${orgB.body.id}
+          ORDER BY id ASC 
+          LIMIT 10
+        `);
+        return (res as any).rows ?? [];
+      });
+
+      // Should find the user with correct context
+      expect(resultWithCorrectOrg.length).toBeGreaterThan(0);
+      expect(resultWithCorrectOrg[0].email).toBe('rls-test@orgb.com');
+    });
+
+    it('fails fast when no org context is set', async () => {
+      // Test what happens when we try to query without setting app.org_id
+      const identityRepo = app.get(IdentityRepository);
+      
+      // Direct call without RLS context should return no results
+      const result = await identityRepo.listUsersByOrgAfter('any-org-id', undefined, 10);
+      
+      // This should still work (no RLS on the original method) but the RLS version should fail
+      expect(Array.isArray(result)).toBe(true);
+      
+      // But if we try to use the RLS method without setting the context, it should return empty
+      const dbModule = app.get(DRIZZLE_DB);
+      const resultNoContext = await identityRepo.listUsersByOrgAfterWithDb(dbModule, 'any-org-id', undefined, 10);
+      expect(resultNoContext).toEqual([]);
     });
   });
 });

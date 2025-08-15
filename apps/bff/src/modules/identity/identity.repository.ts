@@ -165,4 +165,49 @@ export class IdentityRepository {
       createdAt: r.createdAt
     }));
   }
+
+  // RLS-enabled methods that accept a database context
+  async listUsersByOrgAfterWithDb(
+    db: any,
+    orgId: string, 
+    cursor?: { createdAt: string, id: string }, 
+    limit: number = 20
+  ): Promise<UserPublic[]> {
+    let queryResult;
+    
+    if (cursor) {
+      // Use cursor-based pagination with (created_at, id) > (cursor_created_at, cursor_id)
+      queryResult = await db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId} 
+          AND (created_at, id) > (${cursor.createdAt}, ${cursor.id})
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    } else {
+      // No cursor, start from beginning
+      queryResult = await db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    }
+    
+    return ((queryResult as any).rows ?? []).map((r: any) => ({
+      id: r.id, 
+      email: r.email, 
+      firstName: r.firstName, 
+      lastName: r.lastName, 
+      displayName: r.displayName,
+      createdAt: r.createdAt
+    }));
+  }
+
+  async countUsersByOrgWithDb(db: any, orgId: string): Promise<number> {
+    const res = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE organization_id = ${orgId}`);
+    return parseInt((res as any).rows?.[0]?.count ?? '0', 10);
+  }
 }

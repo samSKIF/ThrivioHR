@@ -1,0 +1,83 @@
+DB backstop with Row-Level Security (RLS)
+
+Goal: belt-and-suspenders org isolation at the database layer so even if an app bug appears, cross-org reads still fail.
+
+Do exactly this
+
+Create a migration to enable RLS and a per-request setting key.
+
+File: services/identity/drizzle/migrations/0004_enable_rls_users.sql
+
+Content:
+
+-- Enable RLS on users
+ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if re-running locally
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='users' AND policyname='users_org_read') THEN
+    DROP POLICY users_org_read ON "users";
+  END IF;
+END $$;
+
+-- Read policy bound to a request-scoped GUC
+CREATE POLICY users_org_read ON "users"
+  FOR SELECT
+  USING (organization_id::text = current_setting('app.org_id', true));
+
+-- Optional: tighter insert/update policies (future-safe)
+-- CREATE POLICY users_org_write ON "users" FOR INSERT WITH CHECK (...)
+
+
+Set the org id per request/operation.
+
+Create a tiny helper for Drizzle:
+
+// apps/bff/src/db/with-org.ts
+import { sql } from 'drizzle-orm';
+import { Injectable } from '@nestjs/common';
+import { DrizzleDatabase } from './types'; // your db type
+
+@Injectable()
+export class OrgSqlContext {
+  constructor(private readonly db: DrizzleDatabase) {}
+  async runWithOrg<T>(orgId: string, fn: (db: DrizzleDatabase)=>Promise<T>) {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`SET LOCAL app.org_id = ${orgId}`);
+      return fn(tx);
+    });
+  }
+}
+
+
+Use it in resolvers/services where you hit the DB (only around read paths for now):
+
+// directory.resolver.ts (inside method)
+const orgId = ctx.req.orgId;
+return this.orgSqlContext.runWithOrg(orgId, async (db) => {
+  return this.directoryService.listEmployeesConnection(db, /* args */);
+});
+
+
+Minimal code change: add an overload to your service methods that accepts a db arg; default to the global db if not provided.
+
+Keep your explicit WHERE organization_id filters for now.
+RLS is a backstop; no functional change intended. (We keep WHERE + index usage to ensure the planner stays happy.)
+
+Tests (add to graphql.e2e.spec.ts).
+
+RLS leakage test: login as Org A; create user in Org B (via REST). Call listEmployeesConnection as Org A and assert Org B user is not present (this already exists, but now it’s protected at DB too).
+
+Direct repository bypass test (new, integration-ish): call the identity repository directly inside the test using runWithOrg with Org A and attempt to fetch a user by id from Org B. Expect zero rows (or a thrown error if you choose to current_setting('app.org_id', false)).
+
+Fail-fast test: temporarily run a read without runWithOrg (no SET LOCAL) and assert it returns zero rows because current_setting('app.org_id', true) is NULL.
+
+Definition of Done
+
+npx drizzle-kit migrate --config=drizzle.config.ts applies 0004_enable_rls_users.sql.
+
+nx build bff passes.
+
+nx test bff --runInBand passes, including the new tests.
+
+Manual smoke: try to force a cross-org read (e.g., GraphQL as Org A, passing a known Org B user id) → not returned.
