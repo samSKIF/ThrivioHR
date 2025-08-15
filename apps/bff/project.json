@@ -39,6 +39,16 @@
         "command": "tsx src/main.ts",
         "cwd": "apps/bff"
       }
+    },
+    "plan:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx tools/plan-employees.ts",
+        "cwd": "apps/bff",
+        "env": {
+          "PLAN_MAX_MS": "25"
+        }
+      }
     }
   },
   "tags": ["type:app", "scope:bff"]

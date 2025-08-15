@@ -140,6 +140,30 @@
       "apps/bff/project.json",
       "nx/core/project-json"
     ],
+    "targets.plan:check": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.plan:check.executor": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.plan:check.options": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.plan:check.options.command": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.plan:check.options.cwd": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.plan:check.options.env": [
+      "apps/bff/project.json",
+      "nx/core/project-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"

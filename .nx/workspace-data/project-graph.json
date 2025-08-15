@@ -209,6 +209,18 @@
             },
             "configurations": {},
             "parallelism": true
+          },
+          "plan:check": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "tsx tools/plan-employees.ts",
+              "cwd": "apps/bff",
+              "env": {
+                "PLAN_MAX_MS": "25"
+              }
+            },
+            "configurations": {},
+            "parallelism": true
           }
         },
         "implicitDependencies": []
@@ -18115,5 +18127,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755248843125
+  "computedAt": 1755251936036
 }
