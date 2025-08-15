@@ -89,6 +89,7 @@ node_modules/
 - **Print a PLAN** with exact files to touch. Do not touch outside files.
 - After edits, run acceptance checks (lint/tests/dev port up/etc.) and print results.
 - If anything fails: **revert and STOP**.
+- After finishing all request by the prompt provide an overview where we are compared to Roadmap.md
 
 ## Performance & pagination
 - Avoid N+1: BFF uses **DataLoader**; services provide batch endpoints.
