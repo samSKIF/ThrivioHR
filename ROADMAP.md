@@ -33,4 +33,21 @@
 - Error/empty/loading states covered; Lighthouse perf ≥ 90 on shell page.
 - Tests: one e2e smoke for login + `currentUser`; one unit for auth link.
 
+## Big 3b — SSO (OIDC/SAML) Foundation
+
+### Sub-features
+- OIDC (Auth Code + PKCE): provider config (issuer, client, scopes), nonce/state, token exchange → BFF JWT.
+- SAML 2.0: IdP metadata upload/URL, ACS endpoint, signature validation, attribute mapping (email/name).
+- Multi-tenant: org-scoped IdP configs; per-org login discovery.
+- Frontend wiring: Next.js login screen with "Sign in with SSO"; error and fallback paths.
+- Session model: refresh/rotation rules, logout, and clock-skew handling.
+- E2E smoke: Okta/Auth0/Azure AD dev tenant supported via env-config.
+
+### DoD
+- From a clean env: configure one OIDC IdP and complete login → `currentUser` in the web app.
+- Optional: configure one SAML IdP and complete login → `currentUser`.
+- BFF issues first-party JWT after IdP callback; org scoping enforced (guards + RLS backstop).
+- Failure paths covered (invalid metadata, bad signature, expired code).
+- Tests: one e2e OIDC login, one unit for SAML assertion validation utility.
+
 _Note: Big 4 anchor not found; 3a appended at end to keep SSO (Big 11) unchanged._
