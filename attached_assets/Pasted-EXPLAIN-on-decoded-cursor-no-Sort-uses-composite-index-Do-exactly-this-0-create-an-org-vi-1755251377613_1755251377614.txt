@@ -1,0 +1,66 @@
+EXPLAIN on decoded cursor (no Sort, uses composite index)
+
+Do exactly this:
+
+# 0) create an org + viewer + token (fresh, isolated)
+ORG_JSON=$(curl -s -X POST http://localhost:5000/orgs -H 'content-type: application/json' -d '{"name":"PerfSanity"}')
+ORG_ID=$(python3 - <<'PY'
+import json,sys; print(json.load(sys.stdin)['id'])
+PY <<<"$ORG_JSON")
+
+curl -s -X POST http://localhost:5000/users -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"viewer.perf@example.com\",\"givenName\":\"Perf\",\"familyName\":\"Sanity\"}" >/dev/null
+
+TOKEN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"viewer.perf@example.com\"}" \
+  | python3 - <<'PY'
+import json,sys; print(json.load(sys.stdin)['accessToken'])
+PY)
+
+# 1) fetch Page 1 to get a real endCursor
+Q1='{"query":"query($f:Int!){ listEmployeesConnection(first:$f){ pageInfo{ endCursor } } }","variables":{"f":25}}'
+EC=$(curl -s -X POST http://localhost:5000/graphql \
+  -H "content-type: application/json" -H "authorization: Bearer $TOKEN" \
+  -d "$Q1" | python3 - <<'PY'
+import json,sys; print(json.load(sys.stdin)['data']['listEmployeesConnection']['pageInfo']['endCursor'])
+PY)
+
+# 2) decode endCursor → createdAt + id (cursor = base64(JSON))
+export EC
+DECODED=$(python3 - <<'PY'
+import base64,json,os
+cur=os.environ['EC']
+obj=json.loads(base64.b64decode(cur).decode())
+print(obj["createdAt"] + "|" + obj["id"])
+PY)
+TS=${DECODED%|*}
+UID=${DECODED#*|}
+
+echo "Decoded cursor:"
+echo "  createdAt = $TS"
+echo "  id        = $UID"
+
+# 3) EXPLAIN ANALYZE the Page-2 filter using the decoded tuple
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -v ORG_ID="$ORG_ID" -v TS="$TS" -v UID="$UID" -c "
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, email
+FROM users
+WHERE organization_id = :'ORG_ID'
+  AND (created_at, id) > (timestamp :'TS', :'UID'::uuid)
+ORDER BY created_at ASC, id ASC
+LIMIT 101;
+" | tee /tmp/plan.txt
+
+# 4) Quick assertions on the plan
+grep -E 'Index (Only )?Scan.*idx_users_org_created_id' /tmp/plan.txt && echo 'INDEX_OK ✅' || echo 'INDEX_MISSING ❌'
+grep -q ' Sort ' /tmp/plan.txt && echo 'HAS_SORT ❌' || echo 'NO_SORT ✅'
+
+
+Definition of Done
+
+Output shows INDEX_OK ✅ (plan contains Index Scan or Index Only Scan using idx_users_org_created_id).
+
+Output shows NO_SORT ✅ (no separate sort node; ordering satisfied by the index).
+
+The EXPLAIN timing is small (millisecond range) and buffers indicate index usage.
