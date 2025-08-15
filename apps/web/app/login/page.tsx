@@ -11,7 +11,7 @@ export default function LoginPage() {
     setMsg('Logging in…');
     
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

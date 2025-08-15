@@ -1,0 +1,40 @@
+I'll execute this exact task to resolve the login page errors (network fetch failure and missing module) so the UI can authenticate reliably.
+
+**Scope**
+Touch only:
+- apps/web/app/login/page.tsx
+- apps/web/.env.local (create if missing)
+
+**Changes**
+
+1. **Ensure the login page is treated as a client component**  
+   Add `"use client";` as the first line in `apps/web/app/login/page.tsx`. Without this directive, Next.js tries to bundle the page on the server side, which leads to mysterious missing-module errors (e.g. `Cannot find module '/461.js'`).
+
+2. **Fix the network “Failed to fetch” error**  
+   The login page currently points at `process.env.NEXT_PUBLIC_API_URL` or `localhost:5000`, but the dev server runs your BFF on `5000` while the web app runs on `3000`. Browsers sometimes block cross-origin requests to another port or the BFF may not actually be running. Solve this by:
+
+   - Adding a line to `.env.local` to define `NEXT_PUBLIC_API_URL=http://localhost:5000` if it isn’t present.  
+   - Starting the BFF locally when you run the web app (e.g., `nx serve bff` in another terminal).  
+   - Changing the fetch call in `page.tsx` to fall back to a **relative path** if the environment variable is unset or unreachable:
+
+     ```ts
+     const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+     const res = await fetch(`${apiBase}/auth/login`, {
+       method: 'POST',
+       headers: { 'content-type': 'application/json' },
+       body: JSON.stringify({ orgId, email }),
+     });
+     ```
+
+     If `apiBase` is an empty string, the fetch defaults to `/auth/login` on the same origin (port 3000). You’ll need to run `nx serve bff` and configure Next.js to proxy `/auth` to the BFF (or start the BFF on port 3000 behind Next.js) in your development environment.
+
+3. **Suppress extension‑injected hydration warnings**  
+   Add `suppressHydrationWarning` to the `<body>` in `layout.tsx` and to each `<input>` and `<button>` in the login form to prevent spurious warnings from injected attributes (e.g., Grammarly):
+
+   ```tsx
+   // in layout.tsx
+   <body suppressHydrationWarning>
+
+   // in login/page.tsx
+   <input suppressHydrationWarning … />
+   <button suppressHydrationWarning … />
