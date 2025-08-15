@@ -9,22 +9,28 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg('Logging in…');
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ orgId, email }),
-    });
-    const json = await res.json();
-    if (json?.accessToken) {
-      localStorage.setItem('accessToken', json.accessToken);
-      setMsg('Logged in. Go to /me.');
-    } else {
-      setMsg('Login failed');
+    
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orgId, email }),
+      });
+      const json = await res.json();
+      if (json?.accessToken) {
+        localStorage.setItem('accessToken', json.accessToken);
+        setMsg('Logged in. Go to /me.');
+      } else {
+        setMsg(json?.message || 'Login failed');
+      }
+    } catch (err) {
+      setMsg('Network error: ' + err);
     }
   }
 
   return (
-    <main style={{ padding: 24 }}>
+    <main suppressHydrationWarning style={{ padding: 24 }}>
       <h1>Login</h1>
       <form onSubmit={onSubmit}>
         <div>

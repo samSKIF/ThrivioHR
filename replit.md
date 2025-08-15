@@ -101,6 +101,11 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-15**: **BIG 3A WEB APP FOUNDATION - COMPLETE** - Next.js 14 app with Apollo Client GraphQL, authentication flow, and dev bootstrap
+- **Login Page Stability**: Fixed hydration mismatch with suppressHydrationWarning and robust error handling with try/catch networking
+- **Environment Configuration**: Added .env.local with NEXT_PUBLIC_API_URL for reliable BFF communication
+- **Dev Auth Bootstrap**: Created /dev/auth page for quick token validation with production safety guards
+- **Authentication Integration**: Complete REST login → JWT storage → Apollo Client headers → GraphQL currentUser flow
 - **2025-08-15**: **ROADMAP RESTRUCTURED** - Added Big 3a (Web App Foundation) and Big 3b (SSO Foundation) milestones to context/ROADMAP.md
 - **2025-08-15**: **ORGANIZATION SCOPE ENFORCEMENT IMPLEMENTED** - Created OrgScopeGuard to prevent cross-organization data leakage
 - **Security Enhancement**: All GraphQL resolvers now enforce organization scope using JWT token orgId (never from client args)
