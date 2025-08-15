@@ -155,29 +155,5 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 33659
-externalPort = 8000
-
-[[ports]]
-localPort = 35525
-externalPort = 6800
-
-[[ports]]
-localPort = 36107
-externalPort = 8080
-
-[[ports]]
-localPort = 38543
-externalPort = 8099
-
-[[ports]]
-localPort = 41871
-externalPort = 8008
-
-[[ports]]
-localPort = 42313
-externalPort = 8081
-
-[[ports]]
 localPort = 45637
 externalPort = 3001
