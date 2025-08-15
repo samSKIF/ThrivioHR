@@ -15,3 +15,22 @@
 - Protected pages redirect when unauthenticated; authorized flow green
 - Directory list uses connection pagination and matches GraphQL schema
 - Lint/typecheck/test in CI; Lighthouse ≥90 perf/accessibility on key pages
+
+## Big 3a — Web App (Next.js) Foundation **NEXT**
+
+### Sub-features
+- Next.js 14 app scaffold in monorepo (App Router, TypeScript, ESLint/Prettier).
+- Auth wiring: JWT from BFF; role-aware nav (Workspace/Admin).
+- GraphQL client (urql or Apollo) with auth link + error handling.
+- Layout/shell: header/nav, toasts, error boundary, loading states.
+- Basic pages: Login, Me/Profile (read-only), 404.
+- CI: build, type-check, and e2e smoke (login → `currentUser`).
+
+### DoD
+- `pnpm dev` boots web + BFF; `pnpm build` green in CI.
+- Unauth users redirected to login; auth users see role-aware shell.
+- `{ currentUser { id email displayName } }` renders in UI via GraphQL client.
+- Error/empty/loading states covered; Lighthouse perf ≥ 90 on shell page.
+- Tests: one e2e smoke for login + `currentUser`; one unit for auth link.
+
+_Note: Big 4 anchor not found; 3a appended at end to keep SSO (Big 11) unchanged._
