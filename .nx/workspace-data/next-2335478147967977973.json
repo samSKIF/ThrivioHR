@@ -1,0 +1,67 @@
+{
+  "3240616462058373380": {
+    "next:build": {
+      "command": "next build",
+      "options": {
+        "cwd": "apps/web",
+        "tty": false
+      },
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "externalDependencies": [
+            "next"
+          ]
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/apps/web/.next/!(cache)/**/*",
+        "{workspaceRoot}/apps/web/.next/!(cache)"
+      ]
+    },
+    "next:dev": {
+      "continuous": true,
+      "command": "next dev",
+      "options": {
+        "cwd": "apps/web"
+      }
+    },
+    "start": {
+      "continuous": true,
+      "command": "next start",
+      "options": {
+        "cwd": "apps/web"
+      },
+      "dependsOn": [
+        "next:build"
+      ]
+    },
+    "serve-static": {
+      "continuous": true,
+      "command": "next start",
+      "options": {
+        "cwd": "apps/web"
+      },
+      "dependsOn": [
+        "next:build"
+      ]
+    },
+    "build-deps": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "watch-deps": {
+      "continuous": true,
+      "dependsOn": [
+        "build-deps"
+      ],
+      "command": "yarn nx watch --projects web --includeDependentProjects -- yarn nx build-deps web"
+    }
+  }
+}

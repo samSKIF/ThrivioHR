@@ -1,0 +1,200 @@
+“Big 3a: Next.js Web App Foundation (minimal login + GraphQL ‘me’ page)”
+
+I’ll execute this exact task to scaffold a minimal Next.js 14 app in Nx, wire it to the existing BFF (REST login + GraphQL), and add smoke tests. Keep behavior tiny, testable, and reversible.
+
+1) Generate the app (TypeScript, App Router)
+# Create Next.js app named "web"
+npx nx g @nx/next:app web --style=css --no-interactive
+
+# Ensure contracts are resolvable
+jq '.compilerOptions.paths["@thrivio/contracts/*"]=["packages/contracts/src/*"]' -S < tsconfig.base.json > /tmp/tsb && mv /tmp/tsb tsconfig.base.json
+
+# Install client deps
+pnpm add -w @apollo/client graphql
+
+2) Environment wiring (BFF endpoints)
+
+Create apps/web/.env.local:
+
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:5000/graphql
+
+3) Apollo client + auth header
+
+Create apps/web/src/lib/apollo.tsx:
+
+'use client';
+import { ApolloClient, InMemoryCache, HttpLink, ApolloProvider, from } from '@apollo/client';
+
+function authHeader() {
+  if (typeof window === 'undefined') return {};
+  const token = localStorage.getItem('accessToken');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+const client = new ApolloClient({
+  link: new HttpLink({
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_URL,
+    fetch: (input, init) =>
+      fetch(input, {
+        ...init,
+        headers: { ...(init?.headers || {}), ...authHeader() },
+      }),
+  }),
+  cache: new InMemoryCache(),
+});
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <ApolloProvider client={client}>{children}</ApolloProvider>;
+}
+
+4) Wrap layout with Providers
+
+Edit apps/web/app/layout.tsx (keep what the generator made, just wrap body):
+
+import './globals.css';
+import type { Metadata } from 'next';
+import { Providers } from '../src/lib/apollo';
+
+export const metadata: Metadata = { title: 'ThrivioHR', description: 'Web App Foundation' };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+
+5) Minimal pages: home, login, me
+
+apps/web/app/page.tsx
+
+export default function Home() {
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>ThrivioHR Web</h1>
+      <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/me">Me (GraphQL)</a></li>
+      </ul>
+    </main>
+  );
+}
+
+
+apps/web/app/login/page.tsx
+
+'use client';
+import { useState } from 'react';
+
+export default function LoginPage() {
+  const [orgId, setOrgId] = useState('');
+  const [email, setEmail] = useState('csvdemo@example.com');
+  const [msg, setMsg] = useState('');
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg('Logging in…');
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ orgId, email }),
+    });
+    const json = await res.json();
+    if (json?.accessToken) {
+      localStorage.setItem('accessToken', json.accessToken);
+      setMsg('Logged in. Go to /me.');
+    } else {
+      setMsg('Login failed');
+    }
+  }
+
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Login</h1>
+      <form onSubmit={onSubmit}>
+        <div>
+          <label>Org ID</label>
+          <input value={orgId} onChange={e => setOrgId(e.target.value)} placeholder="paste orgId" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <p>{msg}</p>
+    </main>
+  );
+}
+
+
+apps/web/app/me/page.tsx
+
+'use client';
+import { gql, useQuery } from '@apollo/client';
+
+const ME = gql`query { currentUser { id email displayName } }`;
+
+export default function MePage() {
+  const { data, loading, error } = useQuery(ME, { fetchPolicy: 'no-cache' });
+
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Me</h1>
+      {loading && <p>Loading…</p>}
+      {error && (
+        <>
+          <p>Error: {error.message}</p>
+          <p>(Tip: log in at /login)</p>
+        </>
+      )}
+      {data?.currentUser && (
+        <pre>{JSON.stringify(data.currentUser, null, 2)}</pre>
+      )}
+    </main>
+  );
+}
+
+6) Nx targets sanity & build
+# Verify project shows up
+npx nx graph --focus=web || true
+
+# Build web
+npx nx build web && echo "=== WEB BUILD OK ==="
+
+# (Optional) run dev to smoke in Replit
+npx nx serve web & sleep 3 && curl -s http://localhost:4200 | head -n 5
+
+7) Minimal tests (unit smoke)
+
+Create apps/web/src/app/page.spec.tsx:
+
+import { describe, it, expect } from '@jest/globals';
+
+describe('web app foundation', () => {
+  it('placeholder test', () => {
+    expect(true).toBe(true);
+  });
+});
+
+npx nx test web --skip-nx-cache && echo "=== WEB TESTS OK ==="
+
+Definition of Done (run these)
+# 1) Builds cleanly
+npx nx build web && echo "BUILD_OK"
+
+# 2) BFF is running, web dev serves at 4200, homepage reachable
+npx nx serve web & sleep 3 && curl -s http://localhost:4200 | grep -q "ThrivioHR Web" && echo "HOME_OK"
+
+# 3) Login -> Me flow (manual): get orgId from existing orgs and log in at /login,
+# then visit /me and see { id, email, displayName } JSON render.
+
+# 4) Tests pass
+npx nx test web --skip-nx-cache && echo "TESTS_OK"
+
+
+Scope guard: Do not style beyond inline styles, no state management libs, no routing beyond /, /login, /me. No server actions. Keep <150 LoC changed.

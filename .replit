@@ -15,23 +15,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "main"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "snapshot-ui"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "db-generate"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "db-migrate"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "db-seed-identity"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
@@ -49,13 +33,9 @@ args = "db-diagnose-identity"
 task = "workflow.run"
 args = "bff-server"
 
-[[workflows.workflow]]
-name = "main"
-author = "agent"
-
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "find . -type f -name \"*.md\" | head -10 && echo \"--- File structure ---\" && tree -I 'node_modules|.git' || ls -la"
+task = "workflow.run"
+args = "web-dev"
 
 [[workflows.workflow]]
 name = "snapshot-ui"
@@ -64,39 +44,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "tsx scripts/snapshot-legacy-ui.ts"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "db-generate"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "drizzle-kit generate --config=drizzle.config.ts"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "db-migrate"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "drizzle-kit migrate --config=drizzle.config.ts"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "db-seed-identity"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "tsx services/identity/src/seeds/identity.seed.ts"
 
 [workflows.workflow.metadata]
 outputType = "console"
@@ -145,6 +92,22 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "web-dev"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx nx serve web --port=3000"
+waitForPort = 3000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 3000
+externalPort = 3002
 
 [[ports]]
 localPort = 4000

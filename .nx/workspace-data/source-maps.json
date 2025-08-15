@@ -226,6 +226,26 @@
       "apps/web/project.json",
       "nx/core/project-json"
     ],
+    "targets.serve": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.executor": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.command": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.cwd": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
     "targets.build": [
       "apps/web/project.json",
       "nx/core/project-json"
@@ -243,6 +263,26 @@
       "nx/core/project-json"
     ],
     "targets.build.options.cwd": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.cwd": [
       "apps/web/project.json",
       "nx/core/project-json"
     ],

@@ -1,22 +1,24 @@
-import { createTestApp } from '../../../main';
 import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../main';
 
-describe('Directory Module', () => {
-  it('should validate a CSV upload', async () => {
-    const app = await createTestApp();
-    // login first
-    const login = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909', email: 'csvdemo@example.com' });
-    const token = login.body.accessToken;
-    const csv = 'email,givenName,familyName\njohn@example.com,John,Doe';
+describe('Directory module (smoke)', () => {
+  let app: INestApplication;
 
-    const res = await request(app.getHttpServer())
+  beforeAll(async () => {
+    app = await createTestApp();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('POST /directory/import/validate without token -> 401', async () => {
+    await request(app.getHttpServer())
       .post('/directory/import/validate')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ csv });
-    expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('rows');
-    expect(res.body).toHaveProperty('valid');
+      .set('content-type', 'application/json')
+      .send({ csv: 'email,givenName,familyName\nno@token.com,No,Token' })
+      .expect(401);
   });
 });

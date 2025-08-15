@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 
 export async function createTestApp(): Promise<INestApplication> {
   const logger = process.env.NODE_ENV === 'test' ? ['error'] : ['log', 'error', 'warn'];
-  const app = await NestFactory.create(AppModule, { logger });
+  const app = await NestFactory.create(AppModule, { logger: logger as any });
   // IMPORTANT: do NOT app.listen() in tests. Call app.init() in specs.
   return app;
 }

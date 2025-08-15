@@ -62,7 +62,38 @@ const OPTIONAL = [
 
 @Injectable()
 export class DirectoryService {
-  constructor(@Inject(IdentityRepository) private readonly identity: IdentityRepository) {}
+  constructor(private readonly identity: IdentityRepository) {}
+
+  // GraphQL resolver support methods
+  async getOrganizations(limit: number = 1) {
+    return this.identity.getOrganizations(limit);
+  }
+
+  async listUsersByOrg(orgId: string, limit: number, cursor?: string) {
+    return this.identity.listUsersByOrg(orgId, limit, cursor);
+  }
+
+  async getUserById(id: string) {
+    return this.identity.getUserById(id);
+  }
+
+  // Original methods - for compatibility
+  async listUsersByOrgAfter(orgId: string, cursor: any, limit: number) {
+    return this.identity.listUsersByOrgAfter(orgId, cursor, limit);
+  }
+
+  async countUsersByOrg(orgId: string) {
+    return this.identity.countUsersByOrg(orgId);
+  }
+
+  // RLS-enabled methods that accept a database context
+  async listUsersByOrgAfterWithDb(db: any, orgId: string, cursor: any, limit: number) {
+    return this.identity.listUsersByOrgAfterWithDb(db, orgId, cursor, limit);
+  }
+
+  async countUsersByOrgWithDb(db: any, orgId: string) {
+    return this.identity.countUsersByOrgWithDb(db, orgId);
+  }
   validate(csv: string): ValidationResult {
     if (!csv?.trim()) {
       return {
