@@ -1,20 +1,23 @@
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { Resolver, Query, Args, Context } from '@nestjs/graphql';
 import { UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { OrgScopeGuard } from '../../modules/auth/org-scope.guard';
 import { DirectoryService } from '../../modules/directory/directory.service';
 
 @Resolver('Employee')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, OrgScopeGuard)
 export class DirectoryResolver {
   constructor(private readonly directoryService: DirectoryService) {}
 
   @Query('listEmployees')
   async listEmployees(
     _: unknown,
-    args: { orgId: string; limit?: number; cursor?: string },
+    args: { limit?: number; cursor?: string },
+    @Context() ctx: any
   ) {
+    const orgId: string = ctx.req.orgId; // from OrgScopeGuard
     const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
-    const rows = await this.directoryService.listUsersByOrg(args.orgId, limit, args.cursor ?? null);
+    const rows = await this.directoryService.listUsersByOrg(orgId, limit, args.cursor ?? null);
     return rows.map(r => ({
       id: r.id,
       email: r.email,
@@ -25,9 +28,10 @@ export class DirectoryResolver {
   }
 
   @Query('getEmployee')
-  async getEmployee(_: unknown, args: { id: string }) {
+  async getEmployee(_: unknown, args: { id: string }, @Context() ctx: any) {
+    const orgId: string = ctx.req.orgId; // from OrgScopeGuard
     const u = await this.directoryService.getUserById(args.id);
-    if (!u) return null;
+    if (!u || u.organization_id !== orgId) return null; // enforce org scope
     return {
       id: u.id,
       email: u.email,
@@ -41,29 +45,21 @@ export class DirectoryResolver {
   async listEmployeesConnection(
     _: unknown,
     args: { first?: number; after?: string },
-    context: any
+    @Context() ctx: any
   ) {
-
-    
-    // For testing, extract orgId from the first available user in the system
-    // In production, this would be extracted from the JWT context
-    const allOrgs = await this.directoryService?.getOrganizations(1) || [];
-    if (allOrgs.length === 0) {
-      throw new Error('No organizations found');
-    }
-    const orgId = allOrgs[0].id;
+    const orgId: string = ctx.req.orgId; // from OrgScopeGuard
 
     // Validate and set defaults for pagination args
-    const first = Math.min(Math.max(args.first ?? 20, 1), 100);
+    const first = Math.min(Math.max(args?.first ?? 20, 1), 100);
     
     // Enforce upper bound for performance
-    if (args.first && args.first > 100) {
+    if (args?.first && args.first > 100) {
       throw new BadRequestException('first must be between 1..100');
     }
     
     // Decode cursor if provided
     let cursor: { createdAt: string; id: string } | undefined;
-    if (args.after) {
+    if (args?.after) {
       try {
         const decoded = Buffer.from(args.after, 'base64').toString('utf-8');
         cursor = JSON.parse(decoded);

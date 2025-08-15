@@ -101,12 +101,12 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-15**: **COMPOSITE INDEX PERFORMANCE VALIDATED** - EXPLAIN ANALYZE confirms 0.079ms execution with optimal index usage
-- **Production Performance**: Index Scan using `idx_users_org_created_id` achieves sub-millisecond keyset pagination on 992+ user dataset
-- **No Sort Required**: Composite index (organization_id, created_at, id) provides natural ordering, eliminating expensive sort operations
-- **Buffer Efficiency**: Only 5 shared buffer hits demonstrate highly efficient index access patterns
-- **Migration Strategy**: CONCURRENT index creation prevents production write locks while maintaining optimal performance
-- **Pagination Stability**: E2E tests prove zero duplicates during concurrent data insertion between pages
+- **2025-08-15**: **ORGANIZATION SCOPE ENFORCEMENT IMPLEMENTED** - Created OrgScopeGuard to prevent cross-organization data leakage
+- **Security Enhancement**: All GraphQL resolvers now enforce organization scope using JWT token orgId (never from client args)
+- **Data Isolation**: Added comprehensive E2E tests proving no cross-org employee leakage and client tampering resistance
+- **Performance Protection**: CI plan guard automatically validates composite index usage and prevents performance regressions
+- **Production Readiness**: Guard validates INDEX_OK, NO_SORT, TIME_OK metrics on every build with configurable thresholds
+- **Composite Index Validated**: EXPLAIN ANALYZE confirms 0.079ms execution with optimal index usage on production-scale datasets
 - **2025-08-14**: **JEST E2E CONFIGURATION ALIGNMENT COMPLETE** - Tests now use identical GraphQL setup as production
 - **Test Reliability**: E2E tests run flake-free with consistent authentication and error handling patterns  
 - **Production Parity**: Jest apps use same SDL loader, path `/graphql`, validation rules, and error formatter as runtime

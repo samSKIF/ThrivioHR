@@ -117,10 +117,10 @@ export class IdentityRepository {
   }
 
   async getUserById(id: string) {
-    const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
+    const rows = await this.db.execute(sql`SELECT id, organization_id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
     const r = ((rows as any).rows ?? [])[0];
     if (!r) return null;
-    return { id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName };
+    return { id: r.id, organization_id: r.organization_id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName };
   }
 
   async countUsersByOrg(orgId: string): Promise<number> {

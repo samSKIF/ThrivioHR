@@ -2,7 +2,6 @@ import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { createTestApp } from '../../main';
 import { sql } from 'drizzle-orm';
-import { db } from '../db/connection';
 
 describe('GraphQL E2E', () => {
   let app: INestApplication;
@@ -451,6 +450,130 @@ describe('GraphQL E2E', () => {
 
       expect(res.body.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
       expect(res.body.errors?.[0]?.message).toMatch(/first .* 1\.\.100/i);
+    });
+  });
+
+  describe('Organization Isolation', () => {
+    it('does not leak employees across orgs', async () => {
+      // Create Org A and user A1 
+      const orgARes = await request(server).post('/orgs')
+        .set('content-type', 'application/json')
+        .send({ name: `Org A ${Date.now()}` });
+      expect(orgARes.status).toBeLessThan(400);
+      const orgAId = orgARes.body?.id ?? orgARes.body?.data?.id;
+
+      const emailA1 = `orga-user1-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .set('content-type', 'application/json')
+        .send({
+          orgId: orgAId,
+          email: emailA1,
+          givenName: 'UserA1',
+          familyName: 'OrgA',
+        });
+
+      // Create Org B and user B1
+      const orgBRes = await request(server).post('/orgs')
+        .set('content-type', 'application/json')
+        .send({ name: `Org B ${Date.now()}` });
+      expect(orgBRes.status).toBeLessThan(400);
+      const orgBId = orgBRes.body?.id ?? orgBRes.body?.data?.id;
+
+      const emailB1 = `orgb-user1-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .set('content-type', 'application/json')
+        .send({
+          orgId: orgBId,
+          email: emailB1,
+          givenName: 'UserB1',
+          familyName: 'OrgB',
+        });
+
+      // Login as user A1 to get tokenA
+      const loginARes = await request(server).post('/auth/login')
+        .set('content-type', 'application/json')
+        .send({ orgId: orgAId, email: emailA1 });
+      expect(loginARes.status).toBe(201);
+      const tokenA = loginARes.body?.accessToken;
+      expect(typeof tokenA).toBe('string');
+
+      // Query listEmployeesConnection with tokenA
+      const res = await request(server)
+        .post('/graphql')
+        .set('authorization', `Bearer ${tokenA}`)
+        .send({ 
+          query: `query { 
+            listEmployeesConnection(first: 50) { 
+              edges { node { id email } } 
+            } 
+          }` 
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toBeDefined();
+      
+      const edges = res.body.data.listEmployeesConnection.edges;
+      expect(Array.isArray(edges)).toBe(true);
+      
+      // Verify no nodes contain userB email (cross-org leakage test)
+      const allEmails = edges.map((edge: any) => edge.node.email);
+      expect(allEmails).not.toContain(emailB1);
+      
+      // Verify userA1 is present (sanity check)
+      expect(allEmails).toContain(emailA1);
+    });
+
+    it('ignores any client attempt to scope org via inputs', async () => {
+      // This test ensures that even if a malicious client tries to pass org parameters,
+      // the server only uses the orgId from the JWT token via OrgScopeGuard
+      
+      // Create another org for tampering attempt
+      const tamperOrgRes = await request(server).post('/orgs')
+        .set('content-type', 'application/json')
+        .send({ name: `Tamper Org ${Date.now()}` });
+      expect(tamperOrgRes.status).toBeLessThan(400);
+      const tamperOrgId = tamperOrgRes.body?.id ?? tamperOrgRes.body?.data?.id;
+
+      // Add user to tamper org
+      const tamperEmail = `tamper-${Date.now()}@example.com`;
+      await request(server).post('/users')
+        .set('content-type', 'application/json')
+        .send({
+          orgId: tamperOrgId,
+          email: tamperEmail,
+          givenName: 'Tamper',
+          familyName: 'User',
+        });
+
+      // Use our existing authenticated token (from original org)
+      // Try to query with tamper org in variables/extensions (should be ignored)
+      const res = await request(server)
+        .post('/graphql')
+        .set('authorization', `Bearer ${accessToken}`)
+        .send({ 
+          query: `query { 
+            listEmployeesConnection(first: 50) { 
+              edges { node { id email } } 
+            } 
+          }`,
+          // Malicious attempt: try to include org scope in variables
+          variables: { orgId: tamperOrgId },
+          // Or in extensions
+          extensions: { orgId: tamperOrgId }
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toBeDefined();
+      
+      const edges = res.body.data.listEmployeesConnection.edges;
+      expect(Array.isArray(edges)).toBe(true);
+      
+      // Results should exclude tamper org user (proves server ignores client org inputs)
+      const allEmails = edges.map((edge: any) => edge.node.email);
+      expect(allEmails).not.toContain(tamperEmail);
+      
+      // Results should still include our original org users
+      expect(allEmails.length).toBeGreaterThan(0);
     });
   });
 });
