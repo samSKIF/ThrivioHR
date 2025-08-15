@@ -101,6 +101,7 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-15**: **ROADMAP RESTRUCTURED** - Added Big 3a (Web App Foundation) and Big 3b (SSO Foundation) milestones to context/ROADMAP.md
 - **2025-08-15**: **ORGANIZATION SCOPE ENFORCEMENT IMPLEMENTED** - Created OrgScopeGuard to prevent cross-organization data leakage
 - **Security Enhancement**: All GraphQL resolvers now enforce organization scope using JWT token orgId (never from client args)
 - **Data Isolation**: Added comprehensive E2E tests proving no cross-org employee leakage and client tampering resistance
