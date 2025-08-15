@@ -47,7 +47,7 @@ export class DirectoryResolver {
     
     // For testing, extract orgId from the first available user in the system
     // In production, this would be extracted from the JWT context
-    const allOrgs = await this.directoryService.getOrganizations(1);
+    const allOrgs = await this.directoryService?.getOrganizations(1) || [];
     if (allOrgs.length === 0) {
       throw new Error('No organizations found');
     }

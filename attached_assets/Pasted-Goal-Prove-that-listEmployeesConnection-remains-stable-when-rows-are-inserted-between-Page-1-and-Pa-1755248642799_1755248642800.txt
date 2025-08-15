@@ -1,0 +1,83 @@
+Goal: Prove that listEmployeesConnection remains stable when rows are inserted between Page 1 and Page 2.
+
+Do this exactly:
+
+Create test org + user, get a token (fresh, isolated run).
+
+ORG=$(curl -s -X POST http://localhost:5000/orgs -H 'content-type: application/json' -d '{"name":"ConnTest"}')
+ORG_ID=$(python3 - <<'PY'\nimport json,sys;print(json.loads(sys.stdin.read())['id'])\nPY <<<"$ORG")
+
+# seed 40 baseline users with evenly spaced created_at (older first)
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
+INSERT INTO users (organization_id, email, first_name, last_name, display_name, created_at)
+SELECT '$ORG_ID',
+       'conn_'||gs::text||'@example.com',
+       'Conn','User','Conn User '||gs::text,
+       NOW() - (interval '40 minutes' - (gs||' minutes')::interval)
+FROM generate_series(1,40) gs
+ON CONFLICT (organization_id, email) DO NOTHING;
+"
+
+# login actor
+curl -s -X POST http://localhost:5000/users -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"viewer@example.com\",\"givenName\":\"View\",\"familyName\":\"Er\"}" >/dev/null
+
+TOKEN=$(curl -s -X POST http://localhost:5000/auth/login -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"viewer@example.com\"}" \
+  | python3 - <<'PY'\nimport json,sys;print(json.loads(sys.stdin.read())['accessToken'])\nPY)
+
+
+Page 1 (first 5), capture endCursor and boundary timestamps.
+
+Q1='{"query":"query($f:Int){ listEmployeesConnection(first:$f){ pageInfo{ endCursor hasNextPage } edges{ node{ id email displayName createdAt } } } }","variables":{"f":5}}'
+
+PAGE1=$(curl -s -X POST http://localhost:5000/graphql -H "content-type: application/json" -H "authorization: Bearer $TOKEN" -d "$Q1")
+ENDCUR=$(python3 - <<'PY'\nimport json,sys;d=json.loads(sys.stdin.read());print(d['data']['listEmployeesConnection']['pageInfo']['endCursor'])\nPY <<<"$PAGE1")
+
+# capture the last node’s createdAt from page1 (boundary)
+BOUND_TS=$(python3 - <<'PY'\nimport json,sys;d=json.loads(sys.stdin.read());print(d['data']['listEmployeesConnection']['edges'][-1]['node']['createdAt'])\nPY <<<"$PAGE1")
+echo "Boundary createdAt: $BOUND_TS"
+
+
+Insert rows “between” pages (created_at just after the boundary), plus a newer one far ahead.
+
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
+-- 3 rows that should appear on Page 2 (strict keyset: (created_at,id) > boundary)
+INSERT INTO users (organization_id,email,first_name,last_name,display_name,created_at)
+SELECT '$ORG_ID','between_1@example.com','B','One','Between One',  (timestamp '$BOUND_TS' + interval '1 millisecond')
+UNION ALL
+SELECT '$ORG_ID','between_2@example.com','B','Two','Between Two',  (timestamp '$BOUND_TS' + interval '2 millisecond')
+UNION ALL
+SELECT '$ORG_ID','between_3@example.com','B','Tri','Between Tri',  (timestamp '$BOUND_TS' + interval '3 millisecond')
+ON CONFLICT (organization_id,email) DO NOTHING;
+
+-- one shiny new row way in the future; should land on much later pages
+INSERT INTO users (organization_id,email,first_name,last_name,display_name,created_at)
+VALUES ('$ORG_ID','future_999@example.com','F','N','Future 999', NOW());
+"
+
+
+Page 2 with after: endCursor. Assert:
+
+no duplicates across Page1∪Page2,
+
+the three “between_*” emails are present,
+
+order is stable (ascending createdAt, then id).
+
+Q2='{"query":"query($a:String){ listEmployeesConnection(first:5, after:$a){ pageInfo{ endCursor hasNextPage } edges{ node{ id email displayName createdAt } } } }","variables":{"a":"'"$ENDCUR"'"}}'
+PAGE2=$(curl -s -X POST http://localhost:5000/graphql -H "content-type: application/json" -H "authorization: Bearer $TOKEN" -d "$Q2")
+
+python3 - <<'PY'\nimport json,sys\np1=json.loads(open(0).read())\nPY <<<"$PAGE1" >/dev/null 2>&1
+
+# gather ids/emails from Page1+Page2 and check duplicates/order/memberships
+python3 - <<'PY'\nimport json,sys\np1=json.loads('''$PAGE1''');p2=json.loads('''$PAGE2''')\nget=lambda d:[(e['node']['id'],e['node']['email'],e['node']['createdAt']) for e in d['data']['listEmployeesConnection']['edges']]\nE1,E2=get(p1),get(p2)\nids=[x[0] for x in (E1+E2)]\n# duplicates?\ndups=set([i for i in ids if ids.count(i)>1])\nprint('DUPLICATES:', 'NONE' if not dups else dups)\n# between_* presence on page2\nemails2=[x[1] for x in E2]\nexpect={'between_1@example.com','between_2@example.com','between_3@example.com'}\nprint('BETWEEN_PRESENT:', expect.issubset(set(emails2)))\n# ordering stable\nall_sorted=sorted(E1+E2, key=lambda t:(t[2],t[0]))\nprint('ORDER_STABLE:', all_sorted==(E1+E2))\nPY
+
+
+Definition of Done
+
+Script prints DUPLICATES: NONE
+
+BETWEEN_PRESENT: True
+
+ORDER_STABLE: True
