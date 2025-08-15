@@ -1,0 +1,51 @@
+I'll execute this exact task to fix the login page runtime error and remaining hydration mismatches.
+
+**Scope**  
+Touch only:
+- `apps/web/app/login/page.tsx`
+- `apps/web/app/layout.tsx`
+- `apps/web/.env.local` (create if missing)
+
+**Changes**
+
+1. **Ensure the login page is a Client Component.**  
+   Add `"use client";` as the first line of `apps/web/app/login/page.tsx` so Next.js treats it as a client‑only component. This prevents the server bundle from trying to import client-only hooks (like `useState`) and eliminates the mysterious `/461.js` module resolution error.
+
+2. **Suppress hydration warnings globally.**  
+   In `apps/web/app/layout.tsx`, set `suppressHydrationWarning` on the `<body>` tag so that extension‑injected attributes on inputs/buttons don't cause mismatches. For example:
+   ```tsx
+   return (
+     <html lang="en">
+       <body suppressHydrationWarning>
+         <Providers>{children}</Providers>
+       </body>
+     </html>
+   );
+Suppress per‑element mismatches on login form.
+In apps/web/app/login/page.tsx, add suppressHydrationWarning to each <input> and <button> element:
+
+tsx
+Copy
+Edit
+<input suppressHydrationWarning value={orgId} onChange={(e) => setOrgId(e.target.value)} placeholder="paste orgId" />
+<input suppressHydrationWarning value={email} onChange={(e) => setEmail(e.target.value)} />
+<button suppressHydrationWarning type="submit">Login</button>
+Harden environment configuration.
+Ensure .env.local contains a line NEXT_PUBLIC_API_URL=http://localhost:5000 and restart the dev server. The login page’s fetch call should reference this variable and fall back to 'http://localhost:5000' if undefined:
+
+ts
+Copy
+Edit
+const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const res = await fetch(`${apiBase}/auth/login`, { ... });
+Definition of Done
+
+nx build web and nx build bff succeed.
+
+Navigating to /login in dev mode no longer triggers “Cannot find module '/461.js'” or hydration warnings.
+
+Submitting the login form with a valid orgId and email stores the token in localStorage and redirects to /me.
+
+The dev auth bootstrap page (/dev/auth?token=...) still works.
+
+Stop immediately and print any errors instead of scaffolding.
