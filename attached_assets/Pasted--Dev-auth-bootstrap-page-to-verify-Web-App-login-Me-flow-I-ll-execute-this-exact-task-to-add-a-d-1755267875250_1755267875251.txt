@@ -1,0 +1,68 @@
+“Dev auth bootstrap page to verify Web App login → Me flow”
+
+I’ll execute this exact task to add a dev-only page that sets the JWT from a token query param into localStorage and redirects to /me. This lets us validate the Next.js app against the running BFF quickly.
+
+1) Add the dev bootstrap page
+
+Create apps/web/app/dev/auth/page.tsx:
+
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export default function DevAuthPage() {
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  useEffect(() => {
+    // Hard stop in production: do not set tokens in prod builds
+    if (process.env.NODE_ENV === 'production') return;
+
+    const token = sp.get('token');
+    if (token) {
+      try {
+        localStorage.setItem('accessToken', token);
+      } catch {}
+    }
+    router.replace('/me');
+  }, [router, sp]);
+
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Dev Auth Bootstrap</h1>
+      <p>Setting token (dev only) and redirecting to /me…</p>
+      {process.env.NODE_ENV === 'production' && (
+        <p style={{ color: 'crimson' }}>
+          Disabled in production builds.
+        </p>
+      )}
+    </main>
+  );
+}
+
+2) Definition of Done — run these
+# A) Ensure BFF running on :5000 and web dev on :3000
+#    (If needed) npx nx serve web --port=3000 &
+
+# B) Get an org and user, then log in to obtain a token
+ORG_ID=$(curl -s 'http://localhost:5000/orgs?limit=1' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+curl -s -X POST http://localhost:5000/users \
+  -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"webtest@example.com\",\"givenName\":\"Web\",\"familyName\":\"Tester\"}" >/dev/null
+TOKEN=$(curl -s -X POST http://localhost:5000/auth/login \
+  -H 'content-type: application/json' \
+  -d "{\"orgId\":\"$ORG_ID\",\"email\":\"webtest@example.com\"}" \
+  | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+# C) Open in browser:
+#    http://localhost:3000/dev/auth?token=$TOKEN
+#    It should redirect to /me and render:
+#    { "id": "...", "email": "webtest@example.com", "displayName": ... }
+
+# D) Sanity: web builds & tests
+npx nx build web && echo "WEB_BUILD_OK"
+npx nx test web --skip-nx-cache && echo "WEB_TESTS_OK"
+
+
+Scope: no other routes, no styling changes, no server actions. Keep this page dev-only (guarded by NODE_ENV !== 'production'). If everything’s green, we move to Big 3b: SSO (OIDC/SAML) Foundation next.

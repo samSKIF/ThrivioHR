@@ -12374,12 +12374,12 @@
     "web": [
       {
         "source": "web",
-        "target": "npm:next",
+        "target": "npm:react",
         "type": "static"
       },
       {
         "source": "web",
-        "target": "npm:react",
+        "target": "npm:next",
         "type": "static"
       },
       {
@@ -27628,5 +27628,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755266228326
+  "computedAt": 1755268166878
 }
