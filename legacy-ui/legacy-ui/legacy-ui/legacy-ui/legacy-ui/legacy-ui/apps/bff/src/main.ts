@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -17,3 +18,13 @@ async function bootstrap() {
   console.log('BFF on :5000');
 }
 bootstrap();
+
+// Provide a helper for tests (returns app instance)
+export async function createTestApp() {
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+  const app = moduleFixture.createNestApplication();
+  await app.init();
+  return app;
+}

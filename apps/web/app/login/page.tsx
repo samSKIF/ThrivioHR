@@ -35,13 +35,22 @@ export default function LoginPage() {
       <form onSubmit={onSubmit}>
         <div>
           <label>Org ID</label>
-          <input value={orgId} onChange={e => setOrgId(e.target.value)} placeholder="paste orgId" />
+          <input
+            suppressHydrationWarning
+            value={orgId}
+            onChange={(e) => setOrgId(e.target.value)}
+            placeholder="paste orgId"
+          />
         </div>
         <div>
           <label>Email</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} />
+          <input
+            suppressHydrationWarning
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-        <button type="submit">Login</button>
+        <button suppressHydrationWarning type="submit">Login</button>
       </form>
       <p>{msg}</p>
     </main>
