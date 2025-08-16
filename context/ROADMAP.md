@@ -71,7 +71,7 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - Guarded endpoints reject anonymous calls.
 - Tokens scoped to org; sessions recorded.
 
-## Big 3a — Web App (Next.js) Foundation **NEXT**
+## Big 3a — Web App (Next.js) Foundation **DONE**
 
 ### Sub-features
 - Next.js 14 app scaffold in monorepo (App Router, TypeScript, ESLint/Prettier).
@@ -88,7 +88,7 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - Error/empty/loading states covered; Lighthouse perf ≥ 90 on shell page.
 - Tests: one e2e smoke for login + `currentUser`; one unit for auth link.
 
-## Big 3b — SSO (OIDC/SAML) Foundation
+## Big 3b — SSO (OIDC/SAML) Foundation **IN PROGRESS**
 
 ### Sub-features
 - OIDC (Auth Code + PKCE): provider config (issuer, client, scopes), nonce/state, token exchange → BFF JWT.
@@ -104,6 +104,14 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - BFF issues first-party JWT after IdP callback; org scoping enforced (guards + RLS backstop).
 - Failure paths covered (invalid metadata, bad signature, expired code).
 - Tests: one e2e OIDC login, one unit for SAML assertion validation utility.
+
+### Acceptance Checks (Big 3b - OIDC Foundation)
+- ✓ OIDC Authorization Code + PKCE service implemented with openid-client v6.x
+- ✓ Unit tests pass for callback parsing and profile extraction
+- ✓ Route smoke tests confirm /sso/oidc/start returns 302 to IdP authorize endpoint
+- ✓ Login page shows SSO integration with configuration instructions
+- ✓ OIDC documentation created for Okta/Auth0 setup
+- Pending: Okta e2e flow test (requires OIDC credentials configuration)
 
 ## Big 4 — Directory & Org Structure **IN PROGRESS**
 

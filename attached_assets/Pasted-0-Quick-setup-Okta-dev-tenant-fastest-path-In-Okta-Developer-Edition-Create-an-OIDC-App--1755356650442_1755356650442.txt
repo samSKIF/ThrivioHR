@@ -1,0 +1,233 @@
+0) Quick setup (Okta dev tenant — fastest path)
+
+In Okta (Developer Edition):
+
+Create an OIDC App → Web Application (confidential client).
+
+Sign-in redirect URI: http://localhost:5000/sso/oidc/callback
+
+Trusted origins: add http://localhost:3000 (web) and http://localhost:5000 (bff) if prompted.
+
+Scopes: openid, profile, email.
+
+Assign a test user to the app.
+
+Note:
+
+Issuer: looks like https://dev-XXXXXX.okta.com/oauth2/default
+
+Client ID / Client Secret.
+
+In your local env (BFF):
+
+# apps/bff/.env.local
+OIDC_ISSUER_URL=https://dev-XXXXXX.okta.com/oauth2/default
+OIDC_CLIENT_ID=xxxxxxxx
+OIDC_CLIENT_SECRET=xxxxxxxx
+OIDC_REDIRECT_URI=http://localhost:5000/sso/oidc/callback
+OIDC_SCOPES=openid profile email
+WEB_APP_BASE_URL=http://localhost:3000
+
+
+Run & click:
+
+Start dev: pnpm dev
+
+Go to http://localhost:3000/login → Sign in with SSO → complete Okta login → you should land back in the app with currentUser working.
+
+1) Read-only diagnostics (verify the slice is wired as expected)
+Copy
+Edit
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) Confirm OIDC endpoints are registered and BFF port
+   bash -lc 'echo "---- listening routes ----"; (grep -RIn "sso/oidc" apps/bff/src || true); echo "---- BFF PORT ----"; (grep -RIn "listen(" apps/bff/src/main.ts || true)'
+
+2) Check login page has an SSO trigger
+   bash -lc 'echo "---- login page ----"; sed -n "1,200p" apps/web/app/login/page.tsx 2>/dev/null || sed -n "1,200p" apps/web/src/app/(auth)/login/page.tsx 2>/dev/null || true'
+
+3) Curl smoke: start endpoint should 302 to your IdP authorize URL
+   bash -lc 'echo "---- /sso/oidc/start HEAD ----"; curl -sI "http://localhost:5000/sso/oidc/start?returnTo=http://localhost:3000" | sed -n "1,20p"'
+
+4) Print env samples actually present
+   bash -lc 'echo "---- apps/bff/.env.example ----"; sed -n "1,200p" apps/bff/.env.example 2>/dev/null || true; echo "---- apps/web/.env.example ----"; sed -n "1,200p" apps/web/.env.example 2>/dev/null || true'
+
+At the end, confirm where we are compared to the roadmap and if there is any regression in previous features.
+
+2) Surgical implementation: tests + docs + roadmap flip (OIDC only)
+
+This locks the slice with a unit test (mocking openid-client) and a tiny e2e-ish route check, adds operator docs, and flips the roadmap statuses.
+
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add unit tests for OIDC callback claim handling, a lightweight route smoke test, operator docs for Okta setup, and update ROADMAP to mark Big 3a DONE and Big 3b IN PROGRESS.
+
+TOUCH ONLY
+apps/bff/package.json
+apps/bff/jest.config.ts
+apps/bff/src/modules/sso/oidc/oidc.service.ts   // minimal export tweak if needed for testing
+apps/bff/test/oidc.service.spec.ts
+apps/bff/test/oidc.routes.spec.ts
+docs/sso/oidc-setup.md
+ROADMAP.md
+
+CHANGES
+// 1) Ensure jest config exists for bff (create if missing)
+apps/bff/jest.config.ts (new if absent)
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/test'],
+  moduleFileExtensions: ['ts', 'tsx', 'js'],
+  transform: { '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }] },
+};
+
+// 2) Package.json test script (bff)
+apps/bff/package.json
+- Add (or ensure) "test": "jest --passWithNoTests"
+
+// 3) Small testability tweak (if class not exported): no logic change, ensure class is exportable
+// apps/bff/src/modules/sso/oidc/oidc.service.ts
+// Confirm `export class OidcService { ... }` (no other edits)
+
+// 4) Unit test for handleCallback (mock openid-client)
+apps/bff/test/oidc.service.spec.ts (new)
+import { OidcService } from '../src/modules/sso/oidc/oidc.service';
+import * as oc from 'openid-client';
+
+jest.mock('openid-client', () => {
+  const generators = {
+    codeVerifier: () => 'cv',
+    codeChallenge: () => 'cc',
+    nonce: () => 'nonce',
+    state: () => 'STATE123',
+  };
+  class MockClient {
+    async callback(_redirect: string, _params: any) {
+      return {
+        claims() {
+          return {
+            sub: 'abc123',
+            email: 'jane.doe@example.com',
+            given_name: 'Jane',
+            family_name: 'Doe',
+            name: 'Jane Doe',
+          };
+        },
+        id_token: 'idtok',
+      };
+    }
+    authorizationUrl() { return 'https://idp.example/authorize?...'; }
+  }
+  return {
+    generators,
+    Issuer: { discover: async () => ({ Client: MockClient }) },
+  };
+});
+
+process.env.OIDC_ISSUER_URL = 'https://idp.example';
+process.env.OIDC_CLIENT_ID = 'cid';
+process.env.OIDC_CLIENT_SECRET = 'secret';
+process.env.OIDC_REDIRECT_URI = 'http://localhost:5000/sso/oidc/callback';
+process.env.OIDC_SCOPES = 'openid profile email';
+process.env.WEB_APP_BASE_URL = 'http://localhost:3000';
+
+describe('OidcService', () => {
+  it('extracts profile from token claims', async () => {
+    const svc = new OidcService();
+    const auth = await svc.buildAuthUrl('http://localhost:3000');
+    expect(auth.url).toContain('authorize');
+
+    // simulate callback
+    const profile = await svc.handleCallback({ state: 'STATE123', code: 'xyz' } as any);
+    expect(profile.email).toBe('jane.doe@example.com');
+    expect(profile.displayName).toBe('Jane Doe');
+    expect(profile.returnTo).toBe('http://localhost:3000');
+  });
+});
+
+// 5) Tiny route smoke (no external IdP) - ensures controller is mounted
+apps/bff/test/oidc.routes.spec.ts (new)
+import request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import { OidcModule } from '../src/modules/sso/oidc/oidc.module';
+import { OidcService } from '../src/modules/sso/oidc/oidc.service';
+import { AuthService } from '../src/modules/auth/auth.service';
+
+class FakeAuthService {
+  async issueTokensForEmail() { return { accessToken: 'a', refreshToken: 'r' }; }
+}
+
+describe('OIDC routes', () => {
+  let app: INestApplication;
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [OidcModule],
+    })
+      .overrideProvider(AuthService)
+      .useClass(FakeAuthService)
+      .compile();
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+  afterAll(async () => { await app.close(); });
+
+  it('GET /sso/oidc/start redirects', async () => {
+    const res = await request(app.getHttpServer()).get('/sso/oidc/start?returnTo=http://localhost:3000');
+    expect([301,302]).toContain(res.statusCode);
+    expect(res.headers.location).toBeDefined();
+  });
+});
+
+// 6) Operator docs
+docs/sso/oidc-setup.md (new)
+# OIDC Setup (Okta Dev)
+- Create Web App (confidential client), scopes: openid profile email
+- Redirect URI: http://localhost:5000/sso/oidc/callback
+- Assign a test user
+- Capture Issuer, Client ID, Client Secret
+- Set apps/bff/.env.local accordingly and run `pnpm dev`
+- Acceptance: login via SSO lands back in app and `{ currentUser }` resolves
+
+# Alt: Auth0 quick notes
+- Regular Web App
+- Domain = Issuer
+- Same redirect, scopes, and env vars
+
+# Troubleshooting
+- 302 from /sso/oidc/start → Location should be IdP /authorize URL
+- Mismatched redirect URI → fix in IdP config or env
+- Empty email in claims → map `email` in IdP and consent
+
+// 7) ROADMAP status flip
+ROADMAP.md
+- Change “Big 3a — Web App (Next.js) Foundation” status to **DONE**
+- Change “Big 3b — SSO (OIDC/SAML) Foundation” to **IN PROGRESS**
+- Add acceptance checks bullet under 3b about Okta e2e
+
+RUN & PRINT
+1) Run bff tests:
+   bash -lc "pnpm --filter bff add -D jest ts-jest @types/jest supertest && pnpm --filter bff test"
+
+2) Show docs and roadmap diffs:
+   bash -lc "echo '--- docs/sso/oidc-setup.md ---'; sed -n '1,160p' docs/sso/oidc-setup.md; echo '--- ROADMAP.md (excerpt around 3a/3b) ---'; nl -ba ROADMAP.md | sed -n '1,220p'"
+
+STOP.
+
+Acceptance (for the milestone)
+
+/sso/oidc/start returns a 302 to your IdP’s /authorize endpoint.
+
+Logging in at the IdP redirects to http://localhost:3000 and the app resolves { currentUser } with the correct email/name.
+
+Unit tests pass (callback parsing, profile extraction).
+
+Roadmap updated: Big 3a = DONE, Big 3b (OIDC) = IN PROGRESS.
+
+No regressions to /auth/login or guarded GraphQL endpoints.
