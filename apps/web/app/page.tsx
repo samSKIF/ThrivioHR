@@ -1,8 +1,19 @@
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Automatically redirect to login page on app startup
+    router.push('/login');
+  }, [router]);
+
   return (
     <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <h1>ThrivioHR Web</h1>
-      <p>Welcome to the ThrivioHR employee engagement platform.</p>
+      <p>Redirecting to login...</p>
       
       <div style={{ marginTop: 32 }}>
         <h2>Navigation</h2>
