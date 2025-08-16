@@ -1,14 +1,25 @@
-// The page MUST be a Client Component for React hooks to work:
-'use client';
-import { useState } from 'react';
-const env = {
-  BFF_BASE_URL: process.env.NEXT_PUBLIC_BFF_BASE_URL || 'http://localhost:5000',
-};
+"use client";
+import { useEffect, useState } from "react";
+import { env } from "../../src/lib/env";
 
 export default function LoginPage() {
+  const [bffUp, setBffUp] = useState<boolean>(true); // default to true so the button is not greyed
   const [orgId, setOrgId] = useState('');
   const [email, setEmail] = useState('csvdemo@example.com');
   const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${env.BFF_BASE_URL}/health`, { method: "GET" });
+        if (alive) setBffUp(res.ok);
+      } catch {
+        if (alive) setBffUp(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,6 +42,17 @@ export default function LoginPage() {
       setMsg('Network error: ' + err);
     }
   }
+
+  const startSso = () => {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const url = `${env.BFF_BASE_URL}/sso/oidc/start?returnTo=${encodeURIComponent(origin)}`;
+      window.location.href = url;
+    } catch (err) {
+      // Optionally show a toast/snackbar instead of alert
+      alert("Unable to start SSO. Please try again or contact your admin.");
+    }
+  };
 
   return (
     <main suppressHydrationWarning style={{ padding: 24 }}>
@@ -56,25 +78,30 @@ export default function LoginPage() {
         <button suppressHydrationWarning type="submit">Login</button>
       </form>
       
-      <div style={{ marginTop: 24, borderTop: '1px solid #ccc', paddingTop: 24 }}>
-        <h3>SSO Integration</h3>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          OIDC SSO foundation implemented. Configure OIDC environment variables to enable.
-        </p>
+      <div className="mt-4 flex items-center gap-2" style={{ marginTop: 24, borderTop: '1px solid #ccc', paddingTop: 24 }}>
         <button
-          disabled
+          onClick={startSso}
+          disabled={!bffUp}
+          className={`rounded-md px-4 py-2 border ${bffUp ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+          aria-disabled={!bffUp}
           style={{
             padding: '12px 24px',
-            backgroundColor: '#ccc',
+            backgroundColor: bffUp ? '#007bff' : '#ccc',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
-            cursor: 'not-allowed',
-            fontWeight: 'bold'
+            cursor: bffUp ? 'pointer' : 'not-allowed',
+            fontWeight: 'bold',
+            opacity: bffUp ? 1 : 0.5
           }}
         >
-          Sign in with SSO (Configure OIDC)
+          Sign in with SSO
         </button>
+        {!bffUp && (
+          <span className="text-sm text-red-500" style={{ fontSize: '14px', color: '#dc3545' }}>
+            SSO unavailable: backend is unreachable.
+          </span>
+        )}
       </div>
       
       <p>{msg}</p>
