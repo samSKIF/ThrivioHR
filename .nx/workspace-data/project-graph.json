@@ -12370,7 +12370,23 @@
     "contracts": [],
     "identity": [],
     "ledger": [],
-    "bff": [],
+    "bff": [
+      {
+        "source": "bff",
+        "target": "npm:@nestjs/graphql",
+        "type": "static"
+      },
+      {
+        "source": "bff",
+        "target": "npm:@nestjs/common",
+        "type": "static"
+      },
+      {
+        "source": "bff",
+        "target": "npm:express",
+        "type": "static"
+      }
+    ],
     "web": [
       {
         "source": "web",
@@ -27628,5 +27644,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755339036468
+  "computedAt": 1755339710172
 }

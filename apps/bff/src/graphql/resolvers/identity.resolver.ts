@@ -1,17 +1,22 @@
 import { Resolver, Query } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { IdentityService } from '../../modules/identity/identity.service';
 import { Request } from 'express';
 
 @Resolver('User')
 @UseGuards(JwtAuthGuard)
 export class IdentityResolver {
+  constructor(private readonly identity: IdentityService) {}
   @Query('currentUser')
   async currentUser(_: unknown, __: unknown, ctx: { req: Request }) {
     // JwtAuthGuard already validated; claims are in req.user
     const claims: any = (ctx.req as any).user ?? null;
     if (!claims) return null;
-    // Minimal shape matching schema.graphql
+    
+    // For now, return JWT claims data since identity service doesn't have getUserById method
+    // TODO: Add getUserById method to identity service for fresh database lookup
+    
     return {
       id: claims.sub,
       email: claims.email ?? '',
