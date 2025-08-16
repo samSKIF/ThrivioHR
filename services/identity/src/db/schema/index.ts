@@ -20,7 +20,9 @@ import { orgMembership } from './org_membership';
 import { locations } from './locations';
 import { employmentEvents } from './employment_events';
 
-export const allTables = [
+import type { PgTable } from 'drizzle-orm/pg-core';
+
+export const allTables: PgTable[] = [
   organizations,
   users,
   identities,
