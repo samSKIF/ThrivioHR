@@ -97,13 +97,13 @@ outputType = "webview"
 name = "web-dev"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx nx serve web --port=3000"
 waitForPort = 3000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 3000
