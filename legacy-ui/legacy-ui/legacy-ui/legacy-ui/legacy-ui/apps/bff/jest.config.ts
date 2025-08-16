@@ -1,6 +1,3 @@
-import { pathsToModuleNameMapper } from 'ts-jest';
-import tsconfig from '../../tsconfig.base.json';
-
 export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -10,8 +7,8 @@ export default {
   transform: {
     '^.+\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
-  moduleNameMapper: pathsToModuleNameMapper(
-    (tsconfig as any).compilerOptions?.paths || {},
-    { prefix: '<rootDir>/../../' }
-  ),
+  // Avoid importing tsconfig.base.json; hard-map the known alias(es) instead
+  moduleNameMapper: {
+    '^@thrivio/contracts(.*)$': '<rootDir>/../../packages/contracts/src$1',
+  },
 };

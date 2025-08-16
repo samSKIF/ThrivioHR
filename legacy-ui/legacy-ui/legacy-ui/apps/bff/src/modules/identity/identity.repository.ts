@@ -100,4 +100,114 @@ export class IdentityRepository {
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (upd as any).rows?.[0];
   }
+
+  async listUsersByOrg(orgId: string, limit = 20, cursor: string | null = null) {
+    // raw SQL to avoid schema coupling; pagination by id (lexicographic)
+    if (cursor) {
+      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
+      return ((rows as any).rows ?? []).map((r: any) => ({
+        id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName,
+      }));
+    } else {
+      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
+      return ((rows as any).rows ?? []).map((r: any) => ({
+        id: r.id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName,
+      }));
+    }
+  }
+
+  async getUserById(id: string) {
+    const rows = await this.db.execute(sql`SELECT id, organization_id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
+    const r = ((rows as any).rows ?? [])[0];
+    if (!r) return null;
+    return { id: r.id, organization_id: r.organization_id, email: r.email, firstName: r.firstName, lastName: r.lastName, displayName: r.displayName };
+  }
+
+  async countUsersByOrg(orgId: string): Promise<number> {
+    const res = await this.db.execute(sql`SELECT COUNT(*) as count FROM users WHERE organization_id = ${orgId}`);
+    return parseInt((res as any).rows?.[0]?.count ?? '0', 10);
+  }
+
+  async listUsersByOrgAfter(
+    orgId: string, 
+    cursor?: { createdAt: string, id: string }, 
+    limit: number = 20
+  ): Promise<UserPublic[]> {
+    let queryResult;
+    
+    if (cursor) {
+      // Use cursor-based pagination with (created_at, id) > (cursor_created_at, cursor_id)
+      queryResult = await this.db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId} 
+          AND (created_at, id) > (${cursor.createdAt}, ${cursor.id})
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    } else {
+      // No cursor, start from beginning
+      queryResult = await this.db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    }
+    
+    return ((queryResult as any).rows ?? []).map((r: any) => ({
+      id: r.id, 
+      email: r.email, 
+      firstName: r.firstName, 
+      lastName: r.lastName, 
+      displayName: r.displayName,
+      createdAt: r.createdAt
+    }));
+  }
+
+  // RLS-enabled methods that accept a database context
+  async listUsersByOrgAfterWithDb(
+    db: any,
+    orgId: string, 
+    cursor?: { createdAt: string, id: string }, 
+    limit: number = 20
+  ): Promise<UserPublic[]> {
+    let queryResult;
+    
+    if (cursor) {
+      // Use cursor-based pagination with (created_at, id) > (cursor_created_at, cursor_id)
+      queryResult = await db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId} 
+          AND (created_at, id) > (${cursor.createdAt}, ${cursor.id})
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    } else {
+      // No cursor, start from beginning
+      queryResult = await db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        FROM users 
+        WHERE organization_id = ${orgId}
+        ORDER BY created_at ASC, id ASC 
+        LIMIT ${limit}
+      `);
+    }
+    
+    return ((queryResult as any).rows ?? []).map((r: any) => ({
+      id: r.id, 
+      email: r.email, 
+      firstName: r.firstName, 
+      lastName: r.lastName, 
+      displayName: r.displayName,
+      createdAt: r.createdAt
+    }));
+  }
+
+  async countUsersByOrgWithDb(db: any, orgId: string): Promise<number> {
+    const res = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE organization_id = ${orgId}`);
+    return parseInt((res as any).rows?.[0]?.count ?? '0', 10);
+  }
 }

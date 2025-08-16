@@ -101,10 +101,14 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
-- **2025-08-16**: **JWT TOKEN ENHANCEMENT** - Enhanced JWT tokens to include complete user profile data (email, firstName, lastName, displayName) in token payload
-- **2025-08-16**: **DEFAULT LOGIN PAGE REDIRECT** - Configured home page to automatically redirect to login page on app startup for better development workflow
-- **2025-08-16**: **APOLLO CLIENT GRAPHQL AUTHENTICATION - COMPLETE** - Fixed GraphQL authentication by configuring Apollo Client to use Next.js proxy routes
-- **Apollo Client Fix**: Changed NEXT_PUBLIC_GRAPHQL_URL from direct BFF URL to `/graphql` proxy route for proper JWT token inclusion
+- **2025-08-16**: **OIDC SSO FOUNDATION IMPLEMENTED** - Built OIDC Authorization Code + PKCE flow foundation for enterprise SSO integration
+- **OIDC Architecture**: Created service/controller structure with openid-client v6.x integration, PKCE security, and state management
+- **SSO Integration Ready**: Login page shows SSO option (disabled until OIDC credentials configured), with fallback to existing JWT flow
+- **Enterprise Readiness**: Foundation supports SAML/OIDC requirements for mid-market and enterprise clients in EU, GCC/UAE markets
+- **Development Safety**: OIDC module temporarily disabled to preserve working authentication; can be re-enabled with proper environment configuration
+- **JWT TOKEN ENHANCEMENT** - Enhanced JWT tokens to include complete user profile data (email, firstName, lastName, displayName) in token payload
+- **DEFAULT LOGIN PAGE REDIRECT** - Configured home page to automatically redirect to login page on app startup for better development workflow
+- **APOLLO CLIENT GRAPHQL AUTHENTICATION - COMPLETE** - Fixed GraphQL authentication by configuring Apollo Client to use Next.js proxy routes
 - **Authentication Flow Verified**: Full end-to-end authentication working - REST login → JWT storage → GraphQL currentUser query successful
 - **2025-08-15**: **BIG 3A WEB APP FOUNDATION - COMPLETE** - Next.js 14 app with Apollo Client GraphQL, authentication flow, and dev bootstrap
 - **Login Page Stability**: Fixed hydration mismatch with suppressHydrationWarning and robust error handling with try/catch networking

@@ -1,18 +1,13 @@
-export type NormalizedRow = {
-  email: string | null;
-  givenName: string | null;
-  familyName: string | null;
-  department?: string | null;
-  location?: string | null;
-  managerEmail?: string | null;
-  jobTitle?: string | null;
-  employeeId?: string | null;
-  startDate?: string | null;
-  birthDate?: string | null;
-  nationality?: string | null;
-  gender?: string | null;
-  phone?: string | null;
-};
+export type {
+  ImportRow,
+  CommitChange,
+} from "./compat";
+export type {
+  CommitRecordCompat as CommitRecord,
+  CommitOverviewCompat as CommitOverview,
+  CommitPlanCompat as CommitPlan,
+  NormalizedRow,
+} from "./compat";
 
 export type ManagerDiag = {
   managerMissing: number;

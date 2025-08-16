@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'ThrivioHR', description: 'Web App Fo
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

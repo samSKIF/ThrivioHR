@@ -2502,6 +2502,15 @@
         "hash": "sha512-GcESn8NZySmfwlTsIur+49yDqSny2IhPeZfXunQi48DMugKeZ7uy1FX83pO0X22sHntJ4Ub+9k34XQCX+oHt2A=="
       }
     },
+    "npm:@parcel/watcher-linux-x64-musl": {
+      "type": "npm",
+      "name": "npm:@parcel/watcher-linux-x64-musl",
+      "data": {
+        "version": "2.5.1",
+        "packageName": "@parcel/watcher-linux-x64-musl",
+        "hash": "sha512-n0E2EQbatQ3bXhcH2D1XIAANAcTZkQICBPVaxMeaCVBtOpBZpWJuf7LwyWPSBDITb7In8mqQgJ7gH8CILCURXg=="
+      }
+    },
     "npm:@parcel/watcher": {
       "type": "npm",
       "name": "npm:@parcel/watcher",
@@ -2635,6 +2644,15 @@
         "version": "1.4.11",
         "packageName": "@rspack/binding-linux-x64-gnu",
         "hash": "sha512-bHYFLxPPYBOSaHdQbEoCYGMQ1gOrEWj7Mro/DLfSHZi1a0okcQ2Q1y0i1DczReim3ZhLGNrK7k1IpFXCRbAobQ=="
+      }
+    },
+    "npm:@rspack/binding-linux-x64-musl": {
+      "type": "npm",
+      "name": "npm:@rspack/binding-linux-x64-musl",
+      "data": {
+        "version": "1.4.11",
+        "packageName": "@rspack/binding-linux-x64-musl",
+        "hash": "sha512-wrm4E7q2k4+cwT6Uhp6hIQ3eUe/YoaUttj6j5TqHYZX6YeLrNPtD9+ne6lQQ17BV8wmm6NZsmoFIJ5xIptpRhQ=="
       }
     },
     "npm:@rspack/binding": {
@@ -7659,6 +7677,15 @@
         "hash": "sha512-y2mfcJywuTUkvLm2Lp1/pFX8kTgMO5yyQGq/Sk/n2mN7XWYp4JsCZ/QXW34M8YScgk8bPZlREH04f6blPnoHnQ=="
       }
     },
+    "npm:jose": {
+      "type": "npm",
+      "name": "npm:jose",
+      "data": {
+        "version": "6.0.12",
+        "packageName": "jose",
+        "hash": "sha512-T8xypXs8CpmiIi78k0E+Lk7T2zlK4zDyg+o1CZ4AkOHgDg98ogdP2BeZ61lTFKFyoEwJ9RgAgN+SdM3iPgNonQ=="
+      }
+    },
     "npm:js-tokens": {
       "type": "npm",
       "name": "npm:js-tokens",
@@ -8820,6 +8847,15 @@
         "hash": "sha512-nj2snZ3mHZnbHcoB3NUdxbch9L1sQKV1XccLs1B79fmI/N5oOgWgctm/bWoZH2UH5b4A8ZLAMTsC6YnSJGbcaw=="
       }
     },
+    "npm:oauth4webapi": {
+      "type": "npm",
+      "name": "npm:oauth4webapi",
+      "data": {
+        "version": "3.7.0",
+        "packageName": "oauth4webapi",
+        "hash": "sha512-Q52wTPUWPsVLVVmTViXPQFMW2h2xv2jnDGxypjpelCFKaOjLsm7AxYuOk1oQgFm95VNDbuggasu9htXrz6XwKw=="
+      }
+    },
     "npm:object-assign": {
       "type": "npm",
       "name": "npm:object-assign",
@@ -8917,6 +8953,15 @@
         "version": "1.5.2",
         "packageName": "opener",
         "hash": "sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A=="
+      }
+    },
+    "npm:openid-client": {
+      "type": "npm",
+      "name": "npm:openid-client",
+      "data": {
+        "version": "6.6.4",
+        "packageName": "openid-client",
+        "hash": "sha512-PLWVhRksRnNH05sqeuCX/PR+1J70NyZcAcPske+FeF732KKONd3v0p5Utx1ro1iLfCglH8B3/+dA1vqIHDoIiA=="
       }
     },
     "npm:optimism": {
@@ -10231,6 +10276,15 @@
         "version": "2.1.2",
         "packageName": "safer-buffer",
         "hash": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
+      }
+    },
+    "npm:sass-embedded-linux-musl-x64": {
+      "type": "npm",
+      "name": "npm:sass-embedded-linux-musl-x64",
+      "data": {
+        "version": "1.90.0",
+        "packageName": "sass-embedded-linux-musl-x64",
+        "hash": "sha512-NeAycQlsdhFdnIeSmRmScYUyCd+uE+x15NLFunbF8M0PgCKurrUhaxgGKSuBbaK56FpxarKOHCqcOrWbemIGzQ=="
       }
     },
     "npm:sass-embedded-linux-x64": {
@@ -19172,6 +19226,11 @@
       "type": "static"
     },
     {
+      "source": "npm:@parcel/watcher",
+      "target": "npm:@parcel/watcher-linux-x64-musl",
+      "type": "static"
+    },
+    {
       "source": "npm:@phenomnomnominal/tsquery",
       "target": "npm:esquery",
       "type": "static"
@@ -19189,6 +19248,11 @@
     {
       "source": "npm:@rspack/binding",
       "target": "npm:@rspack/binding-linux-x64-gnu",
+      "type": "static"
+    },
+    {
+      "source": "npm:@rspack/binding",
+      "target": "npm:@rspack/binding-linux-x64-musl",
       "type": "static"
     },
     {
@@ -28312,6 +28376,16 @@
       "type": "static"
     },
     {
+      "source": "npm:openid-client",
+      "target": "npm:jose",
+      "type": "static"
+    },
+    {
+      "source": "npm:openid-client",
+      "target": "npm:oauth4webapi",
+      "type": "static"
+    },
+    {
       "source": "npm:optimism",
       "target": "npm:@wry/caches",
       "type": "static"
@@ -29608,6 +29682,11 @@
     },
     {
       "source": "npm:sass-embedded",
+      "target": "npm:sass-embedded-linux-musl-x64",
+      "type": "static"
+    },
+    {
+      "source": "npm:sass-embedded",
       "target": "npm:sass-embedded-linux-x64",
       "type": "static"
     },
@@ -29649,6 +29728,11 @@
     {
       "source": "npm:sass-embedded",
       "target": "npm:varint",
+      "type": "static"
+    },
+    {
+      "source": "npm:sass-embedded",
+      "target": "npm:sass-embedded-linux-musl-x64",
       "type": "static"
     },
     {

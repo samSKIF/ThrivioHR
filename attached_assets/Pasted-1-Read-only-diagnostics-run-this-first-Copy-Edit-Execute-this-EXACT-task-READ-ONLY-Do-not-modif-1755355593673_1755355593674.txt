@@ -1,0 +1,279 @@
+1) Read-only diagnostics (run this first)
+Copy
+Edit
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) Print repo tree (top 2 levels) for apps/ and services/
+   Command:
+   bash -lc 'ls -la && echo "---- apps ----" && tree -L 2 apps || true && echo "---- services ----" && tree -L 2 services || true && echo "---- packages ----" && tree -L 2 packages || true'
+
+2) Show BFF entry points and auth modules, if any
+   Command:
+   bash -lc 'echo "---- BFF main.ts ----"; sed -n "1,200p" apps/bff/src/main.ts || true; echo "---- BFF app.module.ts ----"; sed -n "1,200p" apps/bff/src/app.module.ts || true; echo "---- BFF modules dir ----"; tree -L 3 apps/bff/src/modules || true'
+
+3) Check installed deps for OIDC client and JWT libs
+   Command:
+   bash -lc 'jq -r ".dependencies, .devDependencies" apps/bff/package.json | sed -n "1,200p"'
+
+4) Verify web login page & any auth wiring
+   Command:
+   bash -lc 'echo "---- web login ----"; (grep -RIn "(auth|login)" apps/web/src || true) | head -n 50; echo "---- app router layout ----"; (grep -RIn "layout" apps/web/src/app || true) | head -n 50'
+
+5) Print env samples for BFF & web
+   Command:
+   bash -lc 'echo "---- BFF .env.example ----"; sed -n "1,200p" apps/bff/.env.example 2>/dev/null || true; echo "---- web .env.example ----"; sed -n "1,200p" apps/web/.env.example 2>/dev/null || true'
+
+At the end, confirm where we are compared to the roadmap and if there is any regression in previous features.
+
+2) Surgical implementation: OIDC (Auth Code + PKCE)
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add an OIDC login flow (Authorization Code + PKCE) to the BFF and expose a “Sign in with SSO” button in the web app. Use env-driven single-tenant config for now (org-scoped config comes next). After login, mint our existing BFF JWT and redirect to the app.
+
+TOUCH ONLY
+apps/bff/package.json
+apps/bff/.env.example
+apps/bff/src/app.module.ts
+apps/bff/src/modules/sso/oidc/oidc.module.ts
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+apps/bff/src/modules/sso/oidc/types.ts
+apps/bff/src/config/oidc.config.ts
+apps/bff/src/modules/auth/auth.service.ts        // only if needed to mint our existing JWT via a public method
+apps/web/.env.example
+apps/web/src/app/(auth)/login/page.tsx
+apps/web/src/lib/env.ts                           // if this file exists; otherwise create minimal helper
+
+CHANGES
+// 1) Add dependency for OIDC client
+apps/bff/package.json
+- Add "openid-client": "^5.6.5" under dependencies
+
+// 2) Add BFF env variables sample
+apps/bff/.env.example (append)
+OIDC_ISSUER_URL=https://YOUR_DEV_ISSUER/.well-known/openid-configuration
+OIDC_CLIENT_ID=your_client_id
+OIDC_CLIENT_SECRET=your_client_secret
+OIDC_REDIRECT_URI=http://localhost:4000/sso/oidc/callback
+OIDC_SCOPES=openid profile email
+BFF_JWT_AUDIENCE=thriviohr
+BFF_JWT_ISSUER=thrivio-bff
+WEB_APP_BASE_URL=http://localhost:3000
+
+// 3) Centralize OIDC config
+apps/bff/src/config/oidc.config.ts (new file)
+export const oidcEnv = () => ({
+  issuerUrl: process.env.OIDC_ISSUER_URL!,
+  clientId: process.env.OIDC_CLIENT_ID!,
+  clientSecret: process.env.OIDC_CLIENT_SECRET!,
+  redirectUri: process.env.OIDC_REDIRECT_URI!,
+  scopes: (process.env.OIDC_SCOPES || 'openid profile email').split(/\s+/),
+  webBaseUrl: process.env.WEB_APP_BASE_URL || 'http://localhost:3000',
+});
+
+// 4) OIDC types
+apps/bff/src/modules/sso/oidc/types.ts (new file)
+export type OidcState = { nonce: string; codeVerifier: string; returnTo?: string };
+
+// 5) OIDC module/service/controller
+apps/bff/src/modules/sso/oidc/oidc.module.ts (new)
+import { Module } from '@nestjs/common';
+import { OidcService } from './oidc.service';
+import { OidcController } from './oidc.controller';
+@Module({ providers: [OidcService], controllers: [OidcController] })
+export class OidcModule {}
+
+// 5a) OIDC service
+apps/bff/src/modules/sso/oidc/oidc.service.ts (new)
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { generators, Issuer } from 'openid-client';
+import { oidcEnv } from '../../../config/oidc.config';
+
+const MEM_STATE = new Map<string, { codeVerifier: string; nonce: string; returnTo?: string }>();
+
+@Injectable()
+export class OidcService {
+  private clientPromise = this.init();
+
+  private async init() {
+    const cfg = oidcEnv();
+    const issuer = await Issuer.discover(cfg.issuerUrl);
+    return new issuer.Client({
+      client_id: cfg.clientId,
+      client_secret: cfg.clientSecret,
+      redirect_uris: [cfg.redirectUri],
+      response_types: ['code'],
+      token_endpoint_auth_method: 'client_secret_basic',
+    });
+  }
+
+  public async buildAuthUrl(returnTo?: string) {
+    const cfg = oidcEnv();
+    const client = await this.clientPromise;
+
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
+    const nonce = generators.nonce();
+    const state = generators.state();
+
+    MEM_STATE.set(state, { codeVerifier, nonce, returnTo });
+
+    const url = client.authorizationUrl({
+      scope: cfg.scopes.join(' '),
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      response_type: 'code',
+      redirect_uri: cfg.redirectUri,
+      nonce,
+      state,
+    });
+    return { url, state };
+  }
+
+  public async handleCallback(params: Record<string, string>) {
+    const cfg = oidcEnv();
+    const client = await this.clientPromise;
+    const stateRec = MEM_STATE.get(params.state || '');
+    if (!stateRec) throw new UnauthorizedException('invalid_state');
+
+    const tokenSet = await client.callback(cfg.redirectUri, params, {
+      nonce: stateRec.nonce,
+      state: params.state,
+    });
+
+    MEM_STATE.delete(params.state!);
+
+    const claims = tokenSet.claims();
+    const email = (claims.email as string) || '';
+    const firstName = (claims.given_name as string) || '';
+    const lastName = (claims.family_name as string) || '';
+    const displayName =
+      (claims.name as string) || [firstName, lastName].filter(Boolean).join(' ') || email;
+
+    return {
+      email,
+      firstName,
+      lastName,
+      displayName,
+      idp: { sub: claims.sub as string, idToken: tokenSet.id_token },
+      returnTo: stateRec.returnTo || cfg.webBaseUrl,
+    };
+  }
+}
+
+// 5b) OIDC controller
+apps/bff/src/modules/sso/oidc/oidc.controller.ts (new)
+import { Controller, Get, Query, Req, Res } from '@nestjs/common';
+import { OidcService } from './oidc.service';
+import type { Request, Response } from 'express';
+// NOTE: adjust imports to your existing Auth service that mints BFF JWTs:
+import { AuthService } from '../../auth/auth.service';
+
+@Controller('sso/oidc')
+export class OidcController {
+  constructor(private readonly oidc: OidcService, private readonly auth: AuthService) {}
+
+  @Get('start')
+  async start(@Query('returnTo') returnTo: string | undefined, @Res() res: Response) {
+    const { url } = await this.oidc.buildAuthUrl(returnTo);
+    res.redirect(url);
+  }
+
+  @Get('callback')
+  async callback(@Req() req: Request, @Res() res: Response) {
+    const params = req.query as Record<string, string>;
+    const profile = await this.oidc.handleCallback(params);
+
+    // 1) Lookup or JIT-provision the user in your Identity service.
+    // For this slice: assume user already exists; fallback to a safe dev test user creation if your AuthService supports it.
+    // 2) Mint first-party JWT (access/refresh) the same way /auth/login does.
+    const tokens = await this.auth.issueTokensForEmail(profile.email, {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      displayName: profile.displayName,
+      // optionally pass orgId once org-scoped configs land
+    });
+
+    // Store tokens as secure cookies or return via redirect (this uses cookie pattern if your auth already sets cookies).
+    // If your AuthService sets cookies, call it here; otherwise, place tokens in a short-lived fragment and let web extract them (future slice).
+    // Minimal: redirect back to web app; web will call /auth/me with attached cookie or Authorization.
+    res.redirect(profile.returnTo);
+  }
+}
+
+// 6) Wire module
+apps/bff/src/app.module.ts
+- Import and add OidcModule to the root module's imports array.
+
+Example:
+import { Module } from '@nestjs/common';
+import { OidcModule } from './modules/sso/oidc/oidc.module';
+// ... other imports
+@Module({
+  imports: [
+    // ...existing
+    OidcModule,
+  ],
+})
+export class AppModule {}
+
+// 7) Expose a “Sign in with SSO” button on the web login page
+apps/web/.env.example (append)
+NEXT_PUBLIC_BFF_BASE_URL=http://localhost:4000
+
+apps/web/src/lib/env.ts (create if missing; otherwise extend)
+export const env = {
+  BFF_BASE_URL: process.env.NEXT_PUBLIC_BFF_BASE_URL || 'http://localhost:4000',
+};
+
+apps/web/src/app/(auth)/login/page.tsx
+- Add a secondary button: “Sign in with SSO” → `${env.BFF_BASE_URL}/sso/oidc/start?returnTo=${encodeURIComponent(window.location.origin)}`.
+- Keep existing username/password flow intact.
+
+Minimal snippet inside the component:
+<button
+  onClick={() => {
+    const base = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${env.BFF_BASE_URL}/sso/oidc/start?returnTo=${encodeURIComponent(base)}`;
+    window.location.href = url;
+  }}
+  className="rounded-md px-4 py-2 border"
+>
+  Sign in with SSO
+</button>
+
+RUN & PRINT
+1) Install deps in the BFF and type-check:
+   bash -lc "pnpm --filter bff add openid-client && pnpm --filter bff build"
+
+2) Build the web app to ensure no TS errors:
+   bash -lc "pnpm --filter web build"
+
+3) Print OIDC files to verify content:
+   bash -lc 'sed -n "1,160p" apps/bff/src/modules/sso/oidc/oidc.service.ts; echo "---"; sed -n "1,160p" apps/bff/src/modules/sso/oidc/oidc.controller.ts'
+
+4) Print login page to confirm SSO button is present:
+   bash -lc 'sed -n "1,200p" apps/web/src/app/(auth)/login/page.tsx'
+
+STOP.
+
+Acceptance checks for this slice
+
+Builds green for bff and web.
+
+From a clean env with OIDC creds set:
+
+Hitting http://localhost:3000/login shows a Sign in with SSO button.
+
+Clicking it redirects to your IdP (Okta/Auth0/Azure AD dev tenant).
+
+After login, you’re redirected back to the web app, and currentUser resolves with your profile (email/name).
+
+Our existing JWT/session mechanism is reused (no regressions to /auth/login).
+
+No cross-tenant leakage introduced (still single-tenant config at this step).
