@@ -101,6 +101,9 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-16**: **APOLLO CLIENT GRAPHQL AUTHENTICATION - COMPLETE** - Fixed GraphQL authentication by configuring Apollo Client to use Next.js proxy routes
+- **Apollo Client Fix**: Changed NEXT_PUBLIC_GRAPHQL_URL from direct BFF URL to `/graphql` proxy route for proper JWT token inclusion
+- **Authentication Flow Verified**: Full end-to-end authentication working - REST login → JWT storage → GraphQL currentUser query successful
 - **2025-08-15**: **BIG 3A WEB APP FOUNDATION - COMPLETE** - Next.js 14 app with Apollo Client GraphQL, authentication flow, and dev bootstrap
 - **Login Page Stability**: Fixed hydration mismatch with suppressHydrationWarning and robust error handling with try/catch networking
 - **Environment Configuration**: Added .env.local with NEXT_PUBLIC_API_URL for reliable BFF communication
