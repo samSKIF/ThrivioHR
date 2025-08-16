@@ -1,4 +1,5 @@
-"use client";
+// The page MUST be a Client Component for React hooks to work:
+'use client';
 import { useState } from 'react';
 
 export default function LoginPage() {
@@ -11,8 +12,7 @@ export default function LoginPage() {
     setMsg('Logging in…');
     
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiBase}/auth/login`, {
+      const res = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ orgId, email }),

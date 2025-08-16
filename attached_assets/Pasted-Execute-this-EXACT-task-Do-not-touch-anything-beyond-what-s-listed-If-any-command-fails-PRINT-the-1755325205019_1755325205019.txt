@@ -1,0 +1,89 @@
+Execute this EXACT task. Do not touch anything beyond what's listed. If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Fix login errors by making the login page a proper Client Component, proxying API calls via Next.js rewrites, and removing the need for cross‑origin fetches.
+
+TOUCH ONLY
+apps/web/app/login/page.tsx
+apps/web/next.config.js
+
+CHANGES
+// 1) Ensure login page is a Client Component. The first line must be exactly:
+'use client';
+
+@@ apps/web/app/login/page.tsx
+ // At top of file:
+-'use client';
++// The page MUST be a Client Component for React hooks to work:
++'use client';
+
+// 2) Simplify the fetch call: always use a relative path. The rewrites will proxy to the BFF.
+@@ function onSubmit(e: React.FormEvent) {
+-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+-  const res = await fetch(`${apiBase}/auth/login`, {
++  const res = await fetch('/auth/login', {
+     method: 'POST',
+     headers: { 'content-type': 'application/json' },
+     body: JSON.stringify({ orgId, email }),
+   });
+
+ // the rest of the file unchanged (e.g., error handling)
+
+// 3) Create/modify Next.js rewrites to proxy API routes to BFF.
+// If next.config.js exists, insert the rewrites into module.exports. Otherwise create one.
+*** Begin Patch
+*** Update File: apps/web/next.config.js
+@@
+-module.exports = {
+-  // existing config here
+-};
++const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
++module.exports = {
++  reactStrictMode: true,
++  async rewrites() {
++    return [
++      {
++        // Proxy all auth requests to the BFF
++        source: '/auth/:path*',
++        destination: `${apiBase}/auth/:path*`,
++      },
++      {
++        // Proxy GraphQL API to the BFF
++        source: '/graphql',
++        destination: `${apiBase}/graphql`,
++      },
++    ];
++  },
++};
+
+*** End Patch
+
+RUN & PRINT
+# Rebuild web to pick up next.config.js rewrites:
+npx nx build web && echo "=== BUILD OK ==="
+
+# Start BFF and web servers separately in the background for the smoke tests (ignore errors if already running):
+pkill -f "nx serve bff" || true
+pkill -f "nx serve web" || true
+npx nx serve bff --port=5000 --dev &> /dev/null &
+npx nx serve web --port=3000 --dev &> /dev/null &
+sleep 10
+
+# Smoke test the login page loads and proxies to BFF:
+echo "Testing /login page..."
+curl -s http://localhost:3000/login | grep -q "Login" && echo "✅ LOGIN_PAGE_LOADS" || echo "❌ LOGIN_PAGE_FAIL"
+
+# Validate the proxy works by posting to /auth/login (this will return Invalid credentials for unknown users, which is OK):
+echo "Testing login fetch proxy..."
+curl -s -X POST http://localhost:3000/auth/login -H 'content-type: application/json' \
+  -d '{"orgId":"not-real-uuid","email":"csvdemo@example.com"}' | grep -q '"statusCode"' \
+  && echo "✅ FETCH_PROXY_OK" || echo "❌ FETCH_PROXY_FAIL"
+
+# Kill background dev servers:
+pkill -f "nx serve bff" || true
+pkill -f "nx serve web" || true
+
+# End of checks
+echo "=== DONE ==="
+
+STOP.
