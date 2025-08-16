@@ -1,0 +1,105 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Enable the “Sign in with SSO” login button unless the BFF is unreachable. Remove any client checks that depend on server-only OIDC envs. Gracefully handle click errors.
+
+TOUCH ONLY
+apps/web/src/app/(auth)/login/page.tsx
+apps/web/src/lib/env.ts        // if missing, create
+apps/web/.env.example
+
+CHANGES
+// 1) Ensure a public base URL for the BFF
+apps/web/.env.example (append if missing)
+NEXT_PUBLIC_BFF_BASE_URL=http://localhost:5000
+
+// 2) Centralize reading the public env
+apps/web/src/lib/env.ts  (create if missing)
+export const env = {
+  BFF_BASE_URL: process.env.NEXT_PUBLIC_BFF_BASE_URL || 'http://localhost:5000',
+};
+
+// 3) Make the SSO button enabled if the BFF /health responds OK.
+//    Remove any “isSSOConfigured” checks that rely on server-only variables.
+//    Add a tiny client-side health probe on mount; fallback to enabled-by-default.
+
+apps/web/src/app/(auth)/login/page.tsx
+- Replace the current SSO button logic with this minimal version (adjust styling to your codebase):
+
+"use client";
+import { useEffect, useState } from "react";
+import { env } from "@/src/lib/env"; // adjust import path if your tsconfig uses baseUrl
+
+export default function LoginPage() {
+  const [bffUp, setBffUp] = useState<boolean>(true); // default to true so the button is not greyed
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${env.BFF_BASE_URL}/health`, { method: "GET" });
+        if (alive) setBffUp(res.ok);
+      } catch {
+        if (alive) setBffUp(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const startSso = () => {
+    try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const url = `${env.BFF_BASE_URL}/sso/oidc/start?returnTo=${encodeURIComponent(origin)}`;
+      window.location.href = url;
+    } catch (err) {
+      // Optionally show a toast/snackbar instead of alert
+      alert("Unable to start SSO. Please try again or contact your admin.");
+    }
+  };
+
+  return (
+    <div className="login">
+      {/* ... your existing username/password UI ... */}
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          onClick={startSso}
+          disabled={!bffUp}
+          className={`rounded-md px-4 py-2 border ${bffUp ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+          aria-disabled={!bffUp}
+        >
+          Sign in with SSO
+        </button>
+        {!bffUp && (
+          <span className="text-sm text-red-500">
+            SSO unavailable: backend is unreachable.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+RUN & PRINT
+1) Build the web to catch TS errors:
+   bash -lc "pnpm --filter web build"
+
+2) Show the updated login page snippet:
+   bash -lc 'sed -n "1,200p" apps/web/src/app/(auth)/login/page.tsx'
+
+STOP.
+Quick checks (no code)
+Ensure apps/web/.env.local has: NEXT_PUBLIC_BFF_BASE_URL=http://localhost:5000
+
+Confirm BFF is up: open http://localhost:5000/health in a browser—should return OK.
+
+Hard refresh the login page (or clear cache) so the public env is picked up.
+
+Acceptance
+Login page loads with SSO button enabled if http://localhost:5000/health is reachable.
+
+Clicking Sign in with SSO navigates to /sso/oidc/start?... and 302s to your IdP when OIDC is configured; if not configured, you’ll see the backend error page rather than a greyed button.
+
+No regressions to username/password flow.
+
+If your project uses a different page path (apps/web/app/login/page.tsx vs apps/web/src/app/(auth)/login/page.tsx), apply the same patch to the correct file — the idea’s the same: feature-flag by BFF reachability, not server secrets.
