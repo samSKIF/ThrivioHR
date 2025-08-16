@@ -101,6 +101,7 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-16**: **JWT TOKEN ENHANCEMENT** - Enhanced JWT tokens to include complete user profile data (email, firstName, lastName, displayName) in token payload
 - **2025-08-16**: **DEFAULT LOGIN PAGE REDIRECT** - Configured home page to automatically redirect to login page on app startup for better development workflow
 - **2025-08-16**: **APOLLO CLIENT GRAPHQL AUTHENTICATION - COMPLETE** - Fixed GraphQL authentication by configuring Apollo Client to use Next.js proxy routes
 - **Apollo Client Fix**: Changed NEXT_PUBLIC_GRAPHQL_URL from direct BFF URL to `/graphql` proxy route for proper JWT token inclusion
