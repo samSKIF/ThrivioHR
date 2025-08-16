@@ -1,25 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
-import { env } from "../../src/lib/env";
 
 export default function LoginPage() {
-  const [bffUp, setBffUp] = useState<boolean>(true); // default to true so the button is not greyed
+  const [mounted, setMounted] = useState(false);
+  const [bffUp, setBffUp] = useState(true); // optimistic by default
   const [orgId, setOrgId] = useState('');
   const [email, setEmail] = useState('csvdemo@example.com');
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
+    setMounted(true); // avoid hydration mismatch from extensions injecting attributes
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     let alive = true;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 2000);
     (async () => {
       try {
-        const res = await fetch(`${env.BFF_BASE_URL}/health`, { method: "GET" });
+        const res = await fetch("/api/bff/health", { method: "GET", signal: controller.signal });
         if (alive) setBffUp(res.ok);
       } catch {
         if (alive) setBffUp(false);
+      } finally {
+        clearTimeout(t);
       }
     })();
-    return () => { alive = false; };
-  }, []);
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [mounted]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,19 +56,15 @@ export default function LoginPage() {
   }
 
   const startSso = () => {
-    try {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const url = `${env.BFF_BASE_URL}/sso/oidc/start?returnTo=${encodeURIComponent(origin)}`;
-      window.location.href = url;
-    } catch (err) {
-      // Optionally show a toast/snackbar instead of alert
-      alert("Unable to start SSO. Please try again or contact your admin.");
-    }
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    // Use our same-origin proxy route so the browser never talks to localhost:5000
+    window.location.href = `/api/sso/oidc/start?returnTo=${encodeURIComponent(origin)}`;
   };
 
   return (
-    <main suppressHydrationWarning style={{ padding: 24 }}>
+    <main style={{ padding: 24 }} suppressHydrationWarning>
       <h1>Login</h1>
+
       <form onSubmit={onSubmit}>
         <div>
           <label>Org ID</label>
@@ -77,33 +85,28 @@ export default function LoginPage() {
         </div>
         <button suppressHydrationWarning type="submit">Login</button>
       </form>
-      
-      <div className="mt-4 flex items-center gap-2" style={{ marginTop: 24, borderTop: '1px solid #ccc', paddingTop: 24 }}>
-        <button
-          onClick={startSso}
-          disabled={!bffUp}
-          className={`rounded-md px-4 py-2 border ${bffUp ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
-          aria-disabled={!bffUp}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: bffUp ? '#007bff' : '#ccc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: bffUp ? 'pointer' : 'not-allowed',
-            fontWeight: 'bold',
-            opacity: bffUp ? 1 : 0.5
-          }}
-        >
-          Sign in with SSO
-        </button>
-        {!bffUp && (
-          <span className="text-sm text-red-500" style={{ fontSize: '14px', color: '#dc3545' }}>
-            SSO unavailable: backend is unreachable.
-          </span>
-        )}
-      </div>
-      
+
+      {/* SSO block only renders after mount to avoid hydration diff */}
+      {mounted && (
+        <div className="mt-4 flex items-center gap-2" style={{ marginTop: 24 }}>
+          <button
+            onClick={startSso}
+            disabled={!bffUp}
+            className={`rounded-md px-4 py-2 border ${bffUp ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+            aria-disabled={!bffUp}
+            style={{ padding: "12px 24px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: 6 }}
+            suppressHydrationWarning
+          >
+            Sign in with SSO
+          </button>
+          {!bffUp && (
+            <span className="text-sm" style={{ color: "#dc2626" }}>
+              SSO temporarily unavailable (backend unreachable)
+            </span>
+          )}
+        </div>
+      )}
+
       <p>{msg}</p>
     </main>
   );

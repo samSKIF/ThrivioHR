@@ -1,0 +1,132 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Stop the SSO button from greying out by avoiding cross-origin client fetches and hydration mismatches. Add server-side proxy API routes for BFF health and SSO start; render the SSO control only after mount.
+
+TOUCH ONLY
+apps/web/app/login/page.tsx
+apps/web/src/app/api/bff/health/route.ts
+apps/web/src/app/api/sso/oidc/start/route.ts
+apps/web/.env.example
+
+CHANGES
+// 1) Server-only base for the BFF (used by API routes; not exposed to the client)
+apps/web/.env.example  (append)
+BFF_BASE_URL_INTERNAL=http://localhost:5000
+
+// 2) Health proxy API (server → BFF). Avoids browser → localhost:5000.
+apps/web/src/app/api/bff/health/route.ts  (new)
+import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+export async function GET() {
+  const base = process.env.BFF_BASE_URL_INTERNAL || "http://localhost:5000";
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 2000);
+  try {
+    const r = await fetch(`${base}/health`, { signal: controller.signal });
+    clearTimeout(t);
+    return NextResponse.json({ ok: r.ok }, { status: r.ok ? 200 : 503 });
+  } catch {
+    clearTimeout(t);
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
+}
+
+// 3) SSO start proxy API: grabs the BFF’s 302 Location to the IdP and relays it to the browser
+apps/web/src/app/api/sso/oidc/start/route.ts  (new)
+import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+export async function GET(req: Request) {
+  const base = process.env.BFF_BASE_URL_INTERNAL || "http://localhost:5000";
+  const { searchParams } = new URL(req.url);
+  const returnTo = searchParams.get("returnTo") || "";
+  const target = `${base}/sso/oidc/start?returnTo=${encodeURIComponent(returnTo)}`;
+  const resp = await fetch(target, { redirect: "manual" });
+  const loc = resp.headers.get("location") || "/login?error=sso";
+  return NextResponse.redirect(loc, 302);
+}
+
+// 4) Login page: render SSO block only after mount; hit our API routes (same-origin)
+apps/web/app/login/page.tsx  (replace SSO block; keep your existing username/password UI intact)
+"use client";
+import { useEffect, useState } from "react";
+
+export default function LoginPage() {
+  const [mounted, setMounted] = useState(false);
+  const [bffUp, setBffUp] = useState(true); // optimistic by default
+
+  useEffect(() => {
+    setMounted(true); // avoid hydration mismatch from extensions injecting attributes
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    let alive = true;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 2000);
+    (async () => {
+      try {
+        const res = await fetch("/api/bff/health", { method: "GET", signal: controller.signal });
+        if (alive) setBffUp(res.ok);
+      } catch {
+        if (alive) setBffUp(false);
+      } finally {
+        clearTimeout(t);
+      }
+    })();
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [mounted]);
+
+  const startSso = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    // Use our same-origin proxy route so the browser never talks to localhost:5000
+    window.location.href = `/api/sso/oidc/start?returnTo=${encodeURIComponent(origin)}`;
+  };
+
+  return (
+    <main style={{ padding: 24 }} suppressHydrationWarning>
+      <h1>Login</h1>
+
+      {/* … your existing username/password form … */}
+
+      {/* SSO block only renders after mount to avoid hydration diff */}
+      {mounted && (
+        <div className="mt-4 flex items-center gap-2" style={{ marginTop: 24 }}>
+          <button
+            onClick={startSso}
+            disabled={!bffUp}
+            className={`rounded-md px-4 py-2 border ${bffUp ? "opacity-100 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+            aria-disabled={!bffUp}
+            style={{ padding: "12px 24px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: 6 }}
+            suppressHydrationWarning
+          >
+            Sign in with SSO
+          </button>
+          {!bffUp && (
+            <span className="text-sm" style={{ color: "#dc2626" }}>
+              SSO temporarily unavailable (backend unreachable)
+            </span>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}
+
+RUN & PRINT
+1) Build web (catch TS errors):
+   bash -lc "pnpm --filter web build"
+
+2) Show new API routes:
+   bash -lc 'sed -n "1,200p" apps/web/src/app/api/bff/health/route.ts; echo \"---\"; sed -n "1,200p" apps/web/src/app/api/sso/oidc/start/route.ts'
+
+3) Show updated login page:
+   bash -lc 'sed -n "1,220p" apps/web/app/login/page.tsx'
+
+STOP.
