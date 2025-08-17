@@ -27765,6 +27765,279 @@
     ]
   },
   "version": "6.0",
-  "errors": [],
-  "computedAt": 1755375850571
+  "errors": [
+    {
+      "stack": " - .tmp-legacy/repo/apps/bff/project.json: Error: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/bff/project.json'\n    at readFileSync (node:fs:449:20)\n    at readJsonFile (/home/runner/workspace/node_modules/nx/src/utils/fileutils.js:27:48)\n    at /home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:16:59\n    at /home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.ProjectJsonProjectsPlugin.createNodesV2 (/home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:15:55)\n    at LoadedNxPlugin.createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n    at LoadedNxPlugin.createNodes.<computed> (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:32:34)\n    at createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/isolation/plugin-worker.js:76:63)\n - .tmp-legacy/repo/apps/web/project.json: Error: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/web/project.json'\n    at readFileSync (node:fs:449:20)\n    at readJsonFile (/home/runner/workspace/node_modules/nx/src/utils/fileutils.js:27:48)\n    at /home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:16:59\n    at /home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.ProjectJsonProjectsPlugin.createNodesV2 (/home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:15:55)\n    at LoadedNxPlugin.createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n    at LoadedNxPlugin.createNodes.<computed> (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:32:34)\n    at createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/isolation/plugin-worker.js:76:63)",
+      "message": "2 errors occurred while processing files for the nx/core/project-json plugin\n.\n  - .tmp-legacy/repo/apps/bff/project.json: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/bff/project.json'\n  - .tmp-legacy/repo/apps/web/project.json: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/web/project.json'",
+      "errors": [
+        [
+          ".tmp-legacy/repo/apps/bff/project.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/bff/project.json'\n    at readFileSync (node:fs:449:20)\n    at readJsonFile (/home/runner/workspace/node_modules/nx/src/utils/fileutils.js:27:48)\n    at /home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:16:59\n    at /home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.ProjectJsonProjectsPlugin.createNodesV2 (/home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:15:55)\n    at LoadedNxPlugin.createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n    at LoadedNxPlugin.createNodes.<computed> (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:32:34)\n    at createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/isolation/plugin-worker.js:76:63)",
+            "message": "ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/bff/project.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/home/runner/workspace/.tmp-legacy/repo/apps/bff/project.json"
+          }
+        ],
+        [
+          ".tmp-legacy/repo/apps/web/project.json",
+          {
+            "stack": "Error: ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/web/project.json'\n    at readFileSync (node:fs:449:20)\n    at readJsonFile (/home/runner/workspace/node_modules/nx/src/utils/fileutils.js:27:48)\n    at /home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:16:59\n    at /home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:10:33\n    at Array.map (<anonymous>)\n    at createNodesFromFiles (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/utils.js:8:35)\n    at exports.ProjectJsonProjectsPlugin.createNodesV2 (/home/runner/workspace/node_modules/nx/src/plugins/project-json/build-nodes/project-json.js:15:55)\n    at LoadedNxPlugin.createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:22:65)\n    at LoadedNxPlugin.createNodes.<computed> (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/loaded-nx-plugin.js:32:34)\n    at createNodes (/home/runner/workspace/node_modules/nx/src/project-graph/plugins/isolation/plugin-worker.js:76:63)",
+            "message": "ENOENT: no such file or directory, open '/home/runner/workspace/.tmp-legacy/repo/apps/web/project.json'",
+            "errno": -2,
+            "code": "ENOENT",
+            "syscall": "open",
+            "path": "/home/runner/workspace/.tmp-legacy/repo/apps/web/project.json"
+          }
+        ]
+      ],
+      "partialResults": [
+        [
+          "apps/bff/project.json",
+          {
+            "projects": {
+              "apps/bff": {
+                "name": "bff",
+                "root": "apps/bff",
+                "$schema": "../../node_modules/nx/schemas/project-schema.json",
+                "sourceRoot": "apps/bff/src",
+                "projectType": "application",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsx src/main.ts",
+                      "cwd": "apps/bff"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsc -p tsconfig.json",
+                      "cwd": "apps/bff"
+                    }
+                  },
+                  "test": {
+                    "executor": "@nx/jest:jest",
+                    "options": {
+                      "jestConfig": "apps/bff/jest.config.ts",
+                      "passWithNoTests": false
+                    },
+                    "outputs": [
+                      "{workspaceRoot}/coverage/apps/bff"
+                    ]
+                  },
+                  "lint": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "eslint src",
+                      "cwd": "apps/bff"
+                    }
+                  },
+                  "serve": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsx src/main.ts",
+                      "cwd": "apps/bff"
+                    }
+                  },
+                  "plan:check": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsx tools/plan-employees.ts",
+                      "cwd": "apps/bff",
+                      "env": {
+                        "PLAN_MAX_MS": "25"
+                      }
+                    }
+                  }
+                },
+                "tags": [
+                  "type:app",
+                  "scope:bff"
+                ]
+              }
+            }
+          }
+        ],
+        [
+          "apps/web/project.json",
+          {
+            "projects": {
+              "apps/web": {
+                "name": "web",
+                "root": "apps/web",
+                "$schema": "../../node_modules/nx/schemas/project-schema.json",
+                "sourceRoot": "apps/web",
+                "projectType": "application",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "next dev -p 3000",
+                      "cwd": "apps/web"
+                    }
+                  },
+                  "serve": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "next dev",
+                      "cwd": "apps/web"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "next build",
+                      "cwd": "apps/web"
+                    }
+                  },
+                  "test": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "jest",
+                      "cwd": "apps/web"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "eslint .",
+                      "cwd": "apps/web"
+                    }
+                  }
+                },
+                "tags": []
+              }
+            }
+          }
+        ],
+        [
+          "packages/contracts/project.json",
+          {
+            "projects": {
+              "packages/contracts": {
+                "name": "contracts",
+                "root": "packages/contracts",
+                "sourceRoot": "packages/contracts/src",
+                "projectType": "library",
+                "targets": {},
+                "tags": [
+                  "type:lib",
+                  "scope:contracts"
+                ]
+              }
+            }
+          }
+        ],
+        [
+          "services/identity/project.json",
+          {
+            "projects": {
+              "services/identity": {
+                "name": "identity",
+                "root": "services/identity",
+                "$schema": "../../node_modules/nx/schemas/project-schema.json",
+                "sourceRoot": "services/identity/src",
+                "projectType": "library",
+                "targets": {
+                  "test": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "jest --config services/identity/jest.config.ts --coverage",
+                      "cwd": "."
+                    }
+                  }
+                },
+                "tags": [
+                  "type:service",
+                  "scope:identity"
+                ]
+              }
+            }
+          }
+        ],
+        [
+          "services/ledger/project.json",
+          {
+            "projects": {
+              "services/ledger": {
+                "name": "ledger",
+                "root": "services/ledger",
+                "$schema": "../../node_modules/nx/schemas/project-schema.json",
+                "sourceRoot": "services/ledger/src",
+                "projectType": "application",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsx src/main.ts",
+                      "cwd": "services/ledger"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsc -p tsconfig.json",
+                      "cwd": "services/ledger"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "eslint src",
+                      "cwd": "services/ledger"
+                    }
+                  }
+                },
+                "tags": []
+              }
+            }
+          }
+        ],
+        [
+          "services/recognition/project.json",
+          {
+            "projects": {
+              "services/recognition": {
+                "name": "recognition",
+                "root": "services/recognition",
+                "$schema": "../../node_modules/nx/schemas/project-schema.json",
+                "sourceRoot": "services/recognition/src",
+                "projectType": "application",
+                "targets": {
+                  "dev": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsx src/main.ts",
+                      "cwd": "services/recognition"
+                    }
+                  },
+                  "build": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "tsc -p tsconfig.json",
+                      "cwd": "services/recognition"
+                    }
+                  },
+                  "lint": {
+                    "executor": "nx:run-commands",
+                    "options": {
+                      "command": "eslint src",
+                      "cwd": "services/recognition"
+                    }
+                  }
+                },
+                "tags": []
+              }
+            }
+          }
+        ]
+      ],
+      "name": "AggregateCreateNodesError"
+    }
+  ],
+  "computedAt": 1755412076186
 }
