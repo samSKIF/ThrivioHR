@@ -1,0 +1,192 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Prevent BFF startup crashes when OIDC env is missing. Defer OIDC discovery/client creation until the first request, and handle “not configured” gracefully. Keep /health working so web health probe returns OK.
+
+TOUCH ONLY
+apps/bff/.env.example
+apps/bff/src/config/oidc.config.ts
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+// 1) Add an explicit feature flag and document required vars
+apps/bff/.env.example  (append)
+OIDC_ENABLED=false
+OIDC_ISSUER_URL=
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=
+OIDC_REDIRECT_URI=http://localhost:5000/sso/oidc/callback
+OIDC_SCOPES=openid profile email
+WEB_APP_BASE_URL=http://localhost:3000
+
+// 2) Make config tolerant of missing env (NO non-null assertions)
+apps/bff/src/config/oidc.config.ts  (replace file)
+export const oidcEnv = () => ({
+  enabled: (process.env.OIDC_ENABLED || '').toLowerCase() === 'true',
+  issuerUrl: process.env.OIDC_ISSUER_URL || '',
+  clientId: process.env.OIDC_CLIENT_ID || '',
+  clientSecret: process.env.OIDC_CLIENT_SECRET || '',
+  redirectUri: process.env.OIDC_REDIRECT_URI || '',
+  scopes: (process.env.OIDC_SCOPES || 'openid profile email').split(/\s+/).filter(Boolean),
+  webBaseUrl: process.env.WEB_APP_BASE_URL || 'http://localhost:3000',
+});
+
+// 3) Defer OIDC discovery; never run at module init. Guard when not configured.
+apps/bff/src/modules/sso/oidc/oidc.service.ts  (replace file)
+import { Injectable } from '@nestjs/common';
+import { generators, Issuer, Client } from 'openid-client';
+import { oidcEnv } from '../../../config/oidc.config';
+
+type StateRec = { codeVerifier: string; nonce: string; returnTo?: string };
+
+@Injectable()
+export class OidcService {
+  private client: Client | null = null;
+  private readonly MEM_STATE = new Map<string, StateRec>();
+
+  private isConfigured() {
+    const cfg = oidcEnv();
+    return cfg.enabled && cfg.issuerUrl && cfg.clientId && cfg.clientSecret && cfg.redirectUri;
+  }
+
+  public enabled() {
+    return this.isConfigured();
+  }
+
+  private async getClient(): Promise<Client> {
+    if (this.client) return this.client;
+    const cfg = oidcEnv();
+    if (!this.isConfigured()) {
+      throw new Error('OIDC_NOT_CONFIGURED');
+    }
+    const issuer = await Issuer.discover(cfg.issuerUrl);
+    this.client = new issuer.Client({
+      client_id: cfg.clientId,
+      client_secret: cfg.clientSecret,
+      redirect_uris: [cfg.redirectUri],
+      response_types: ['code'],
+      token_endpoint_auth_method: 'client_secret_basic',
+    });
+    return this.client;
+  }
+
+  public async buildAuthUrl(returnTo?: string) {
+    const cfg = oidcEnv();
+    const client = await this.getClient();
+
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
+    const nonce = generators.nonce();
+    const state = generators.state();
+
+    this.MEM_STATE.set(state, { codeVerifier, nonce, returnTo });
+
+    return client.authorizationUrl({
+      scope: cfg.scopes.join(' '),
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      response_type: 'code',
+      redirect_uri: cfg.redirectUri,
+      nonce,
+      state,
+    });
+  }
+
+  public async handleCallback(params: Record<string, string>) {
+    const cfg = oidcEnv();
+    const client = await this.getClient();
+    const rec = this.MEM_STATE.get(params.state || '');
+    if (!rec) throw new Error('INVALID_STATE');
+
+    const tokenSet = await client.callback(cfg.redirectUri, params, {
+      nonce: rec.nonce,
+      state: params.state,
+    });
+
+    this.MEM_STATE.delete(params.state!);
+
+    const claims = tokenSet.claims();
+    const email = (claims.email as string) || '';
+    const firstName = (claims.given_name as string) || '';
+    const lastName = (claims.family_name as string) || '';
+    const displayName =
+      (claims.name as string) || [firstName, lastName].filter(Boolean).join(' ') || email;
+
+    return {
+      email,
+      firstName,
+      lastName,
+      displayName,
+      idp: { sub: String(claims.sub || ''), idToken: tokenSet.id_token },
+      returnTo: rec.returnTo || cfg.webBaseUrl,
+    };
+  }
+}
+
+// 4) Controller: gracefully handle “not configured” and never crash startup
+apps/bff/src/modules/sso/oidc/oidc.controller.ts  (replace file)
+import { Controller, Get, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+import { AuthService } from '../../auth/auth.service';
+import { oidcEnv } from '../../../config/oidc.config';
+
+@Controller('sso/oidc')
+export class OidcController {
+  constructor(private readonly oidc: OidcService, private readonly auth: AuthService) {}
+
+  @Get('start')
+  async start(@Query('returnTo') returnTo: string | undefined, @Res() res: Response) {
+    const cfg = oidcEnv();
+    if (!this.oidc.enabled()) {
+      // Don’t 500 the user; bounce back to login with a hint
+      const back = cfg.webBaseUrl || 'http://localhost:3000';
+      return res.redirect(`${back}/login?error=sso_disabled`);
+    }
+    try {
+      const url = await this.oidc.buildAuthUrl(returnTo);
+      return res.redirect(url);
+    } catch {
+      const back = cfg.webBaseUrl || 'http://localhost:3000';
+      return res.redirect(`${back}/login?error=sso_unavailable`);
+    }
+  }
+
+  @Get('callback')
+  async callback(@Query() params: Record<string, string>, @Res() res: Response) {
+    const cfg = oidcEnv();
+    if (!this.oidc.enabled()) {
+      const back = cfg.webBaseUrl || 'http://localhost:3000';
+      return res.redirect(`${back}/login?error=sso_disabled`);
+    }
+    try {
+      const profile = await this.oidc.handleCallback(params);
+      // Mint your first-party tokens (same path as /auth/login)
+      await this.auth.issueTokensForEmail(profile.email, {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        displayName: profile.displayName,
+      });
+      return res.redirect(profile.returnTo || cfg.webBaseUrl);
+    } catch {
+      const back = cfg.webBaseUrl || 'http://localhost:3000';
+      return res.redirect(`${back}/login?error=sso_callback_failed`);
+    }
+  }
+}
+
+RUN & PRINT
+1) Build the BFF to ensure no TS errors:
+   bash -lc "pnpm --filter bff build"
+
+2) Start the BFF (if not running) and show health:
+   bash -lc "curl -si http://localhost:5000/health | head -n 10 || true"
+
+3) Show the OIDC controller & service headers to confirm replacements:
+   bash -lc 'sed -n "1,60p" apps/bff/src/modules/sso/oidc/oidc.controller.ts; echo "---"; sed -n "1,60p" apps/bff/src/modules/sso/oidc/oidc.service.ts'
+
+STOP.

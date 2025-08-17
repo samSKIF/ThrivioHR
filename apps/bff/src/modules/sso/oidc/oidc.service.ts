@@ -1,54 +1,52 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import * as oidc from 'openid-client';
+import { Injectable } from '@nestjs/common';
+import { generators, Issuer, Client } from 'openid-client';
 import { oidcEnv } from '../../../config/oidc.config';
 
-const MEM_STATE = new Map<string, { codeVerifier: string; nonce: string; returnTo?: string }>();
+type StateRec = { codeVerifier: string; nonce: string; returnTo?: string };
 
 @Injectable()
 export class OidcService {
-  private clientPromise = this.init();
+  private client: Client | null = null;
+  private readonly MEM_STATE = new Map<string, StateRec>();
 
-  private async init() {
+  private isConfigured() {
     const cfg = oidcEnv();
-    // For development without real OIDC server, create a mock configuration
-    // This allows the service to start without failing
-    try {
-      const issuer = await oidc.discovery(new URL(cfg.issuerUrl));
-      const client = new oidc.Configuration({
-        client_id: cfg.clientId,
-        client_secret: cfg.clientSecret,
-        redirect_uri: cfg.redirectUri,
-        ...issuer,
-      });
-      return { client, issuer, cfg };
-    } catch (error) {
-      // Fallback for development - create minimal config
-      const mockIssuer = {
-        authorization_endpoint: cfg.issuerUrl.replace('/.well-known/openid-configuration', '/auth'),
-        token_endpoint: cfg.issuerUrl.replace('/.well-known/openid-configuration', '/token'),
-        userinfo_endpoint: cfg.issuerUrl.replace('/.well-known/openid-configuration', '/userinfo'),
-      };
-      const client = new oidc.Configuration({
-        client_id: cfg.clientId,
-        client_secret: cfg.clientSecret,
-        redirect_uri: cfg.redirectUri,
-        ...mockIssuer,
-      });
-      return { client, issuer: mockIssuer, cfg };
+    return cfg.enabled && cfg.issuerUrl && cfg.clientId && cfg.clientSecret && cfg.redirectUri;
+  }
+
+  public enabled() {
+    return this.isConfigured();
+  }
+
+  private async getClient(): Promise<Client> {
+    if (this.client) return this.client;
+    const cfg = oidcEnv();
+    if (!this.isConfigured()) {
+      throw new Error('OIDC_NOT_CONFIGURED');
     }
+    const issuer = await Issuer.discover(cfg.issuerUrl);
+    this.client = new issuer.Client({
+      client_id: cfg.clientId,
+      client_secret: cfg.clientSecret,
+      redirect_uris: [cfg.redirectUri],
+      response_types: ['code'],
+      token_endpoint_auth_method: 'client_secret_basic',
+    });
+    return this.client;
   }
 
   public async buildAuthUrl(returnTo?: string) {
-    const { client, cfg } = await this.clientPromise;
-    
-    const codeVerifier = oidc.randomPKCECodeVerifier();
-    const codeChallenge = await oidc.calculatePKCECodeChallenge(codeVerifier);
-    const nonce = oidc.randomNonce();
-    const state = oidc.randomState();
+    const cfg = oidcEnv();
+    const client = await this.getClient();
 
-    MEM_STATE.set(state, { codeVerifier, nonce, returnTo });
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
+    const nonce = generators.nonce();
+    const state = generators.state();
 
-    const url = oidc.buildAuthorizationUrl(client, {
+    this.MEM_STATE.set(state, { codeVerifier, nonce, returnTo });
+
+    return client.authorizationUrl({
       scope: cfg.scopes.join(' '),
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
@@ -57,28 +55,22 @@ export class OidcService {
       nonce,
       state,
     });
-    return { url, state };
   }
 
   public async handleCallback(params: Record<string, string>) {
-    const { client, cfg } = await this.clientPromise;
-    const stateRec = MEM_STATE.get(params.state || '');
-    if (!stateRec) throw new UnauthorizedException('invalid_state');
+    const cfg = oidcEnv();
+    const client = await this.getClient();
+    const rec = this.MEM_STATE.get(params.state || '');
+    if (!rec) throw new Error('INVALID_STATE');
 
-    const tokenSet = await oidc.authorizationCodeGrant(client, new URL(cfg.redirectUri), {
-      code: params.code!,
-      code_verifier: stateRec.codeVerifier,
+    const tokenSet = await client.callback(cfg.redirectUri, params, {
+      nonce: rec.nonce,
+      state: params.state,
     });
 
-    MEM_STATE.delete(params.state!);
+    this.MEM_STATE.delete(params.state!);
 
-    // Simple claims extraction from id_token - in production you'd validate this properly
-    let claims: any = {};
-    if (tokenSet.id_token) {
-      const payload = tokenSet.id_token.split('.')[1];
-      claims = JSON.parse(Buffer.from(payload, 'base64').toString());
-    }
-
+    const claims = tokenSet.claims();
     const email = (claims.email as string) || '';
     const firstName = (claims.given_name as string) || '';
     const lastName = (claims.family_name as string) || '';
@@ -90,8 +82,8 @@ export class OidcService {
       firstName,
       lastName,
       displayName,
-      idp: { sub: claims.sub as string, idToken: tokenSet.id_token },
-      returnTo: stateRec.returnTo || cfg.webBaseUrl,
+      idp: { sub: String(claims.sub || ''), idToken: tokenSet.id_token },
+      returnTo: rec.returnTo || cfg.webBaseUrl,
     };
   }
 }
