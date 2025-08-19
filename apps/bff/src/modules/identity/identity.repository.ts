@@ -36,7 +36,7 @@ export class IdentityRepository {
   async findUserByEmailOrg(email: string, orgId: string): Promise<UserPublic | null> {
     const res = await this.db.execute(sql`SELECT id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" FROM users WHERE organization_id = ${orgId} AND LOWER(email) = LOWER(${email}) LIMIT 1`);
     const row = (res as { rows?: Record<string, unknown>[] }).rows?.[0];
-    return row ?? null;
+    return row ? (row as UserPublic) : null;
   }
 
   async listDistinctDepartments(orgId: string): Promise<string[]> {
@@ -65,18 +65,18 @@ export class IdentityRepository {
     // try existing
     const sel = await this.db.execute(sql`SELECT id, organization_id AS "organizationId", type, name, parent_id AS "parentId" FROM org_units WHERE organization_id = ${orgId} AND type = 'department' AND name = ${trimmed} LIMIT 1`);
     const existing = (sel as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (existing) return { dept: existing, created: false };
+    if (existing) return { dept: existing as Record<string, unknown>, created: false };
     // create
     const ins = await this.db.execute(sql`INSERT INTO org_units (id, organization_id, type, name) VALUES (gen_random_uuid(), ${orgId}, 'department', ${trimmed}) RETURNING id, organization_id AS "organizationId", type, name, parent_id AS "parentId"`);
-    return { dept: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] ?? null, created: true };
+    return { dept: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as Record<string, unknown> ?? null, created: true };
   }
 
   async ensureMembership(userId: string, orgUnitId: string): Promise<{ membership: Record<string, unknown> | null; created: boolean }> {
     const sel = await this.db.execute(sql`SELECT id, user_id AS "userId", org_unit_id AS "orgUnitId", is_primary AS "isPrimary" FROM org_membership WHERE user_id = ${userId} AND org_unit_id = ${orgUnitId} LIMIT 1`);
     const existing = (sel as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (existing) return { membership: existing, created: false };
+    if (existing) return { membership: existing as Record<string, unknown>, created: false };
     const ins = await this.db.execute(sql`INSERT INTO org_membership (id, user_id, org_unit_id, is_primary) VALUES (gen_random_uuid(), ${userId}, ${orgUnitId}, false) RETURNING id, user_id AS "userId", org_unit_id AS "orgUnitId", is_primary AS "isPrimary"`);
-    return { membership: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] ?? null, created: true };
+    return { membership: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as Record<string, unknown> ?? null, created: true };
   }
 
   async findOrCreateLocation(orgId: string, name: string): Promise<{ loc: Record<string, unknown> | null; created: boolean }> {
@@ -84,9 +84,9 @@ export class IdentityRepository {
     if (!trimmed) return { loc: null, created: false };
     const sel = await this.db.execute(sql`SELECT id, organization_id AS "organizationId", name, type FROM locations WHERE organization_id = ${orgId} AND name = ${trimmed} LIMIT 1`);
     const existing = (sel as { rows?: Record<string, unknown>[] }).rows?.[0];
-    if (existing) return { loc: existing, created: false };
+    if (existing) return { loc: existing as Record<string, unknown>, created: false };
     const ins = await this.db.execute(sql`INSERT INTO locations (id, organization_id, name) VALUES (gen_random_uuid(), ${orgId}, ${trimmed}) RETURNING id, organization_id AS "organizationId", name, type`);
-    return { loc: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] ?? null, created: true };
+    return { loc: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as Record<string, unknown> ?? null, created: true };
   }
 
   async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
@@ -106,12 +106,22 @@ export class IdentityRepository {
     if (cursor) {
       const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-        id: r.id as string, organizationId: r.organizationId as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
+        id: r.id as string, 
+        organizationId: r.organizationId as string, 
+        email: r.email as string, 
+        firstName: r.firstName as string, 
+        lastName: r.lastName as string, 
+        displayName: r.displayName as string
       }));
     } else {
       const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-        id: r.id as string, organizationId: r.organizationId as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
+        id: r.id as string, 
+        organizationId: r.organizationId as string, 
+        email: r.email as string, 
+        firstName: r.firstName as string, 
+        lastName: r.lastName as string, 
+        displayName: r.displayName as string
       }));
     }
   }
@@ -120,7 +130,15 @@ export class IdentityRepository {
     const rows = await this.db.execute(sql`SELECT id, organization_id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
     const r = ((rows as { rows?: Record<string, unknown>[] }).rows ?? [])[0];
     if (!r) return null;
-    return { id: r.id as string, organizationId: r.organizationId as string, organization_id: r.organization_id as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string };
+    return { 
+      id: r.id as string, 
+      organizationId: r.organizationId as string, 
+      organization_id: r.organization_id as string, 
+      email: r.email as string, 
+      firstName: r.firstName as string, 
+      lastName: r.lastName as string, 
+      displayName: r.displayName as string 
+    };
   }
 
   async countUsersByOrg(orgId: string): Promise<number> {
@@ -157,12 +175,13 @@ export class IdentityRepository {
     }
     
     return ((queryResult as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-      id: r.id, 
-      email: r.email, 
-      firstName: r.firstName, 
-      lastName: r.lastName, 
-      displayName: r.displayName,
-      createdAt: r.createdAt
+      id: r.id as string, 
+      organizationId: r.organizationId as string,
+      email: r.email as string, 
+      firstName: r.firstName as string, 
+      lastName: r.lastName as string, 
+      displayName: r.displayName as string,
+      createdAt: r.createdAt as string
     }));
   }
 
@@ -197,12 +216,13 @@ export class IdentityRepository {
     }
     
     return ((queryResult as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-      id: r.id, 
-      email: r.email, 
-      firstName: r.firstName, 
-      lastName: r.lastName, 
-      displayName: r.displayName,
-      createdAt: r.createdAt
+      id: r.id as string, 
+      organizationId: r.organizationId as string,
+      email: r.email as string, 
+      firstName: r.firstName as string, 
+      lastName: r.lastName as string, 
+      displayName: r.displayName as string,
+      createdAt: r.createdAt as string
     }));
   }
 

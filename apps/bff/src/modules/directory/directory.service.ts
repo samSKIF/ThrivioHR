@@ -377,7 +377,7 @@ export class DirectoryService {
             const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
             if (deptCreated) departmentsCreated++;
             if (dept) {
-              const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id);
+              const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id as string);
               if (membershipCreated) membershipsLinked++;
               membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }
@@ -401,9 +401,9 @@ export class DirectoryService {
           const user = await this.identity.findUserByEmailOrg(email, payload.orgId);
           if (!user) {
             // Safety: if planner said update but user disappeared, create now.
-            const firstName = incoming?.givenName as string ?? '';
-            const lastName  = incoming?.familyName as string ?? '';
-            const u = await this.identity.createUser(payload.orgId, email, firstName, lastName);
+            const firstName = incoming?.givenName as string | null ?? null;
+            const lastName  = incoming?.familyName as string | null ?? null;
+            const u = await this.identity.createUser(payload.orgId, email, firstName || '', lastName || '');
             createdUsers++;
             let membershipLinkedFlag = false;
             let locationCreated = false;
@@ -411,7 +411,7 @@ export class DirectoryService {
               const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
               if (deptCreated) departmentsCreated++;
               if (dept) {
-                const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id);
+                const { created: membershipCreated } = await this.identity.ensureMembership(u.id, dept.id as string);
                 if (membershipCreated) membershipsLinked++;
                 membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
               }
@@ -436,7 +436,7 @@ export class DirectoryService {
             const { dept, created: deptCreated } = await this.identity.findOrCreateDepartment(payload.orgId, deptName);
             if (deptCreated) departmentsCreated++;
             if (dept) {
-              const { created: membershipCreated } = await this.identity.ensureMembership(user.id, dept.id);
+              const { created: membershipCreated } = await this.identity.ensureMembership(user.id, dept.id as string);
               if (membershipCreated) membershipsLinked++;
               membershipLinkedFlag = true; // Keep per-row membershipLinked: true as-is (still useful to the UI)
             }

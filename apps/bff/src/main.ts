@@ -26,7 +26,7 @@ export async function bootstrap(): Promise<void> {
 // If executed directly (node dist/apps/bff/main.js), start server
 if (require.main === module) {
   bootstrap().catch((err) => {
-    // eslint-disable-next-line no-console
+     
     console.error('Fatal bootstrap error:', err);
     process.exit(1);
   });

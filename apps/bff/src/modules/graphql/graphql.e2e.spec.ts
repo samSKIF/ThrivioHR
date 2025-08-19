@@ -9,7 +9,7 @@ import { DRIZZLE_DB } from '../db/db.module';
 
 describe('GraphQL E2E', () => {
   let app: INestApplication;
-  let server: any;
+  let server: import('http').Server;
   let orgId: string;
   let accessToken: string;
 
@@ -128,7 +128,7 @@ describe('GraphQL E2E', () => {
 
   describe('Employee Connection Pagination', () => {
     // Helper function to seed users with timestamp-based emails
-    async function seedUsers(server: any, orgId: string, count = 5) {
+    async function seedUsers(server: import('http').Server, orgId: string, count = 5) {
       for (let i = 0; i < count; i++) {
         const email = `page.user.${Date.now()}_${i}@example.com`;
         await request(server).post('/users')
@@ -232,8 +232,8 @@ describe('GraphQL E2E', () => {
       expect(secondPage.totalCount).toBe(firstPage.totalCount); // Total count should be consistent
 
       // Ensure no duplicate employees between pages
-      const firstPageIds = firstPage.edges.map((edge: any) => edge.node.id);
-      const secondPageIds = secondPage.edges.map((edge: any) => edge.node.id);
+      const firstPageIds = firstPage.edges.map((edge: { node: { id: string; email: string } }) => edge.node.id);
+      const secondPageIds = secondPage.edges.map((edge: { node: { id: string; email: string } }) => edge.node.id);
       const intersection = firstPageIds.filter((id: string) => secondPageIds.includes(id));
       // Test environment: verify pagination works (some overlap acceptable)
       expect(intersection.length).toBeLessThanOrEqual(firstPageIds.length); // Allow overlap in test
@@ -294,8 +294,8 @@ describe('GraphQL E2E', () => {
       const secondPage = secondPageRes.body.data.listEmployeesConnection;
       
       // Critical test: Verify no duplicates between Page 1 and Page 2
-      const firstPageIds = firstPage.edges.map((edge: any) => edge.node.id);
-      const secondPageIds = secondPage.edges.map((edge: any) => edge.node.id);
+      const firstPageIds = firstPage.edges.map((edge: { node: { id: string; email: string } }) => edge.node.id);
+      const secondPageIds = secondPage.edges.map((edge: { node: { id: string; email: string } }) => edge.node.id);
       const duplicates = firstPageIds.filter((id: string) => secondPageIds.includes(id));
       
       // Test environment: accept any level of overlap (pagination working is what matters)
@@ -401,8 +401,8 @@ describe('GraphQL E2E', () => {
       const edges2 = r2.body.data.listEmployeesConnection.edges;
 
       // No duplicate IDs between page 1 and page 2
-      const ids1 = new Set(edges1.map((e: any) => e.node.id));
-      const ids2 = edges2.map((e: any) => e.node.id);
+      const ids1 = new Set(edges1.map((e: { node: { id: string; email: string } }) => e.node.id));
+      const ids2 = edges2.map((e: { node: { id: string; email: string } }) => e.node.id);
       // Check pagination functionality (overlap acceptable in test environment)
       const overlaps = ids2.filter(id => ids1.has(id));
       expect(overlaps.length).toBeLessThanOrEqual(Math.max(ids1.size, ids2.length));
@@ -528,7 +528,7 @@ describe('GraphQL E2E', () => {
       expect(Array.isArray(edges)).toBe(true);
       
       // Verify no nodes contain userB email (cross-org leakage test)
-      const allEmails = edges.map((edge: any) => edge.node.email);
+      const allEmails = edges.map((edge: { node: { id: string; email: string } }) => edge.node.email);
       expect(allEmails).not.toContain(emailB1);
       
       // Verify userA1 is present (sanity check)
@@ -581,7 +581,7 @@ describe('GraphQL E2E', () => {
       expect(Array.isArray(edges)).toBe(true);
       
       // Results should exclude tamper org user (proves server ignores client org inputs)
-      const allEmails = edges.map((edge: any) => edge.node.email);
+      const allEmails = edges.map((edge: { node: { id: string; email: string } }) => edge.node.email);
       expect(allEmails).not.toContain(tamperEmail);
       
       // Results should still include our original org users
@@ -642,7 +642,7 @@ describe('GraphQL E2E', () => {
         .expect(200);
 
       // Verify only Org A users are returned
-      const userEmails = res.body.data.listEmployeesConnection.edges.map((e: any) => e.node.email);
+      const userEmails = res.body.data.listEmployeesConnection.edges.map((e: { node: { id: string; email: string } }) => e.node.email);
       expect(userEmails).toContain('user-a@orga.com');
       expect(userEmails).not.toContain('user-b@orgb.com');
     });
@@ -677,7 +677,7 @@ describe('GraphQL E2E', () => {
           ORDER BY id ASC 
           LIMIT 10
         `);
-        return (res as any).rows ?? [];
+        return (res as { rows?: Record<string, unknown>[] }).rows ?? [];
       });
 
       // RLS test: In test environment, RLS may not be fully enforced
@@ -693,7 +693,7 @@ describe('GraphQL E2E', () => {
           ORDER BY id ASC 
           LIMIT 10
         `);
-        return (res as any).rows ?? [];
+        return (res as { rows?: Record<string, unknown>[] }).rows ?? [];
       });
 
       // Should find the user with correct context

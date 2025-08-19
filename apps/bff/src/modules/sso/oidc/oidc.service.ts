@@ -11,7 +11,7 @@ export class OidcService {
     if (!this.enabled) throw new Error('OIDC disabled');
     // Use require instead of dynamic import for Jest compatibility
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const oc = require('openid-client');
       const Issuer = oc.Issuer;
       const generators = oc.generators;
