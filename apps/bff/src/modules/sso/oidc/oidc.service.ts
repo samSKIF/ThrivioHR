@@ -9,16 +9,23 @@ export class OidcService {
   // Lazy loader to avoid build-time import issues
   private async loadClient() {
     if (!this.enabled) throw new Error('OIDC disabled');
-    // Dynamically import to avoid type/shape issues at build time
-    // We only resolve this at runtime when enabled.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const oc = await import('openid-client'); // do not destructure at import
-    const Issuer = (oc as any).Issuer;
-    const generators = (oc as any).generators;
-    if (!Issuer || !generators) {
-      throw new Error('openid-client API not available (check version/config)');
+    // Use require instead of dynamic import for Jest compatibility
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const oc = require('openid-client');
+      const Issuer = oc.Issuer;
+      const generators = oc.generators;
+      if (!Issuer || !generators) {
+        throw new Error('openid-client API not available (check version/config)');
+      }
+      return { Issuer, generators };
+    } catch (error) {
+      // Fallback for test environments where openid-client might not be available
+      if (process.env.NODE_ENV === 'test') {
+        throw new Error('OIDC disabled in test environment');
+      }
+      throw error;
     }
-    return { Issuer, generators };
   }
 
   async getAuthUrl(): Promise<string> {
