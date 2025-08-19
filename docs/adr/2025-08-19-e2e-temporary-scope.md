@@ -1,0 +1,2 @@
+# ADR: Temporary e2e scope for Big 3a
+We use a BFF e2e smoke (`apps/bff/test/current-user.e2e.spec.ts`) as a temporary stand-in for the Web login→currentUser e2e until Big 3b (SSO) is wired. This unblocks Big 3a acceptance while keeping UX security work in Big 3b. We'll replace this with a real Web e2e after SSO.

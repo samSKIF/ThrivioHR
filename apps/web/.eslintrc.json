@@ -1,0 +1,9 @@
+{
+  "extends": "../../.eslintrc.json",
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**"],
+      "rules": { "@typescript-eslint/no-explicit-any": "off" }
+    }
+  ]
+}

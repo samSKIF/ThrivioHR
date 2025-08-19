@@ -1,0 +1,176 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make Big 3a pass its Definition of Done:
+- Web build green (fix ESLint on web)
+- Unauth → login redirect; basic role-aware shell stub
+- `/me` renders GraphQL `currentUser`
+- Add loading/error/404 states
+- Add one unit test (web auth link) and one e2e smoke (temporary BFF e2e until SSO in Big 3b), documented via ADR
+
+TOUCH ONLY
+apps/web/.eslintrc.json
+apps/web/app/(shell)/layout.tsx
+apps/web/app/login/page.tsx
+apps/web/app/me/page.tsx
+apps/web/app/loading.tsx
+apps/web/app/error.tsx
+apps/web/app/not-found.tsx
+apps/web/middleware.ts
+apps/web/lib/apollo/authLink.ts
+apps/web/lib/apollo/authLink.spec.ts
+apps/web/jest.config.ts
+apps/bff/test/current-user.e2e.spec.ts
+package.json
+docs/adr/2025-08-19-e2e-temporary-scope.md
+
+CHANGES
+1) ESLint (web) – allow `any` only in tests
+- If apps/web/.eslintrc.json exists, add an override:
+{
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**"],
+      "rules": { "@typescript-eslint/no-explicit-any": "off" }
+    }
+  ]
+}
+- If the file doesn’t exist, create it with a minimal config including that override.
+
+2) Role-aware shell + unauth redirect (stub)
+Create/replace apps/web/app/(shell)/layout.tsx:
+---
+export default function ShellLayout({ children }: { children: React.ReactNode }) {
+  // Dev-only role stub; replace with real auth after SSO
+  const isAuthed = typeof window !== 'undefined' && localStorage.getItem('dev_token');
+  if (!isAuthed && typeof window !== 'undefined' && location.pathname.startsWith('/admin')) {
+    if (location.pathname !== '/login') location.href = '/login';
+  }
+  return <div>{children}</div>;
+}
+---
+
+Add a minimal apps/web/middleware.ts to gate /admin in dev:
+---
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(req: NextRequest) {
+  const url = new URL(req.url);
+  const token = req.cookies.get('dev_auth')?.value || '';
+  if (url.pathname.startsWith('/admin') && !token) {
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+  return NextResponse.next();
+}
+
+export const config = { matcher: ['/admin/:path*'] };
+---
+
+3) Loading/error/404 pages
+Create apps/web/app/loading.tsx:
+export default function Loading() { return <div>Loading…</div>; }
+
+Create apps/web/app/error.tsx:
+'use client';
+export default function Error({ error }: { error: Error }) {
+  return <div>Something went wrong: {error.message}</div>;
+}
+
+Create apps/web/app/not-found.tsx:
+export default function NotFound() { return <div>Page not found</div>; }
+
+4) Auth link util + unit test
+Create apps/web/lib/apollo/authLink.ts:
+---
+export function buildAuthHeaders(getToken: () => string | null) {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+---
+
+Create apps/web/lib/apollo/authLink.spec.ts:
+---
+import { buildAuthHeaders } from './authLink';
+
+describe('buildAuthHeaders', () => {
+  it('adds Authorization when token exists', () => {
+    const h = buildAuthHeaders(() => 'abc');
+    expect(h.Authorization).toBe('Bearer abc');
+  });
+  it('omits Authorization when no token', () => {
+    const h = buildAuthHeaders(() => null);
+    expect('Authorization' in h).toBe(false);
+  });
+});
+---
+
+Create apps/web/jest.config.ts:
+---
+export default {
+  testEnvironment: 'jsdom',
+  transform: { '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: true }] },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  testMatch: ['**/*.spec.(ts|tsx)'],
+};
+---
+
+5) Temporary e2e smoke (BFF) until Big 3b
+Create apps/bff/test/current-user.e2e.spec.ts:
+---
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+
+describe('currentUser (e2e)', () => {
+  let app: INestApplication;
+  beforeAll(async () => {
+    const modRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = modRef.createNestApplication();
+    await app.init();
+  });
+  afterAll(async () => { await app.close(); });
+
+  it('returns dev user without auth (dev stub)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/graphql')
+      .send({ query: '{ currentUser { id email displayName } }' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.currentUser.email).toContain('@');
+  });
+});
+---
+
+6) Root scripts + ADR
+Update package.json scripts to include:
+"dev": "nx run-many --target=dev --projects=bff,web",
+"build": "nx run-many --target=build --projects=bff,web",
+"test:web": "nx test web",
+"test:bff": "nx test bff"
+
+Create docs/adr/2025-08-19-e2e-temporary-scope.md:
+---
+# ADR: Temporary e2e scope for Big 3a
+We use a BFF e2e smoke (`apps/bff/test/current-user.e2e.spec.ts`) as a temporary stand-in for the Web login→currentUser e2e until Big 3b (SSO) is wired. This unblocks Big 3a acceptance while keeping UX security work in Big 3b. We’ll replace this with a real Web e2e after SSO.
+---
+
+RUN & PRINT
+1) echo "=== LINT+BUILD web/bff ==="
+2) npx nx run-many --target=lint --projects=web,bff --skip-nx-cache || true
+3) npx nx run-many --target=build --projects=web,bff --skip-nx-cache || echo "BUILD_FAIL"
+
+4) echo "=== TESTS ==="
+5) npx nx test web || echo "WEB_TESTS_FAIL"
+6) npx nx test bff || echo "BFF_TESTS_FAIL"
+
+7) echo "=== DEV BOOT + /me probe ==="
+8) (npx nx run bff:dev >/tmp/bff.ok 2>&1 &) && sleep 5
+9) (npx nx run web:dev >/tmp/web.ok 2>&1 &) && sleep 8
+10) curl -sS http://localhost:3000/me | sed -n '1,80p'
+
+STOP.
