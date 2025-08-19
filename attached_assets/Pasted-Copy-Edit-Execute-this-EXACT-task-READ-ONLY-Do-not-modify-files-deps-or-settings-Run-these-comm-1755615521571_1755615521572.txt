@@ -1,0 +1,49 @@
+Copy
+Edit
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+### 0) Clean logs and env echo
+1) rm -f /tmp/bff.ok /tmp/web.ok /tmp/bff.log /tmp/web.log || true
+2) echo "PORTS check baseline:" && (ss -ltnp || true) | sed -n '1,80p'
+
+### 1) Build both apps (DoD: build green)
+3) echo "=== BUILD web+bff ==="
+4) npx nx run-many --target=build --projects=web,bff --skip-nx-cache || echo "BUILD_FAIL"
+
+### 2) Boot BFF and check health + GraphQL (DoD: server boots; GraphQL usable)
+5) echo "=== BOOT BFF (dev) ==="
+6) (npx nx run bff:dev >/tmp/bff.log 2>&1 &) && sleep 6 && echo "Ports after boot:" && (ss -ltnp || true) | sed -n '1,80p'
+7) echo "=== BFF /health ===" && curl -sS -i http://localhost:5000/health | sed -n '1,10p'
+8) echo "=== BFF GraphQL currentUser ===" && curl -sS -X POST -H "content-type: application/json" --data '{"query":"{ currentUser { id email displayName } }"}' http://localhost:5000/graphql
+
+### 3) Boot Web and probe key pages (DoD: UI renders currentUser via GraphQL client)
+9) echo "=== BOOT WEB (dev) ==="
+10) (npx nx run web:dev >/tmp/web.log 2>&1 &) && sleep 8 && echo "Ports after web boot:" && (ss -ltnp || true) | sed -n '1,80p'
+11) echo "=== /me HTML (should include Current User JSON) ===" && curl -sS http://localhost:3000/me | sed -n '1,80p'
+
+### 4) Auth behavior (DoD: unauth redirect to login; role-aware shell for auth)
+12) echo "=== Unauth redirect check ==="
+13) curl -sS -I -L http://localhost:3000/admin | sed -n '1,12p'
+14) echo "=== Check for login page ===" && (curl -sS http://localhost:3000/login | sed -n '1,40p' || true)
+
+### 5) Shell quality: error/loading/404 (DoD: error/empty/loading + 404 page)
+15) echo "=== Look for Next.js loading/error/not-found files ==="
+16) (ls -1 apps/web/app/*/loading.tsx apps/web/app/loading.tsx 2>/dev/null || true)
+17) (ls -1 apps/web/app/*/error.tsx apps/web/app/error.tsx 2>/dev/null || true)
+18) (ls -1 apps/web/app/not-found.tsx apps/web/app/404.tsx 2>/dev/null || true)
+
+### 6) Lighthouse (best-effort; optional if Chrome unavailable)
+19) echo "=== Lighthouse shell score (optional) ==="
+20) (npx -y @lhci/cli@0.13.0 healthcheck >/dev/null 2>&1 && npx -y @lhci/cli@0.13.0 collect --url=http://localhost:3000 --numberOfRuns=1 --quiet || echo "LHCI_UNAVAILABLE")
+
+### 7) Tests (DoD: one e2e smoke + one unit for auth link)
+21) echo "=== TESTS: list targets ===" && npx nx show project web && npx nx show project bff | sed -n '1,200p'
+22) echo "=== Run web tests (if configured) ===" && npx nx test web || echo "WEB_TESTS_MISSING_OR_FAIL"
+23) echo "=== Run bff tests (if configured) ===" && npx nx test bff || echo "BFF_TESTS_MISSING_OR_FAIL"
+
+### 8) Tail logs for clues
+24) echo "=== TAIL LOGS: BFF ===" && tail -n 80 /tmp/bff.log || true
+25) echo "=== TAIL LOGS: WEB ===" && tail -n 80 /tmp/web.log || true
+
+STOP.
