@@ -86,7 +86,7 @@ function MeView() {
           <p><strong>Last Name:</strong> {u.lastName || 'Not set'}</p>
           <p><strong>Display Name:</strong> {u.displayName || 'Not set'}</p>
           <hr />
-          <pre>{JSON.stringify(u, null, 2)}</pre>
+          <pre data-testid="me-json">{JSON.stringify(u, null, 2)}</pre>
         </div>
       ) : (
         <p>No user data available</p>

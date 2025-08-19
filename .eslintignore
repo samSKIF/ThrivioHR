@@ -4,3 +4,8 @@ coverage
 .next
 .next/**
 **/.next/**
+legacy-ui
+legacy-ui/**
+/coverage/
+/.next/
+pgsql

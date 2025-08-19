@@ -12,11 +12,11 @@ describe('currentUser (e2e)', () => {
   });
   afterAll(async () => { await app.close(); });
 
-  it('returns dev user without auth (dev stub)', async () => {
+  it('returns dev user (schema-first, no auth)', async () => {
     const res = await request(app.getHttpServer())
       .post('/graphql')
       .send({ query: '{ currentUser { id email displayName } }' });
     expect(res.status).toBe(200);
-    expect(res.body.data.currentUser.email).toContain('@');
+    expect(res.body?.data?.currentUser?.email).toContain('@');
   });
 });

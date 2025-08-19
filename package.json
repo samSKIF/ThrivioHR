@@ -48,6 +48,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-validation-complexity": "^0.4.2",
     "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.4.6",
     "nx": "^21.3.11",

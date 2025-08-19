@@ -1,0 +1,142 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make Big 3a pass all DoD acceptance checks:
+- Lint fully clean (ignore legacy artifacts)
+- One unit test (web auth link) green
+- One e2e smoke (BFF currentUser) green
+- Verify /me renders currentUser JSON
+
+TOUCH ONLY
+.eslintignore
+apps/web/.eslintrc.json
+apps/bff/jest.config.ts
+apps/bff/test/setup-e2e.ts
+apps/bff/test/current-user.e2e.spec.ts
+apps/web/jest.config.ts
+apps/web/app/me/page.tsx
+
+CHANGES
+1) Root ESLint ignore — stop linting legacy & build outputs
+Append to .eslintignore (create if missing):
+legacy-ui
+legacy-ui/**
+dist
+coverage
+/coverage/
+.next
+.next/**
+/.next/
+
+pgsql
+Copy
+Edit
+
+2) Web ESLint override — allow `any` in tests only (idempotent)
+If `apps/web/.eslintrc.json` exists, ensure it includes this override (merge if needed):
+```json
+{
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**"],
+      "rules": { "@typescript-eslint/no-explicit-any": "off" }
+    }
+  ]
+}
+BFF Jest config for e2e
+Create file: apps/bff/jest.config.ts
+
+ts
+Copy
+Edit
+export default {
+  testEnvironment: 'node',
+  transform: { '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: true }] },
+  moduleFileExtensions: ['ts', 'js'],
+  testMatch: ['**/*.spec.ts'],
+  setupFiles: ['<rootDir>/test/setup-e2e.ts'],
+};
+BFF e2e setup — force dev-friendly env
+Create file: apps/bff/test/setup-e2e.ts
+
+ts
+Copy
+Edit
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+process.env.OIDC_ENABLED = 'false';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+BFF e2e smoke — stabilize against schema-first
+Replace content of apps/bff/test/current-user.e2e.spec.ts (preserve filename):
+
+ts
+Copy
+Edit
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+
+describe('currentUser (e2e)', () => {
+  let app: INestApplication;
+  beforeAll(async () => {
+    const modRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = modRef.createNestApplication();
+    await app.init();
+  });
+  afterAll(async () => { await app.close(); });
+
+  it('returns dev user (schema-first, no auth)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/graphql')
+      .send({ query: '{ currentUser { id email displayName } }' });
+    expect(res.status).toBe(200);
+    expect(res.body?.data?.currentUser?.email).toContain('@');
+  });
+});
+Web Jest config (idempotent sanity)
+Ensure apps/web/jest.config.ts contains:
+
+ts
+Copy
+Edit
+export default {
+  testEnvironment: 'jsdom',
+  transform: { '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: true }] },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  testMatch: ['**/*.spec.(ts|tsx)'],
+};
+/me page — ensure it visibly renders JSON (idempotent tweak)
+Confirm apps/web/app/me/page.tsx prints the fetched object (keep your Apollo code). If needed, ensure:
+
+tsx
+Copy
+Edit
+<pre data-testid="me-json">{JSON.stringify(u, null, 2)}</pre>
+RUN & PRINT
+
+echo "=== LINT (root+web) ==="
+
+npx nx run-many --target=lint --projects=web,bff --skip-nx-cache || echo "LINT_FAIL"
+
+echo "=== BUILD (web+bff) ==="
+
+npx nx run-many --target=build --projects=web,bff --skip-nx-cache || echo "BUILD_FAIL"
+
+echo "=== TESTS ==="
+
+npx nx test web || echo "WEB_TESTS_FAIL"
+
+npx nx test bff || echo "BFF_TESTS_FAIL"
+
+echo "=== DEV BOOT & /me probe ==="
+
+(npx nx run bff:dev >/tmp/bff.ok 2>&1 &) && sleep 5
+
+(npx nx run web:dev >/tmp/web.ok 2>&1 &) && sleep 8
+
+curl -sS http://localhost:3000/me | sed -n '1,80p' | sed -n '1,40p'
+
+curl -sS -X POST -H "content-type: application/json" --data '{"query":"{ currentUser { id email displayName } }"}' http://localhost:5000/graphql
+
+STOP.
