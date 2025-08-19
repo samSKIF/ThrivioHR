@@ -30,8 +30,8 @@ export default function TestAuthPage() {
 
       const { access_token } = await loginRes.json();
       
-      // Store token
-      localStorage.setItem('token', access_token);
+      // Store token (use same key as login page)
+      localStorage.setItem('accessToken', access_token);
       setSuccess('Login successful! Token stored.');
       
       // Redirect to /me page after successful login
@@ -67,7 +67,7 @@ export default function TestAuthPage() {
   };
 
   const handleTestCurrent = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       setError('No token found. Please login first.');
       return;
