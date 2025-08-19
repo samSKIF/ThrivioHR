@@ -1,24 +1,39 @@
 'use client';
-import { gql, useQuery } from '@apollo/client';
 
-const ME = gql`query { currentUser { id email displayName } }`;
+import { ApolloClient, InMemoryCache, ApolloProvider, gql, useQuery } from '@apollo/client';
 
-export default function MePage() {
-  const { data, loading, error } = useQuery(ME, { fetchPolicy: 'no-cache' });
+const client = new ApolloClient({
+  uri: process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000/graphql',
+  cache: new InMemoryCache(),
+});
 
+const QUERY = gql`
+  query Me {
+    currentUser {
+      id
+      email
+      displayName
+    }
+  }
+`;
+
+function MeView() {
+  const { data, loading, error } = useQuery(QUERY);
+  if (loading) return <div>Loading…</div>;
+  if (error) return <div>Error: {String(error)}</div>;
+  const u = data?.currentUser;
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Me</h1>
-      {loading && <p>Loading…</p>}
-      {error && (
-        <>
-          <p>Error: {error.message}</p>
-          <p>(Tip: log in at /login)</p>
-        </>
-      )}
-      {data?.currentUser && (
-        <pre>{JSON.stringify(data.currentUser, null, 2)}</pre>
-      )}
-    </main>
+    <div style={{ padding: 24 }}>
+      <h1>Current User</h1>
+      <pre>{JSON.stringify(u, null, 2)}</pre>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ApolloProvider client={client}>
+      <MeView />
+    </ApolloProvider>
   );
 }

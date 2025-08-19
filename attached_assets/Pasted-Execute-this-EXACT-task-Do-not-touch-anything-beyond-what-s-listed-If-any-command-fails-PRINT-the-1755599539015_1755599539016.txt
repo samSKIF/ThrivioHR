@@ -1,0 +1,140 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Expose a minimal GraphQL `currentUser` in the BFF and add a Web `/me` page that queries and renders it (Apollo client, dev-only).
+
+TOUCH ONLY
+apps/bff/src/app.module.ts
+apps/bff/src/main.ts
+apps/bff/src/graphql/user.type.ts
+apps/bff/src/graphql/current-user.resolver.ts
+apps/web/app/me/page.tsx
+
+CHANGES
+1) Create GraphQL types & resolver (BFF)
+
+Create file: apps/bff/src/graphql/user.type.ts
+---
+import { Field, ObjectType, ID } from '@nestjs/graphql';
+
+@ObjectType()
+export class User {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  email!: string;
+
+  @Field()
+  displayName!: string;
+}
+---
+
+Create file: apps/bff/src/graphql/current-user.resolver.ts
+---
+import { Query, Resolver } from '@nestjs/graphql';
+import { User } from './user.type';
+
+@Resolver(() => User)
+export class CurrentUserResolver {
+  // Dev stub: returns a deterministic user (replace with real auth later)
+  @Query(() => User, { name: 'currentUser' })
+  currentUser(): User {
+    return {
+      id: 'dev-user-1',
+      email: 'dev.user@example.com',
+      displayName: 'Dev User',
+    };
+  }
+}
+---
+
+Edit apps/bff/src/app.module.ts to register GraphQL + resolver.
+Insert the following imports at top (preserving existing ones):
+---
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CurrentUserResolver } from './graphql/current-user.resolver';
+---
+
+In the @Module decorator:
+- Add GraphQLModule.forRoot<ApolloDriverConfig>({
+    driver: ApolloDriver,
+    autoSchemaFile: true,
+    playground: true,
+  }) to `imports` (keep HealthModule and anything else already there).
+- Add `providers: [CurrentUserResolver]` (merge with existing providers if present).
+
+2) Ensure CORS for Web → BFF and confirm port (BFF)
+
+Edit apps/bff/src/main.ts (minimal safe changes):
+- Call `app.enableCors({ origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], credentials: false });`
+- Ensure the app still listens on process.env.PORT || 5000.
+
+Example diff-ish:
+---
+const app = await NestFactory.create(AppModule);
+app.enableCors({ origin: ['http://localhost:3000', 'http://127.0.0.1:3000'] });
+await app.listen(process.env.PORT || 5000);
+---
+
+3) Add Web `/me` page that queries currentUser via Apollo (dev-only, local client)
+
+Create file: apps/web/app/me/page.tsx
+---
+'use client';
+
+import { ApolloClient, InMemoryCache, ApolloProvider, gql, useQuery } from '@apollo/client';
+
+const client = new ApolloClient({
+  uri: process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000/graphql',
+  cache: new InMemoryCache(),
+});
+
+const QUERY = gql`
+  query Me {
+    currentUser {
+      id
+      email
+      displayName
+    }
+  }
+`;
+
+function MeView() {
+  const { data, loading, error } = useQuery(QUERY);
+  if (loading) return <div>Loading…</div>;
+  if (error) return <div>Error: {String(error)}</div>;
+  const u = data?.currentUser;
+  return (
+    <div style={{ padding: 24 }}>
+      <h1>Current User</h1>
+      <pre>{JSON.stringify(u, null, 2)}</pre>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ApolloProvider client={client}>
+      <MeView />
+    </ApolloProvider>
+  );
+}
+---
+
+RUN & PRINT
+1) echo "=== BUILD: bff + web ==="
+2) npx nx run-many --target=build --projects=bff,web --skip-nx-cache || echo "Build issues remain"
+
+3) echo "=== DEV: start BFF and probe GraphQL ==="
+4) (npx nx run bff:dev >/tmp/bff.log 2>&1 &) && sleep 6 && curl -sS -X POST -H "content-type: application/json" --data '{"query":"{ currentUser { id email displayName } }"}' http://localhost:5000/graphql
+
+5) echo "=== DEV: start Web and fetch /me (HTML only) ==="
+6) (npx nx run web:dev >/tmp/web.log 2>&1 &) && sleep 8 && (curl -si http://localhost:3000/me | head -n 20 || true)
+
+7) echo "=== LAST LOGS (BFF) ===" && (tail -n 80 /tmp/bff.log || true)
+8) echo "=== LAST LOGS (WEB) ===" && (tail -n 80 /tmp/web.log || true)
+
+STOP.
