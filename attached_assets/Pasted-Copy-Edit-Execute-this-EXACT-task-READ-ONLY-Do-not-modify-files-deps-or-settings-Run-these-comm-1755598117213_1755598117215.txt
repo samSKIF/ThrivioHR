@@ -1,0 +1,41 @@
+Copy
+Edit
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+### 1) Confirm targets per project
+1) echo "=== NX PROJECT TARGETS ==="
+2) npx nx show project bff
+3) npx nx show project web
+4) npx nx show project identity
+5) npx nx show project ledger
+6) npx nx show project recognition
+
+### 2) Build & Lint (no cache, so we see real status)
+7) echo "=== BUILD: all main projects ==="
+8) npx nx run-many --target=build --projects=bff,web,identity,ledger,recognition --skip-nx-cache || echo "One or more builds failed"
+9) echo "=== LINT: all main projects ==="
+10) npx nx run-many --target=lint --projects=bff,web,identity,ledger,recognition --skip-nx-cache || echo "One or more lints failed"
+
+### 3) Tests (only where defined)
+11) echo "=== TEST: identity (if configured) ==="
+12) npx nx test identity || echo "identity tests not configured or failed"
+13) echo "=== TEST: ledger (if configured) ==="
+14) npx nx test ledger || echo "ledger tests not configured or failed"
+15) echo "=== TEST: recognition (if configured) ==="
+16) npx nx test recognition || echo "recognition tests not configured or failed"
+
+### 4) Quick boot & healthchecks (kill afterwards)
+17) echo "=== DEV BOOT: try to start BFF and ping health ==="
+18) (npx nx run bff:dev >/tmp/bff.log 2>&1 &) && sleep 5 && (ss -ltnp | sed -n '1,120p' || true) && (curl -si http://localhost:4000/health || curl -si http://127.0.0.1:4000/health || true)
+19) echo "=== DEV BOOT: try to start Web and ping ==="
+20) (npx nx run web:dev >/tmp/web.log 2>&1 &) && sleep 7 && (ss -ltnp | sed -n '1,120p' || true) && (curl -si http://localhost:3000 || curl -si http://127.0.0.1:3000 || true)
+21) echo "=== Tail last lines of dev logs (non-fatal) ==="
+22) (tail -n 80 /tmp/bff.log || true) && echo "---" && (tail -n 80 /tmp/web.log || true)
+
+### 5) DB wiring sanity (readonly checks)
+23) echo "=== DRIZZLE/DB CONFIG HINTS ==="
+24) (ls -1 **/drizzle.config.* 2>/dev/null || true)
+25) (grep -R --line-number -E "DATABASE_URL|drizzle-orm" -- */* 2>/dev/null | sed -n '1,120p' || true)
+
+STOP.
