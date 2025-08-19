@@ -29,7 +29,7 @@ export class IdentityRepository {
   }
 
   async getUsersByOrg(orgId: string, limit = 20) {
-    const res = await this.db.execute(sql`SELECT id, email, first_name AS "givenName", last_name AS "familyName" FROM users WHERE organization_id = ${orgId} LIMIT ${limit}`);
+    const res = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name AS "givenName", last_name AS "familyName" FROM users WHERE organization_id = ${orgId} LIMIT ${limit}`);
     return (res as { rows?: Record<string, unknown>[] }).rows ?? [];
   }
 
@@ -92,26 +92,26 @@ export class IdentityRepository {
   async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
-    return (ins as { rows?: UserPublic[] }).rows?.[0] as UserPublic;
+    return (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 
   async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
-    return (upd as { rows?: UserPublic[] }).rows?.[0] as UserPublic;
+    return (upd as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 
   async listUsersByOrg(orgId: string, limit = 20, cursor: string | null = null) {
     // raw SQL to avoid schema coupling; pagination by id (lexicographic)
     if (cursor) {
-      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
+      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-        id: r.id as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
+        id: r.id as string, organizationId: r.organizationId as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
       }));
     } else {
-      const rows = await this.db.execute(sql`SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
+      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
-        id: r.id as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
+        id: r.id as string, organizationId: r.organizationId as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string,
       }));
     }
   }
@@ -120,7 +120,7 @@ export class IdentityRepository {
     const rows = await this.db.execute(sql`SELECT id, organization_id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE id = ${id} LIMIT 1`);
     const r = ((rows as { rows?: Record<string, unknown>[] }).rows ?? [])[0];
     if (!r) return null;
-    return { id: r.id as string, organization_id: r.organization_id as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string };
+    return { id: r.id as string, organizationId: r.organizationId as string, organization_id: r.organization_id as string, email: r.email as string, firstName: r.firstName as string, lastName: r.lastName as string, displayName: r.displayName as string };
   }
 
   async countUsersByOrg(orgId: string): Promise<number> {
@@ -138,7 +138,7 @@ export class IdentityRepository {
     if (cursor) {
       // Use cursor-based pagination with (created_at, id) > (cursor_created_at, cursor_id)
       queryResult = await this.db.execute(sql`
-        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
         FROM users 
         WHERE organization_id = ${orgId} 
           AND (created_at, id) > (${cursor.createdAt}, ${cursor.id})
@@ -148,7 +148,7 @@ export class IdentityRepository {
     } else {
       // No cursor, start from beginning
       queryResult = await this.db.execute(sql`
-        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
         FROM users 
         WHERE organization_id = ${orgId}
         ORDER BY created_at ASC, id ASC 
@@ -156,7 +156,7 @@ export class IdentityRepository {
       `);
     }
     
-    return ((queryResult as Record<string, unknown>).rows ?? []).map((r: Record<string, unknown>) => ({
+    return ((queryResult as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
       id: r.id, 
       email: r.email, 
       firstName: r.firstName, 
@@ -178,7 +178,7 @@ export class IdentityRepository {
     if (cursor) {
       // Use cursor-based pagination with (created_at, id) > (cursor_created_at, cursor_id)
       queryResult = await db.execute(sql`
-        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
         FROM users 
         WHERE organization_id = ${orgId} 
           AND (created_at, id) > (${cursor.createdAt}, ${cursor.id})
@@ -188,7 +188,7 @@ export class IdentityRepository {
     } else {
       // No cursor, start from beginning
       queryResult = await db.execute(sql`
-        SELECT id, email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
+        SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", created_at as "createdAt"
         FROM users 
         WHERE organization_id = ${orgId}
         ORDER BY created_at ASC, id ASC 
@@ -196,7 +196,7 @@ export class IdentityRepository {
       `);
     }
     
-    return ((queryResult as Record<string, unknown>).rows ?? []).map((r: Record<string, unknown>) => ({
+    return ((queryResult as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
       id: r.id, 
       email: r.email, 
       firstName: r.firstName, 
@@ -208,6 +208,6 @@ export class IdentityRepository {
 
   async countUsersByOrgWithDb(db: NodePgDatabase<Record<string, unknown>>, orgId: string): Promise<number> {
     const res = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE organization_id = ${orgId}`);
-    return parseInt((res as Record<string, unknown>).rows?.[0]?.count ?? '0', 10);
+    return parseInt((res as { rows?: Record<string, unknown>[] }).rows?.[0]?.count as string ?? '0', 10);
   }
 }
