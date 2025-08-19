@@ -1,11 +1,9 @@
-import { Query, Resolver } from '@nestjs/graphql';
-import { User } from './user.type';
+import { Resolver, Query } from '@nestjs/graphql';
 
-@Resolver(() => User)
+@Resolver('CurrentUser')
 export class CurrentUserResolver {
-  // Dev stub: returns a deterministic user (replace with real auth later)
-  @Query(returns => User)
-  currentUser(): User {
+  @Query('currentUser')
+  currentUser() {
     return {
       id: 'dev-user-1',
       email: 'dev.user@example.com',

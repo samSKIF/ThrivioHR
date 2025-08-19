@@ -1,0 +1,88 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Resolve GraphQL module conflict by using only BffGraphqlModule, and expose schema-first `currentUser` with a small SDL extension wired to the existing resolver.
+
+TOUCH ONLY
+apps/bff/src/app.module.ts
+apps/bff/src/graphql/graphql.module.ts
+apps/bff/src/graphql/current-user.resolver.ts
+
+CHANGES
+1) apps/bff/src/app.module.ts  — remove duplicate GraphQL boot + provider
+- Delete the `GraphQLModule.forRoot<ApolloDriverConfig>({...})` entry from `imports`.
+- Remove `providers: [CurrentUserResolver]` from the @Module metadata (BffGraphqlModule will provide it).
+- Keep all other imports (HealthModule, IdentityModule, AuthModule, DirectoryModule, BffGraphqlModule, OidcModule).
+
+Final @Module block should look like:
+@Module({
+  imports: [
+    HealthModule,
+    IdentityModule,
+    AuthModule,
+    DirectoryModule,
+    BffGraphqlModule,
+    OidcModule
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}
+
+2) apps/bff/src/graphql/graphql.module.ts — extend SDL and register resolver here
+- Import the resolver at the top:
+  import { CurrentUserResolver } from './current-user.resolver';
+
+- Extend the `typeDefs` with a tiny SDL string for dev:
+  Replace the existing `typeDefs: loadContractSDL(),` line with:
+
+// Combine contract SDL with a tiny dev-only extension for currentUser
+const sdl = loadContractSDL() as any;
+const devSDL = /* GraphQL */ type CurrentUser { id: ID! email: String! displayName: String! } extend type Query { currentUser: CurrentUser! } ;
+
+kotlin
+Copy
+Edit
+
+Then set:
+typeDefs: ([] as any[]).concat(sdl, devSDL),
+
+- Add the resolver to providers list:
+providers: [IdentityResolver, DirectoryResolver, CurrentUserResolver],
+
+3) apps/bff/src/graphql/current-user.resolver.ts — align to schema-first
+- Ensure it uses schema-first signatures (no TS class types), like:
+
+```ts
+import { Resolver, Query } from '@nestjs/graphql';
+
+@Resolver('CurrentUser')
+export class CurrentUserResolver {
+@Query('currentUser')
+currentUser() {
+  return {
+    id: 'dev-user-1',
+    email: 'dev.user@example.com',
+    displayName: 'Dev User',
+  };
+}
+}
+RUN & PRINT
+
+echo "=== BUILD bff ==="
+
+npx nx run bff:build --skip-nx-cache || echo "bff build failed"
+
+echo "=== DEV: start BFF and probe GraphQL ==="
+
+(npx nx run bff:dev >/tmp/bff.gql.log 2>&1 &) && sleep 6 && curl -sS -X POST -H "content-type: application/json" --data '{"query":"{ currentUser { id email displayName } }"}' http://localhost:5000/graphql
+
+echo "=== LAST LOGS (BFF) ==="
+
+(tail -n 80 /tmp/bff.gql.log || true)
+
+STOP.
+
+markdown
+Copy
+Edit
