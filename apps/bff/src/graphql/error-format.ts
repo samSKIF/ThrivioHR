@@ -15,10 +15,27 @@ export function formatGraphQLError(
   let code = 'INTERNAL_SERVER_ERROR';
   let message = error.message;
   
-  if (originalError || exception) {
+  // Check for common error patterns first
+  if (message?.includes('No authorization header') || 
+      message?.includes('Invalid token') ||
+      message?.includes('Unauthorized')) {
+    code = 'UNAUTHENTICATED';
+  } else if (originalError || exception) {
     const errorInstance = originalError || exception;
     
-    if (errorInstance.name === 'UnauthorizedException' || 
+    // Check status codes first
+    if (errorInstance.statusCode === 401 || errorInstance.error === 'Unauthorized') {
+      code = 'UNAUTHENTICATED';
+    } else if (errorInstance.statusCode === 403 || errorInstance.error === 'Forbidden') {
+      code = 'FORBIDDEN';
+    } else if (errorInstance.statusCode === 400 || errorInstance.error === 'Bad Request') {
+      code = 'BAD_REQUEST';
+      // For specific user input validation errors from HTTP layer that match new patterns
+      if (errorInstance.message?.includes('Invalid cursor') || 
+          errorInstance.message?.includes('first must be between')) {
+        code = 'BAD_USER_INPUT';
+      }
+    } else if (errorInstance.name === 'UnauthorizedException' || 
         errorInstance.constructor?.name === 'UnauthorizedException') {
       code = 'UNAUTHENTICATED';
     } else if (errorInstance.name === 'ForbiddenException' || 
@@ -26,15 +43,10 @@ export function formatGraphQLError(
       code = 'FORBIDDEN';
     } else if (errorInstance.name === 'BadRequestException' || 
                errorInstance.constructor?.name === 'BadRequestException') {
+      code = 'BAD_REQUEST';
       // Only map new specific user input validation errors to BAD_USER_INPUT
       // Preserve existing BAD_REQUEST behavior for other validation errors
       if (errorInstance.message?.includes('first must be between')) {
-        code = 'BAD_USER_INPUT';
-      }
-    } else if (errorInstance.error === 'Bad Request' && errorInstance.statusCode === 400) {
-      // For specific user input validation errors from HTTP layer that match new patterns
-      if (errorInstance.message?.includes('Invalid cursor') || 
-          errorInstance.message?.includes('first must be between')) {
         code = 'BAD_USER_INPUT';
       }
     }

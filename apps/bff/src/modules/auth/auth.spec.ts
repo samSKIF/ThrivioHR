@@ -1,12 +1,16 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { createTestApp } from '../../main';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../../app.module';
 
 describe('Auth module (smoke)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    app = await createTestApp();
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = moduleRef.createNestApplication();
     await app.init();
   });
 
