@@ -8,8 +8,8 @@ export function formatGraphQLError(
   const isProd = env === 'production';
   
   // Extract the original exception from extensions
-  const originalError = error.extensions?.originalError as any;
-  const exception = error.extensions?.exception as any;
+  const originalError = error.extensions?.originalError as Record<string, unknown>;
+  const exception = error.extensions?.exception as Record<string, unknown>;
   
   // Determine error code based on exception type
   let code = 'INTERNAL_SERVER_ERROR';
@@ -31,8 +31,10 @@ export function formatGraphQLError(
     } else if (errorInstance.statusCode === 400 || errorInstance.error === 'Bad Request') {
       code = 'BAD_REQUEST';
       // For specific user input validation errors from HTTP layer that match new patterns
-      if (errorInstance.message?.includes('Invalid cursor') || 
-          errorInstance.message?.includes('first must be between')) {
+      const instanceMessage = errorInstance.message;
+      if (typeof instanceMessage === 'string' && (
+          instanceMessage.includes('Invalid cursor') || 
+          instanceMessage.includes('first must be between'))) {
         code = 'BAD_USER_INPUT';
       }
     } else if (errorInstance.name === 'UnauthorizedException' || 
@@ -46,7 +48,8 @@ export function formatGraphQLError(
       code = 'BAD_REQUEST';
       // Only map new specific user input validation errors to BAD_USER_INPUT
       // Preserve existing BAD_REQUEST behavior for other validation errors
-      if (errorInstance.message?.includes('first must be between')) {
+      const badReqMessage = errorInstance.message;
+      if (typeof badReqMessage === 'string' && badReqMessage.includes('first must be between')) {
         code = 'BAD_USER_INPUT';
       }
     }
@@ -58,14 +61,14 @@ export function formatGraphQLError(
   }
   
   // Build extensions object - ensure our code takes precedence over original
-  const extensions: Record<string, any> = {
+  const extensions: Record<string, unknown> = {
     ...error.extensions,
     code  // Our code overrides the original
   };
   
   // In non-production, preserve more debugging info
   if (!isProd) {
-    const exceptionData = error.extensions?.exception as any;
+    const exceptionData = error.extensions?.exception as Record<string, unknown>;
     if (exceptionData?.stacktrace) {
       extensions.stacktrace = exceptionData.stacktrace;
     }

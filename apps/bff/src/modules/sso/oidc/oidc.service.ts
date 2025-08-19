@@ -11,7 +11,7 @@ export class OidcService {
     if (!this.enabled) throw new Error('OIDC disabled');
     // Use require instead of dynamic import for Jest compatibility
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
       const oc = require('openid-client');
       const Issuer = oc.Issuer;
       const generators = oc.generators;
@@ -51,7 +51,7 @@ export class OidcService {
     });
   }
 
-  async buildAuthUrl(returnTo: string): Promise<{ url: string; state: string }> {
+  async buildAuthUrl(_returnTo: string): Promise<{ url: string; state: string }> {
     if (!this.enabled) {
       this.logger.warn('OIDC disabled; returning placeholder auth URL');
       return { url: '/auth/disabled', state: 'disabled' };
@@ -74,7 +74,7 @@ export class OidcService {
     return { url, state };
   }
 
-  async handleCallback(params: { state: string; code: string }): Promise<{
+  async handleCallback(_params: { state: string; code: string }): Promise<{
     email: string;
     firstName?: string;
     lastName?: string;

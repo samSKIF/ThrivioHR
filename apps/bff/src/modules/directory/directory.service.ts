@@ -17,7 +17,7 @@ type ValidationResult = {
   requiredHeaders: string[];
   missingHeaders: string[];
   inferredHeaders: string[];
-  preview: any[]; // first 3 normalized rows
+  preview: NormalizedRow[]; // first 3 normalized rows
   sampleErrors: { row: number; message: string }[];
 };
 
@@ -262,8 +262,9 @@ export class DirectoryService {
     // Per-record manager resolution and issues; merge diag.perRecordIssues into each record's reason[]
     const outWithManagers: CommitRecord[] = [];
     for (const rec of out) {
-      const email = (rec.incoming?.email ?? '').trim().toLowerCase();
-      const mEmail = rec.incoming?.managerEmail ?? null;
+      const incomingData = rec.incoming as Record<string, unknown> | undefined;
+      const email = (incomingData?.email as string ?? '').trim().toLowerCase();
+      const mEmail = incomingData?.managerEmail as string | null ?? null;
       const issues = diag.perRecordIssues.get(email) || [];
 
       if (mEmail) {
@@ -325,11 +326,12 @@ export class DirectoryService {
   }
 
   async applyImportSession(token: string, orgIdFromJwt: string): Promise<ApplyReport> {
-    let payload: any;
+    let payload: Record<string, unknown>;
     try {
       payload = verifySession(token, getJwtSecret());
-    } catch (e: any) {
-      throw new BadRequestException(`Invalid or expired session token: ${e?.message || 'unknown'}`);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'unknown';
+      throw new BadRequestException(`Invalid or expired session token: ${errorMessage}`);
     }
     if (!payload?.orgId || payload.orgId !== orgIdFromJwt) {
       throw new BadRequestException('Session/org mismatch.');
@@ -338,15 +340,16 @@ export class DirectoryService {
     const rows: ApplyResultRow[] = [];
     let createdUsers = 0, updatedUsers = 0, skipped = 0, errors = 0, departmentsCreated = 0, membershipsLinked = 0, locationsCreated = 0;
 
-    for (const rec of payload.records as any[]) {
-      const email = rec?.incoming?.email ?? null;
-      const deptName = rec?.incoming?.department ?? null;
-      const locName = rec?.incoming?.location ?? null;
+    for (const rec of (payload.records as Record<string, unknown>[])) {
+      const incoming = rec?.incoming as Record<string, unknown> | undefined;
+      const email = incoming?.email as string | null ?? null;
+      const deptName = incoming?.department as string | null ?? null;
+      const locName = incoming?.location as string | null ?? null;
 
       const ignoredFields: string[] = [];
       // These fields are not in the users schema yet; mark as ignored:
       ['jobTitle','employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
-        .forEach(f => { if (rec?.incoming?.[f] != null) ignoredFields.push(f); });
+        .forEach(f => { if (incoming?.[f] != null) ignoredFields.push(f); });
 
       try {
         if (!email || !rec?.action) {
@@ -357,8 +360,8 @@ export class DirectoryService {
         // Determine create/update from planner's decision.
         if (rec.action === 'create') {
           const user = await this.identity.findUserByEmailOrg(email, payload.orgId);
-          const firstName = rec.incoming?.givenName ?? null;
-          const lastName  = rec.incoming?.familyName ?? null;
+          const firstName = incoming?.givenName as string | null ?? null;
+          const lastName  = incoming?.familyName as string | null ?? null;
 
           const u = user ?? await this.identity.createUser(payload.orgId, email, firstName || '', lastName || '');
           if (!user) createdUsers++; else updatedUsers++; // if user existed, treat as update via name sync below
@@ -398,8 +401,8 @@ export class DirectoryService {
           const user = await this.identity.findUserByEmailOrg(email, payload.orgId);
           if (!user) {
             // Safety: if planner said update but user disappeared, create now.
-            const firstName = rec.incoming?.givenName ?? '';
-            const lastName  = rec.incoming?.familyName ?? '';
+            const firstName = incoming?.givenName as string ?? '';
+            const lastName  = incoming?.familyName as string ?? '';
             const u = await this.identity.createUser(payload.orgId, email, firstName, lastName);
             createdUsers++;
             let membershipLinkedFlag = false;
@@ -422,8 +425,8 @@ export class DirectoryService {
             continue;
           }
 
-          const firstName = rec.incoming?.givenName ?? null;
-          const lastName  = rec.incoming?.familyName ?? null;
+          const firstName = incoming?.givenName as string | null ?? null;
+          const lastName  = incoming?.familyName as string | null ?? null;
           await this.identity.updateUserNames(user.id, firstName, lastName);
           updatedUsers++;
 
@@ -448,9 +451,10 @@ export class DirectoryService {
         } else {
           skipped++; rows.push({ email, action: 'skipped', department: deptName, location: locName, ignoredFields });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         errors++;
-        rows.push({ email, action: 'error', department: deptName, location: locName, ignoredFields, message: e?.message || 'unknown error' });
+        const errorMessage = e instanceof Error ? e.message : 'unknown error';
+        rows.push({ email, action: 'error', department: deptName, location: locName, ignoredFields, message: errorMessage });
       }
     }
 

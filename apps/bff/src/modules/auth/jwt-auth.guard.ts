@@ -14,7 +14,7 @@ export class JwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const gqlCtx = GqlExecutionContext.create(context);
     const httpReq = context.switchToHttp().getRequest();
-    const gqlReq = (gqlCtx.getContext?.() as any)?.req;
+    const gqlReq = (gqlCtx.getContext?.() as { req?: unknown })?.req;
     const req = httpReq ?? gqlReq;
     const authorization = req?.headers?.authorization;
 

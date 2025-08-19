@@ -12876,6 +12876,11 @@
       },
       {
         "source": "bff",
+        "target": "contracts",
+        "type": "static"
+      },
+      {
+        "source": "bff",
         "target": "npm:openid-client",
         "type": "dynamic"
       },
@@ -28543,5 +28548,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755617640003
+  "computedAt": 1755630268693
 }

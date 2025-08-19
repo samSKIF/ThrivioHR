@@ -1,1 +1,0 @@
-export type OidcState = { nonce: string; codeVerifier: string; returnTo?: string };
