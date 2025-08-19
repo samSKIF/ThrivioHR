@@ -2635,6 +2635,15 @@
         "hash": "sha512-frjUJOPJNEZVqiFynhDs/+rEor3ySAj4pITTa/szAWRfdPhAxIJzOtZnn+eCLubr4lymlK/q71azFwTFyeVShg=="
       }
     },
+    "npm:@nestjs/jwt": {
+      "type": "npm",
+      "name": "npm:@nestjs/jwt",
+      "data": {
+        "version": "11.0.0",
+        "packageName": "@nestjs/jwt",
+        "hash": "sha512-v7YRsW3Xi8HNTsO+jeHSEEqelX37TVWgwt+BcxtkG/OfXJEOs6GZdbdza200d6KqId1pJQZ6UPj1F0M6E+mxaA=="
+      }
+    },
     "npm:@nestjs/mapped-types": {
       "type": "npm",
       "name": "npm:@nestjs/mapped-types",
@@ -3515,6 +3524,15 @@
         "version": "9.0.10",
         "packageName": "@types/jsonwebtoken",
         "hash": "sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA=="
+      }
+    },
+    "npm:@types/jsonwebtoken@9.0.7": {
+      "type": "npm",
+      "name": "npm:@types/jsonwebtoken@9.0.7",
+      "data": {
+        "version": "9.0.7",
+        "packageName": "@types/jsonwebtoken",
+        "hash": "sha512-ugo316mmTYBl2g81zDFnZ7cfxlut3o+/EQdaP7J8QN2kY6lJ22hmQYCK5EHcJHbrW+dkCGSCPgbG8JtYj6qSrg=="
       }
     },
     "npm:@types/long": {
@@ -12780,83 +12798,25 @@
     }
   },
   "dependencies": {
-    "recognition": [
-      {
-        "source": "recognition",
-        "target": "npm:@nestjs/common",
-        "type": "static"
-      },
-      {
-        "source": "recognition",
-        "target": "npm:@nestjs/core",
-        "type": "static"
-      }
-    ],
-    "contracts": [
-      {
-        "source": "contracts",
-        "target": "npm:zod",
-        "type": "static"
-      }
-    ],
+    "recognition": [],
+    "contracts": [],
     "identity": [
       {
         "source": "identity",
-        "target": "npm:@nestjs/common",
+        "target": "npm:drizzle-orm",
         "type": "static"
       },
       {
         "source": "identity",
         "target": "npm:pg",
         "type": "static"
-      },
-      {
-        "source": "identity",
-        "target": "npm:drizzle-orm",
-        "type": "static"
-      },
-      {
-        "source": "identity",
-        "target": "npm:@nestjs/core",
-        "type": "static"
-      },
-      {
-        "source": "identity",
-        "target": "npm:@jest/globals",
-        "type": "static"
       }
     ],
-    "ledger": [
-      {
-        "source": "ledger",
-        "target": "npm:@nestjs/common",
-        "type": "static"
-      },
-      {
-        "source": "ledger",
-        "target": "npm:@nestjs/core",
-        "type": "static"
-      }
-    ],
+    "ledger": [],
     "bff": [
       {
         "source": "bff",
         "target": "npm:@nestjs/common",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:express",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:drizzle-orm",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:graphql",
         "type": "static"
       },
       {
@@ -12871,12 +12831,7 @@
       },
       {
         "source": "bff",
-        "target": "npm:graphql-depth-limit",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:graphql-validation-complexity",
+        "target": "npm:express",
         "type": "static"
       },
       {
@@ -12891,32 +12846,17 @@
       },
       {
         "source": "bff",
+        "target": "npm:drizzle-orm",
+        "type": "static"
+      },
+      {
+        "source": "bff",
         "target": "npm:jsonwebtoken",
         "type": "static"
       },
       {
         "source": "bff",
-        "target": "npm:supertest",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:class-validator",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:pg",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "contracts",
-        "type": "static"
-      },
-      {
-        "source": "bff",
-        "target": "npm:csv-parse",
+        "target": "identity",
         "type": "static"
       },
       {
@@ -12936,7 +12876,7 @@
       },
       {
         "source": "bff",
-        "target": "identity",
+        "target": "npm:supertest",
         "type": "static"
       }
     ],
@@ -17229,6 +17169,18 @@
         "type": "static"
       }
     ],
+    "npm:@nestjs/jwt": [
+      {
+        "source": "npm:@nestjs/jwt",
+        "target": "npm:@types/jsonwebtoken@9.0.7",
+        "type": "static"
+      },
+      {
+        "source": "npm:@nestjs/jwt",
+        "target": "npm:jsonwebtoken",
+        "type": "static"
+      }
+    ],
     "npm:@nestjs/platform-express": [
       {
         "source": "npm:@nestjs/platform-express",
@@ -18629,6 +18581,13 @@
       },
       {
         "source": "npm:@types/jsonwebtoken",
+        "target": "npm:@types/node",
+        "type": "static"
+      }
+    ],
+    "npm:@types/jsonwebtoken@9.0.7": [
+      {
+        "source": "npm:@types/jsonwebtoken@9.0.7",
         "target": "npm:@types/node",
         "type": "static"
       }
@@ -28573,276 +28532,6 @@
     ]
   },
   "version": "6.0",
-  "errors": [
-    {
-      "conflicts": {},
-      "projects": {
-        "bff": {
-          "root": ".tmp-legacy/repo/apps/bff",
-          "name": "bff",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "apps/bff/src",
-          "projectType": "application",
-          "tags": [
-            "type:app",
-            "scope:bff"
-          ],
-          "targets": {
-            "dev": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsx src/main.ts",
-                "cwd": "apps/bff"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "build": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsc -p tsconfig.json",
-                "cwd": "apps/bff"
-              },
-              "configurations": {},
-              "parallelism": true,
-              "dependsOn": [
-                "^build"
-              ],
-              "inputs": [
-                "production",
-                "^production"
-              ]
-            },
-            "test": {
-              "executor": "@nx/jest:jest",
-              "options": {
-                "jestConfig": "apps/bff/jest.config.ts",
-                "passWithNoTests": false
-              },
-              "outputs": [
-                "{workspaceRoot}/coverage/apps/bff"
-              ],
-              "configurations": {},
-              "parallelism": true
-            },
-            "lint": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "eslint src",
-                "cwd": "apps/bff"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "serve": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsx src/main.ts",
-                "cwd": "apps/bff"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "plan:check": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsx tools/plan-employees.ts",
-                "cwd": "apps/bff",
-                "env": {
-                  "PLAN_MAX_MS": "25"
-                }
-              },
-              "configurations": {},
-              "parallelism": true
-            }
-          }
-        },
-        "web": {
-          "root": ".tmp-legacy/repo/apps/web",
-          "name": "web",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "apps/web",
-          "projectType": "application",
-          "tags": [],
-          "targets": {
-            "dev": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "next dev -p 3000",
-                "cwd": "apps/web"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "serve": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "next dev",
-                "cwd": "apps/web"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "build": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "next build",
-                "cwd": "apps/web"
-              },
-              "configurations": {},
-              "parallelism": true,
-              "dependsOn": [
-                "^build"
-              ],
-              "inputs": [
-                "production",
-                "^production"
-              ]
-            },
-            "test": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "jest",
-                "cwd": "apps/web"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "lint": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "eslint .",
-                "cwd": "apps/web"
-              },
-              "configurations": {},
-              "parallelism": true
-            }
-          }
-        },
-        "contracts": {
-          "root": ".tmp-legacy/repo/packages/contracts",
-          "name": "contracts",
-          "sourceRoot": "packages/contracts/src",
-          "projectType": "library",
-          "tags": [
-            "type:lib",
-            "scope:contracts"
-          ],
-          "targets": {}
-        },
-        "identity": {
-          "root": ".tmp-legacy/repo/services/identity",
-          "name": "identity",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "services/identity/src",
-          "projectType": "library",
-          "tags": [
-            "type:service",
-            "scope:identity"
-          ],
-          "targets": {
-            "test": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "jest --config services/identity/jest.config.ts --coverage",
-                "cwd": "."
-              },
-              "configurations": {},
-              "parallelism": true
-            }
-          }
-        },
-        "ledger": {
-          "root": ".tmp-legacy/repo/services/ledger",
-          "name": "ledger",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "services/ledger/src",
-          "projectType": "application",
-          "tags": [],
-          "targets": {
-            "dev": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsx src/main.ts",
-                "cwd": "services/ledger"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "build": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsc -p tsconfig.json",
-                "cwd": "services/ledger"
-              },
-              "configurations": {},
-              "parallelism": true,
-              "dependsOn": [
-                "^build"
-              ],
-              "inputs": [
-                "production",
-                "^production"
-              ]
-            },
-            "lint": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "eslint src",
-                "cwd": "services/ledger"
-              },
-              "configurations": {},
-              "parallelism": true
-            }
-          }
-        },
-        "recognition": {
-          "root": ".tmp-legacy/repo/services/recognition",
-          "name": "recognition",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "services/recognition/src",
-          "projectType": "application",
-          "tags": [],
-          "targets": {
-            "dev": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsx src/main.ts",
-                "cwd": "services/recognition"
-              },
-              "configurations": {},
-              "parallelism": true
-            },
-            "build": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "tsc -p tsconfig.json",
-                "cwd": "services/recognition"
-              },
-              "configurations": {},
-              "parallelism": true,
-              "dependsOn": [
-                "^build"
-              ],
-              "inputs": [
-                "production",
-                "^production"
-              ]
-            },
-            "lint": {
-              "executor": "nx:run-commands",
-              "options": {
-                "command": "eslint src",
-                "cwd": "services/recognition"
-              },
-              "configurations": {},
-              "parallelism": true
-            }
-          }
-        }
-      },
-      "name": "MultipleProjectsWithSameNameError"
-    }
-  ],
-  "computedAt": 1755610899262
+  "errors": [],
+  "computedAt": 1755611738149
 }

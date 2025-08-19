@@ -6,7 +6,7 @@ import * as crypto from 'crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-let client: Client;
+export let client: Client;
 export let db: ReturnType<typeof drizzle<typeof schema>>;
 let schemaName = '';
 

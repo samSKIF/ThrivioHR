@@ -33,8 +33,45 @@ export function loadContractSDL(): string {
 
   // fallback for dev/test if contract isn't available
   return `
-    type User { id: ID!, email: String!, firstName: String, lastName: String, displayName: String }
-    type Employee { id: ID!, email: String!, firstName: String, lastName: String, displayName: String }
-    type Query { currentUser: User!, listEmployees: [Employee!]! }
+    type User { 
+      id: ID!
+      email: String!
+      firstName: String
+      lastName: String
+      displayName: String
+    }
+    
+    type Employee { 
+      id: ID!
+      email: String!
+      firstName: String
+      lastName: String
+      displayName: String
+    }
+    
+    type EmployeeEdge {
+      cursor: String!
+      node: Employee!
+    }
+    
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+    
+    type EmployeeConnection {
+      totalCount: Int!
+      edges: [EmployeeEdge!]!
+      pageInfo: PageInfo!
+    }
+    
+    type Query { 
+      currentUser: User
+      listEmployees(orgId: ID, limit: Int = 20, cursor: String): [Employee!]!
+      getEmployee(id: ID!): Employee
+      listEmployeesConnection(first: Int = 20, after: String): EmployeeConnection!
+    }
   `;
 }
