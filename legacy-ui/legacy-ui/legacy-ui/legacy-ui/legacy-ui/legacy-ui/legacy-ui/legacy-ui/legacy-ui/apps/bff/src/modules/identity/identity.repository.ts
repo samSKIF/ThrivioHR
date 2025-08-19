@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-import type { identity as CIdentity } from '@thrivio/contracts';
+import type { UserPublic } from '@thrivio/contracts';
 import { DRIZZLE_DB } from '../db/db.module';
 
 // helper: display name
@@ -33,7 +33,7 @@ export class IdentityRepository {
     return (res as any).rows ?? [];
   }
 
-  async findUserByEmailOrg(email: string, orgId: string): Promise<CIdentity.UserPublic | null> {
+  async findUserByEmailOrg(email: string, orgId: string): Promise<UserPublic | null> {
     const res = await this.db.execute(sql`SELECT id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName" FROM users WHERE organization_id = ${orgId} AND LOWER(email) = LOWER(${email}) LIMIT 1`);
     const row = (res as any).rows?.[0];
     return row ?? null;
@@ -89,13 +89,13 @@ export class IdentityRepository {
     return { loc: (ins as any).rows?.[0] ?? null, created: true };
   }
 
-  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (ins as any).rows?.[0];
   }
 
-  async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<CIdentity.UserPublic> {
+  async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
     return (upd as any).rows?.[0];

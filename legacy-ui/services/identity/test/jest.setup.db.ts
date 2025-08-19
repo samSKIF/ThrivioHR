@@ -7,8 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 let client: Client;
-export let db: ReturnType<typeof drizzle>;
-export { client };
+export let db: ReturnType<typeof drizzle<typeof schema>>;
 let schemaName = '';
 
 function rand(n=6){ return crypto.randomBytes(n).toString('hex'); }
@@ -36,8 +35,8 @@ beforeAll(async () => {
   for (const f of files) {
     let sqlText = fs.readFileSync(path.join(migrationsDir, f), 'utf8');
     // Strip schema qualifiers so FKs point to ephemeral schema instead of "public"
-    sqlText = sqlText.replaceAll('"public".', '');
-    sqlText = sqlText.replaceAll('public.', '');
+    sqlText = sqlText.replace(/"public"\./g, '');
+    sqlText = sqlText.replace(/public\./g, '');
     await client.query(sqlText); // applies into current search_path
   }
   const tables = await client.query(
@@ -71,4 +70,3 @@ afterAll(async () => {
   }
 });
 
-export { client };

@@ -1,30 +1,32 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { INestApplication, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  
-  app.enableCors();
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
-  
-  await app.listen(5000);
-  console.log('BFF on :5000');
-}
-bootstrap();
-
-// Provide a helper for tests (returns app instance)
-export async function createTestApp() {
-  const moduleFixture = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
-  const app = moduleFixture.createNestApplication();
-  await app.init();
+export async function createTestApp(): Promise<INestApplication> {
+  const logger = process.env.NODE_ENV === 'test' ? ['error'] : ['log', 'error', 'warn'];
+  const app = await NestFactory.create(AppModule, { logger });
+  // IMPORTANT: do NOT app.listen() in tests. Call app.init() in specs.
   return app;
+}
+
+export async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create(AppModule);
+  const port = Number(process.env.PORT || 5000);
+
+  // Skip binding when under Jest/test
+  const isJest = typeof process.env.JEST_WORKER_ID !== 'undefined' || process.env.NODE_ENV === 'test';
+  if (!isJest) {
+    await app.listen(port);
+    new Logger('Bootstrap').log(`BFF listening on http://localhost:${port}`);
+  }
+}
+
+// If executed directly (node dist/apps/bff/main.js), start server
+if (require.main === module) {
+  bootstrap().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('Fatal bootstrap error:', err);
+    process.exit(1);
+  });
 }

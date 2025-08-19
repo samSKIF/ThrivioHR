@@ -44,15 +44,25 @@ export class AuthService {
       })
       .returning();
 
-    // Generate tokens
+    // Generate tokens with complete user data
+    const tokenPayload = {
+      sub: user.id,
+      orgId,
+      sid: session.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: user.displayName,
+    };
+
     const accessToken = jwt.sign(
-      { sub: user.id, orgId, sid: session.id },
+      tokenPayload,
       this.jwtSecret,
       { expiresIn: '15m' }
     );
 
     const refreshToken = jwt.sign(
-      { sub: user.id, orgId, sid: session.id },
+      tokenPayload,
       this.jwtSecret,
       { expiresIn: '7d' }
     );
@@ -74,9 +84,17 @@ export class AuthService {
     try {
       const decoded = jwt.verify(refreshToken, this.jwtSecret) as any;
       
-      // Generate new access token with same claims
+      // Generate new access token with same claims including user data
       const accessToken = jwt.sign(
-        { sub: decoded.sub, orgId: decoded.orgId, sid: decoded.sid },
+        { 
+          sub: decoded.sub, 
+          orgId: decoded.orgId, 
+          sid: decoded.sid,
+          email: decoded.email,
+          firstName: decoded.firstName,
+          lastName: decoded.lastName,
+          displayName: decoded.displayName,
+        },
         this.jwtSecret,
         { expiresIn: '15m' }
       );

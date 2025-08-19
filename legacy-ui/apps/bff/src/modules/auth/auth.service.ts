@@ -104,4 +104,67 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
+  // Method for OIDC integration to mint tokens for existing users
+  async issueTokensForEmail(email: string, profile?: { firstName?: string; lastName?: string; displayName?: string; }) {
+    // Find user by email (first org match for single-tenant config phase)
+    const [user] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found for email: ' + email);
+    }
+
+    // Create session
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60 * 60 * 1000); // 60 minutes
+    const sessionToken = `sess_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`;
+    
+    const [session] = await this.db
+      .insert(sessions)
+      .values({
+        userId: user.id,
+        token: sessionToken,
+        expiresAt: expiresAt,
+        ipAddress: null,
+        userAgent: null,
+      })
+      .returning();
+
+    // Generate tokens with complete user data (use profile if provided, otherwise user data)
+    const tokenPayload = {
+      sub: user.id,
+      orgId: user.organizationId,
+      sid: session.id,
+      email: user.email,
+      firstName: profile?.firstName || user.firstName,
+      lastName: profile?.lastName || user.lastName,
+      displayName: profile?.displayName || user.displayName,
+    };
+
+    const accessToken = jwt.sign(
+      tokenPayload,
+      this.jwtSecret,
+      { expiresIn: '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      tokenPayload,
+      this.jwtSecret,
+      { expiresIn: '7d' }
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        orgId: user.organizationId,
+        email: user.email,
+      },
+    };
+  }
 }
