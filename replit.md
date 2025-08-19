@@ -101,6 +101,9 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes
+- **2025-08-19**: **LOGIN AUTO-REDIRECT TO /ME IMPLEMENTED** - Added automatic redirection to /me page after successful login on both login page and test-auth page
+- **Authentication UX Enhancement**: Login page now pre-fills with working test credentials (csvdemo@example.com + org ID) for development
+- **Seamless Navigation**: Users automatically navigate to profile page after authentication instead of manual redirect
 - **2025-08-16**: **OIDC SSO FOUNDATION IMPLEMENTED** - Built OIDC Authorization Code + PKCE flow foundation for enterprise SSO integration
 - **OIDC Architecture**: Created service/controller structure with openid-client v6.x integration, PKCE security, and state management
 - **SSO Integration Ready**: Login page shows SSO option (disabled until OIDC credentials configured), with fallback to existing JWT flow

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
   const [bffUp, setBffUp] = useState(true); // optimistic by default
-  const [orgId, setOrgId] = useState('');
+  const [orgId, setOrgId] = useState('9e2e7679-e33e-4cbe-9edc-195f13e9f909');
   const [email, setEmail] = useState('csvdemo@example.com');
   const [msg, setMsg] = useState('');
 
@@ -46,7 +46,9 @@ export default function LoginPage() {
       const json = await res.json();
       if (json?.accessToken) {
         localStorage.setItem('accessToken', json.accessToken);
-        setMsg('Logged in. Go to /me.');
+        setMsg('Logged in. Redirecting to profile...');
+        // Redirect to /me page after successful login
+        window.location.href = '/me';
       } else {
         setMsg(json?.message || 'Login failed');
       }

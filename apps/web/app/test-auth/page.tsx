@@ -34,6 +34,11 @@ export default function TestAuthPage() {
       localStorage.setItem('token', access_token);
       setSuccess('Login successful! Token stored.');
       
+      // Redirect to /me page after successful login
+      setTimeout(() => {
+        router.push('/me');
+      }, 1500);
+      
       // Test GraphQL with token
       const graphqlRes = await fetch('http://localhost:5000/graphql', {
         method: 'POST',
