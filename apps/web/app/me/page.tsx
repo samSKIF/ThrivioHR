@@ -5,7 +5,7 @@ import { setContext } from '@apollo/client/link/context';
 import { useEffect, useState } from 'react';
 
 const httpLink = createHttpLink({
-  uri: process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:5000/graphql',
+  uri: '/api/graphql', // Use Next.js proxy route instead of direct localhost
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -23,6 +23,14 @@ const authLink = setContext((_, { headers }) => {
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'network-only', // Always fetch fresh data
+    },
+    query: {
+      fetchPolicy: 'network-only',
+    },
+  },
 });
 
 const QUERY = gql`
