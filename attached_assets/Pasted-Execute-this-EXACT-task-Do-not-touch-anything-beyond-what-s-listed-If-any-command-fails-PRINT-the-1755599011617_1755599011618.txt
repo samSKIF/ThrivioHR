@@ -1,0 +1,180 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make BFF compile and serve /health without requiring OIDC; stop ESLint from linting generated folders.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+apps/bff/src/health/health.controller.ts
+apps/bff/src/health/health.module.ts
+apps/bff/src/app.module.ts
+.eslintignore
+apps/web/.eslintignore
+
+CHANGES
+1) In apps/bff/src/modules/sso/oidc/oidc.service.ts:
+- Replace top-level `import { Issuer, Client, generators } from 'openid-client'` with a conditional, lazy import.
+- Export a service that NO-OPs when `process.env.OIDC_ENABLED !== 'true'` (methods resolve gracefully or throw a clear “OIDC disabled” error).
+- Ensure there is NO top-level import of 'openid-client' so TypeScript can compile even if the package shape/version mismatches.
+
+Example full replacement:
+
+```ts
+// apps/bff/src/modules/sso/oidc/oidc.service.ts
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
+export class OidcService {
+  private readonly logger = new Logger(OidcService.name);
+  private get enabled() { return process.env.OIDC_ENABLED === 'true'; }
+
+  // Lazy loader to avoid build-time import issues
+  private async loadClient() {
+    if (!this.enabled) throw new Error('OIDC disabled');
+    // Dynamically import to avoid type/shape issues at build time
+    // We only resolve this at runtime when enabled.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const oc = await import('openid-client'); // do not destructure at import
+    const Issuer = (oc as any).Issuer;
+    const generators = (oc as any).generators;
+    if (!Issuer || !generators) {
+      throw new Error('openid-client API not available (check version/config)');
+    }
+    return { Issuer, generators };
+  }
+
+  async getAuthUrl(): Promise<string> {
+    if (!this.enabled) {
+      this.logger.warn('OIDC disabled; returning placeholder auth URL');
+      return '/auth/disabled';
+    }
+    const { Issuer, generators } = await this.loadClient();
+    // NOTE: Provider discovery/config should be moved to config service.
+    const issuer = await Issuer.discover(process.env.OIDC_ISSUER!);
+    const client = new issuer.Client({
+      client_id: process.env.OIDC_CLIENT_ID!,
+      client_secret: process.env.OIDC_CLIENT_SECRET!,
+      redirect_uris: [process.env.OIDC_REDIRECT_URI!],
+      response_types: ['code'],
+    });
+    const state = generators.state();
+    const nonce = generators.nonce();
+    return client.authorizationUrl({
+      scope: 'openid profile email',
+      state,
+      nonce,
+    });
+  }
+
+  // Add other methods similarly guarded with `this.enabled`.
+}
+In apps/bff/src/modules/sso/oidc/oidc.controller.ts:
+
+Ensure routes call the service but handle OIDC disabled by returning 503 + message instead of crashing.
+
+Minimal edit or full replacement:
+
+ts
+Copy
+Edit
+// apps/bff/src/modules/sso/oidc/oidc.controller.ts
+import { Controller, Get, Res, HttpException, HttpStatus } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  async authorize(@Res() res: Response) {
+    try {
+      const url = await this.svc.getAuthUrl();
+      return res.redirect(url);
+    } catch (e) {
+      throw new HttpException(
+        (e as Error).message || 'OIDC unavailable',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+}
+Add a simple health endpoint so we can curl it:
+Create apps/bff/src/health/health.controller.ts:
+
+ts
+Copy
+Edit
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('health')
+export class HealthController {
+  @Get()
+  get() {
+    return { ok: true, ts: new Date().toISOString() };
+  }
+}
+Create apps/bff/src/health/health.module.ts:
+
+ts
+Copy
+Edit
+import { Module } from '@nestjs/common';
+import { HealthController } from './health.controller';
+
+@Module({
+  controllers: [HealthController],
+})
+export class HealthModule {}
+Wire HealthModule into the app module:
+Edit apps/bff/src/app.module.ts to import HealthModule (do not remove existing modules):
+
+ts
+Copy
+Edit
+import { Module } from '@nestjs/common';
+import { HealthModule } from './health/health.module';
+@Module({
+  imports: [HealthModule /*, ...existing modules */],
+})
+export class AppModule {}
+Stop ESLint from linting generated folders:
+Create or update .eslintignore at repo root with:
+
+lua
+Copy
+Edit
+node_modules
+dist
+coverage
+.next
+.next/**
+**/.next/**
+Create or update apps/web/.eslintignore with:
+
+lua
+Copy
+Edit
+.next
+.next/**
+RUN & PRINT
+
+echo "=== LINT: bff & web ==="
+
+npx nx run-many --target=lint --projects=bff,web --skip-nx-cache || echo "Lint issues remain"
+
+echo "=== BUILD: bff & web ==="
+
+npx nx run-many --target=build --projects=bff,web --skip-nx-cache || echo "Build issues remain"
+
+echo "=== DEV BOOT: bff healthcheck ==="
+
+(npx nx run bff:dev >/tmp/bff.log 2>&1 &) && sleep 5 && (curl -si http://localhost:4000/health || curl -si http://127.0.0.1:4000/health || true)
+
+echo "=== LAST LOGS (BFF) ==="
+
+(tail -n 120 /tmp/bff.log || true)
+
+STOP.
