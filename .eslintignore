@@ -9,3 +9,6 @@ legacy-ui/**
 /coverage/
 /.next/
 pgsql
+/generated/
+**/.gen.ts
+**/.generated.ts

@@ -1,0 +1,103 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make Big 3a fully pass:
+- Lint clean by ignoring legacy/generated outputs
+- One unit test (web auth link) already green (keep as is)
+- One e2e smoke (BFF currentUser) green by sending a valid dev JWT
+- Verify `/me` renders `currentUser` JSON
+
+TOUCH ONLY
+.eslintignore
+apps/bff/test/current-user.e2e.spec.ts
+
+CHANGES
+1) Root ESLint ignore — ignore legacy + generated
+Append these lines to `.eslintignore` (create if missing or append if not present):
+legacy-ui
+legacy-ui/**
+dist
+coverage
+/coverage/
+.next
+.next/**
+/.next/
+/generated/
+**/.gen.ts
+**/.generated.ts
+
+csharp
+Copy
+Edit
+
+2) Fix BFF e2e by sending a real HS256 JWT (no new deps)
+Replace the contents of `apps/bff/test/current-user.e2e.spec.ts` with:
+
+```ts
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { JwtService } from '@nestjs/jwt';
+
+describe('currentUser (e2e)', () => {
+  let app: INestApplication;
+  let jwt: JwtService;
+  let token: string;
+
+  beforeAll(async () => {
+    const modRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = modRef.createNestApplication();
+    await app.init();
+
+    // Build a real HS256 token with the same secret used in tests
+    jwt = new JwtService({ secret: process.env.JWT_SECRET || 'dev-secret' });
+    token = await jwt.signAsync(
+      { sub: 'dev-user-1', email: 'dev.user@example.com' },
+      { algorithm: 'HS256', expiresIn: '5m' }
+    );
+  });
+
+  afterAll(async () => { await app.close(); });
+
+  it('returns currentUser when Authorization token is present', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ query: '{ currentUser { id email displayName } }' });
+
+    expect(res.status).toBe(200);
+    expect(res.body?.data?.currentUser?.email).toBe('dev.user@example.com');
+    expect(res.body?.errors).toBeUndefined();
+  });
+});
+RUN & PRINT
+
+echo "=== LINT (root+web+bff) ==="
+
+npx nx run-many --target=lint --projects=web,bff --skip-nx-cache || echo "LINT_FAIL"
+
+echo "=== BUILD (web+bff) ==="
+
+npx nx run-many --target=build --projects=web,bff --skip-nx-cache || echo "BUILD_FAIL"
+
+echo "=== TESTS ==="
+
+npx nx test web || echo "WEB_TESTS_FAIL"
+
+npx nx test bff || echo "BFF_TESTS_FAIL"
+
+echo "=== DEV BOOT & ACCEPTANCE PROBES ==="
+
+(npx nx run bff:dev >/tmp/bff.ok 2>&1 &) && sleep 5
+
+(npx nx run web:dev >/tmp/web.ok 2>&1 &) && sleep 8
+
+echo "--- /me (should include me-json) ---" && curl -sS http://localhost:3000/me | grep -n "data-testid="me-json"" -n | head -3 || true
+
+echo "--- unauth redirect (/admin -> /login) ---" && curl -sSI -L http://localhost:3000/admin | sed -n '1,12p'
+
+echo "--- GraphQL currentUser (with token) ---" && node -e "const {JwtService}=require('@nestjs/jwt'); const jwt=new JwtService({secret:process.env.JWT_SECRET||'dev-secret'}); jwt.signAsync({sub:'dev-user-1',email:'dev.user@example.com'},{algorithm:'HS256',expiresIn:'2m'}).then(t=>{require('child_process').execSync(curl -sS -X POST -H 'content-type: application/json' -H 'Authorization: Bearer ${t}' --data '{\"query\":\"{ currentUser { id email displayName } }\"}' http://localhost:5000/graphql, {stdio:'inherit'});}).catch(e=>console.error(e));"
+
+STOP.
