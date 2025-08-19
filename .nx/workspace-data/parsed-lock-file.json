@@ -27,6 +27,15 @@
         "hash": "sha512-RStSzQfL1XwL6/NWd7W8avhGQYTgPCtJ+qHkkTTSj9Upp3VVm6Oppv81YWdXG1FgEpDPW4hvCrTUELdcC4inCQ=="
       }
     },
+    "npm:@apollo/link-context": {
+      "type": "npm",
+      "name": "npm:@apollo/link-context",
+      "data": {
+        "version": "2.0.0-beta.3",
+        "packageName": "@apollo/link-context",
+        "hash": "sha512-oqdPayK9opMB80U+/vFiEwoSjtGLchys2vSysaCOE93LdotwQlmO0W0G2INN+tAgUfb+JEAj7rBwlBoXrHOy8A=="
+      }
+    },
     "npm:@apollo/protobufjs": {
       "type": "npm",
       "name": "npm:@apollo/protobufjs",
@@ -2970,6 +2979,15 @@
         "hash": "sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q=="
       }
     },
+    "npm:@types/bcryptjs": {
+      "type": "npm",
+      "name": "npm:@types/bcryptjs",
+      "data": {
+        "version": "2.4.6",
+        "packageName": "@types/bcryptjs",
+        "hash": "sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ=="
+      }
+    },
     "npm:@types/body-parser": {
       "type": "npm",
       "name": "npm:@types/body-parser",
@@ -4192,6 +4210,15 @@
         "version": "0.6.1",
         "packageName": "batch",
         "hash": "sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw=="
+      }
+    },
+    "npm:bcryptjs": {
+      "type": "npm",
+      "name": "npm:bcryptjs",
+      "data": {
+        "version": "3.0.2",
+        "packageName": "bcryptjs",
+        "hash": "sha512-k38b3XOZKv60C4E2hVsXTolJWfkGRMbILBIe2IBITXciy5bOsTKot5kDrf3ZfufQtQOUN5mXceUEpU1rTl9Uog=="
       }
     },
     "npm:big.js": {
@@ -11304,6 +11331,15 @@
         "hash": "sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg=="
       }
     },
+    "npm:tslib@1.14.1": {
+      "type": "npm",
+      "name": "npm:tslib@1.14.1",
+      "data": {
+        "version": "1.14.1",
+        "packageName": "tslib",
+        "hash": "sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg=="
+      }
+    },
     "npm:tslib": {
       "type": "npm",
       "name": "npm:tslib",
@@ -12198,6 +12234,81 @@
     {
       "source": "npm:@apollo/client",
       "target": "npm:zen-observable-ts",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:@graphql-typed-document-node/core",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:@wry/caches",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:@wry/equality",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:@wry/trie",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:graphql-tag",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:hoist-non-react-statics",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:optimism",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:prop-types",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:rehackt",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:symbol-observable@4.0.0",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:ts-invariant",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:tslib",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/client",
+      "target": "npm:zen-observable-ts",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/link-context",
+      "target": "npm:@apollo/client",
+      "type": "static"
+    },
+    {
+      "source": "npm:@apollo/link-context",
+      "target": "npm:tslib@1.14.1",
       "type": "static"
     },
     {
