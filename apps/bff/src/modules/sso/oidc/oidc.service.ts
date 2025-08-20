@@ -72,4 +72,17 @@ export class OidcService {
 
     return url.toString();
   }
+
+  // add at bottom of class
+  offlineCallback(params: Record<string, any>) {
+    if (process.env.OIDC_ENABLED !== 'true') throw new Error('oidc_disabled');
+    if (process.env.OIDC_OFFLINE_CALLBACK !== 'true') throw new Error('offline_disabled');
+    // accept any non-empty code; fabricate identity
+    const code = String(params.code || '');
+    if (!code) throw new Error('missing_code');
+    const email = process.env.OIDC_FAKE_EMAIL || 'dev.user@example.com';
+    const sub = process.env.OIDC_FAKE_SUB || 'dev-user-1';
+    const name = process.env.OIDC_FAKE_NAME || 'Dev User';
+    return { sub, email, name };
+  }
 }

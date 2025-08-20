@@ -1,0 +1,144 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Implement minimal OIDC callback that (dev/offline) accepts a fake code, issues a first-party JWT, sets cookie, and redirects to /me. Keep authorize behavior unchanged.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/auth/jwt.util.ts        (NEW)
+apps/bff/test/oidc.callback.e2e.spec.ts      (NEW)
+
+CHANGES
+1) Create apps/bff/src/modules/auth/jwt.util.ts:
+```ts
+import jwt from 'jsonwebtoken';
+
+const SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+export type UserClaims = { sub: string; email?: string; name?: string };
+
+export function signUserJwt(claims: UserClaims, ttl = '15m') {
+  return jwt.sign(claims, SECRET, { algorithm: 'HS256', expiresIn: ttl });
+}
+Patch apps/bff/src/modules/sso/oidc/oidc.service.ts — add offlineCallback():
+
+ts
+Copy
+Edit
+// add at bottom of class
+  offlineCallback(params: Record<string, any>) {
+    if (process.env.OIDC_ENABLED !== 'true') throw new Error('oidc_disabled');
+    if (process.env.OIDC_OFFLINE_CALLBACK !== 'true') throw new Error('offline_disabled');
+    // accept any non-empty code; fabricate identity
+    const code = String(params.code || '');
+    if (!code) throw new Error('missing_code');
+    const email = process.env.OIDC_FAKE_EMAIL || 'dev.user@example.com';
+    const sub = process.env.OIDC_FAKE_SUB || 'dev-user-1';
+    const name = process.env.OIDC_FAKE_NAME || 'Dev User';
+    return { sub, email, name };
+  }
+Replace apps/bff/src/modules/sso/oidc/oidc.controller.ts with:
+
+ts
+Copy
+Edit
+import { Controller, Get, Query, Res, Inject } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+import { signUserJwt } from '../auth/jwt.util';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(@Inject(OidcService) private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  authorize(@Res() res: Response) {
+    try { return res.redirect(this.svc.buildAuthorizeUrl()); }
+    catch (e: any) {
+      const msg = String(e?.message || '');
+      const nonProd = (process.env.NODE_ENV || '') !== 'production';
+      if (msg.includes('oidc_disabled')) return res.status(503).json({ error: 'OIDC disabled' });
+      if (msg.startsWith('missing_')) return res.status(503).json({ error: 'OIDC misconfigured', detail: nonProd ? msg : undefined });
+      return res.status(500).json({ error: 'authorize_failed', detail: nonProd ? msg : undefined });
+    }
+  }
+
+  @Get('callback')
+  async callback(@Query() q: any, @Res() res: Response) {
+    try {
+      // Offline/dev path
+      if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {
+        const claims = this.svc.offlineCallback(q);
+        const jwt = signUserJwt({ sub: claims.sub, email: claims.email, name: claims.name });
+        res.cookie('sid', jwt, { httpOnly: true, sameSite: 'lax' });
+        return res.redirect('/me');
+      }
+      // Future: real token exchange path goes here (networked)
+      return res.status(503).json({ error: 'OIDC callback not configured' });
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      const nonProd = (process.env.NODE_ENV || '') !== 'production';
+      if (msg.includes('oidc_disabled')) return res.status(503).json({ error: 'OIDC disabled' });
+      if (msg === 'missing_code') return res.status(400).json({ error: 'missing_code' });
+      return res.status(500).json({ error: 'callback_failed', detail: nonProd ? msg : undefined });
+    }
+  }
+
+  @Get('debug')
+  debug(@Res() res: Response) {
+    if ((process.env.NODE_ENV || '') === 'production') return res.status(403).json({ error: 'forbidden' });
+    return res.status(200).json(this.svc.snapshot());
+  }
+}
+Create apps/bff/test/oidc.callback.e2e.spec.ts:
+
+ts
+Copy
+Edit
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../src/main';
+
+describe('OIDC /oidc/callback (e2e)', () => {
+  let app: INestApplication;
+
+  afterEach(async () => {
+    if (app) await app.close();
+    delete process.env.OIDC_ENABLED;
+    delete process.env.OIDC_OFFLINE_CALLBACK;
+    delete process.env.JWT_SECRET;
+  });
+
+  it('503 when disabled', async () => {
+    process.env.OIDC_ENABLED = 'false';
+    app = await createTestApp(); await app.init();
+    const res = await request(app.getHttpServer()).get('/oidc/callback?code=fake');
+    expect(res.status).toBe(503);
+  });
+
+  it('302 and cookie when offline mode enabled', async () => {
+    process.env.OIDC_ENABLED = 'true';
+    process.env.OIDC_OFFLINE_CALLBACK = 'true';
+    process.env.JWT_SECRET = 'dev-secret';
+    app = await createTestApp(); await app.init();
+    const res = await request(app.getHttpServer()).get('/oidc/callback?code=fake');
+    expect([302,307]).toContain(res.status);
+    expect(res.headers['set-cookie']?.[0]).toMatch(/sid=/);
+    expect(res.headers.location).toBe('/me');
+  });
+});
+RUN & PRINT
+
+echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+
+echo "=== TEST: OIDC authorize + callback e2e ===" && npx nx test bff --testPathPattern="apps/bff/test/oidc.(authorize|callback).e2e.spec.ts" --runInBand
+
+echo "=== DEV BOOT (env) ===" && ( OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true JWT_SECRET=dev-secret OIDC_ISSUER="https://accounts.google.com" OIDC_CLIENT_ID="dev-dummy" OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth" npx nx run bff:dev >/tmp/bff.oidc.cb.log 2>&1 & ) && sleep 7 && tail -n 40 /tmp/bff.oidc.cb.log || true
+
+echo "=== /oidc/authorize ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,20p'
+
+echo "=== /oidc/callback (offline) ===" && curl -sSI "http://127.0.0.1:5000/oidc/callback?code=fake" | sed -n '1,20p'
+
+STOP.
