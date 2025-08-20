@@ -1,0 +1,73 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+(1) Gate dev cookie shim behind optional opt-out flag.
+(2) Add /auth/logout to clear cookie and redirect to /login.
+(3) Add a logout e2e.
+
+TOUCH ONLY
+apps/bff/src/main.ts
+apps/bff/src/modules/auth/logout.controller.ts      # NEW
+apps/bff/test/auth.logout.e2e.spec.ts               # NEW
+
+CHANGES
+1) apps/bff/src/main.ts — adjust shim condition:
+Find the dev cookie→Authorization middleware and change the if to:
+  if ((process.env.NODE_ENV || '') !== 'production' && process.env.DEV_COOKIE_AUTH_SHIM !== 'false') {
+
+2) Create apps/bff/src/modules/auth/logout.controller.ts:
+---
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
+
+@Controller('auth')
+export class LogoutController {
+  @Get('logout')
+  logout(@Res() res: Response) {
+    res.clearCookie('sid', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+    return res.redirect('/login');
+  }
+}
+---
+
+3) Wire controller (non-invasive): In apps/bff/src/app.module.ts, add LogoutController to controllers:[...] array.
+
+4) Create apps/bff/test/auth.logout.e2e.spec.ts:
+---
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { createTestApp } from '../../src/main';
+
+describe('Auth logout (e2e)', () => {
+  let app: INestApplication;
+
+  afterEach(async () => { if (app) await app.close(); });
+
+  it('clears sid cookie and redirects to /login', async () => {
+    app = await createTestApp(); await app.init();
+    const server = app.getHttpServer();
+    const res = await request(server).get('/auth/logout');
+    expect([302,307]).toContain(res.status);
+    const set = res.headers['set-cookie']?.[0] || '';
+    expect(set).toMatch(/sid=;/);
+    expect(res.headers.location).toBe('/login');
+  });
+});
+---
+
+RUN & PRINT
+1) echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+2) echo "=== TEST: new e2e ===" && npx nx test bff --testPathPattern="(auth\\.logout|oidc\\.(authorize|callback)|me\\.after-callback)\\.e2e\\.spec\\.ts" --runInBand
+3) echo "=== DEV BOOT (shim default on) ===" && (OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true JWT_SECRET=dev-secret npx nx run bff:dev >/tmp/bff.final.log 2>&1 &) && sleep 6
+4) echo "=== /oidc/callback ?code=fake ===" && curl -sSI "http://127.0.0.1:5000/oidc/callback?code=fake" | sed -n '1,16p'
+5) echo "=== /auth/me (via cookie→auth shim) ===" && curl -sS http://127.0.0.1:5000/auth/me | sed -n '1,60p'
+6) echo "=== /auth/logout clears cookie ===" && curl -sSI http://127.0.0.1:5000/auth/logout | sed -n '1,20p'
+
+STOP.

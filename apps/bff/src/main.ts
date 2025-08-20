@@ -17,7 +17,7 @@ export async function bootstrap(): Promise<void> {
   app.enableCors({ origin: ['http://localhost:3000', 'http://127.0.0.1:3000'] });
   
   app.use((req, _res, next) => {
-    if ((process.env.NODE_ENV || '') !== 'production') {
+    if ((process.env.NODE_ENV || '') !== 'production' && process.env.DEV_COOKIE_AUTH_SHIM !== 'false') {
       const cookie = req.headers.cookie || '';
       const m = /(?:^|;)\s*sid=([^;]+)/.exec(cookie);
       if (m && !req.headers.authorization) {

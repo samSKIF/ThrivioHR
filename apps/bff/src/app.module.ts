@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { LogoutController } from './modules/auth/logout.controller';
 import { HealthModule } from './health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -16,6 +17,6 @@ import { OidcModule } from './modules/sso/oidc/oidc.module';
     BffGraphqlModule,
     OidcModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, LogoutController],
 })
 export class AppModule {}
