@@ -15,6 +15,18 @@ export async function createTestApp(): Promise<INestApplication> {
 export async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: ['http://localhost:3000', 'http://127.0.0.1:3000'] });
+  
+  app.use((req, _res, next) => {
+    if ((process.env.NODE_ENV || '') !== 'production') {
+      const cookie = req.headers.cookie || '';
+      const m = /(?:^|;)\s*sid=([^;]+)/.exec(cookie);
+      if (m && !req.headers.authorization) {
+        req.headers.authorization = `Bearer ${m[1]}`;
+      }
+    }
+    next();
+  });
+  
   const port = Number(process.env.PORT || 5000);
 
   // Skip binding when under Jest/test
