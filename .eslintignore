@@ -4,6 +4,8 @@ coverage
 .next
 .next/**
 **/.next/**
+apps/web/.next
+apps/web/.next/**
 legacy-ui
 legacy-ui/**
 /coverage/

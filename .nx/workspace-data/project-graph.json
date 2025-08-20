@@ -281,10 +281,13 @@
             "parallelism": true
           },
           "lint": {
-            "executor": "nx:run-commands",
+            "executor": "@nx/eslint:lint",
             "options": {
-              "command": "eslint .",
-              "cwd": "apps/web"
+              "lintFilePatterns": [
+                "apps/web/**/*.{ts,tsx,js,jsx}",
+                "!apps/web/.next/**",
+                "!**/.next/**"
+              ]
             },
             "configurations": {},
             "parallelism": true
@@ -28553,5 +28556,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755674183722
+  "computedAt": 1755674563743
 }
