@@ -1,8 +1,30 @@
 import 'reflect-metadata';
-import { config } from 'dotenv';
-config({ path: '../../.env' });
 import { NestFactory } from '@nestjs/core';
 import { INestApplication, Logger } from '@nestjs/common';
+
+// DOTENV: do not override existing env; allow opt-out via DOTENV_DISABLE=true
+(() => {
+  try {
+    if (process.env.DOTENV_DISABLE === 'true') {
+      if ((process.env.NODE_ENV || '') !== 'production') {
+        // eslint-disable-next-line no-console
+        console.log('[dotenv] disabled via DOTENV_DISABLE=true');
+      }
+      return;
+    }
+    const { config } = require('dotenv');
+    const res = config({ path: '../../.env', override: false }); // <— key: NEVER override
+    if ((process.env.NODE_ENV || '') !== 'production' && process.env.OIDC_DEBUG === 'true') {
+      const count = res?.parsed ? Object.keys(res.parsed).length : 0;
+      // eslint-disable-next-line no-console
+      console.log(`[dotenv] loaded ${count} vars from ../../.env (override=false)`);
+      // quick sanity: show the first 60 chars of AUTHZ endpoint
+      const authz = process.env.OIDC_AUTHORIZATION_ENDPOINT || '';
+      // eslint-disable-next-line no-console
+      console.log(`[dotenv] OIDC_AUTHORIZATION_ENDPOINT=${authz.slice(0,60)}`);
+    }
+  } catch { /* ignore */ }
+})();
 import { AppModule } from './app.module';
 
 export async function createTestApp(): Promise<INestApplication> {

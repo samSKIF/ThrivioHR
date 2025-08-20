@@ -1,0 +1,62 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP.
+
+GOAL
+Ensure .env never overrides existing env vars; add DOTENV_DISABLE=true to skip loading .env; add light debug.
+
+TOUCH ONLY
+apps/bff/src/main.ts
+
+CHANGES
+1) Near the top of main.ts (before reading any env), replace the dotenv load with:
+---
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { INestApplication, Logger } from '@nestjs/common';
+
+// DOTENV: do not override existing env; allow opt-out via DOTENV_DISABLE=true
+(() => {
+  try {
+    if (process.env.DOTENV_DISABLE === 'true') {
+      if ((process.env.NODE_ENV || '') !== 'production') {
+        // eslint-disable-next-line no-console
+        console.log('[dotenv] disabled via DOTENV_DISABLE=true');
+      }
+      return;
+    }
+    const { config } = require('dotenv');
+    const res = config({ path: '../../.env', override: false }); // <— key: NEVER override
+    if ((process.env.NODE_ENV || '') !== 'production' && process.env.OIDC_DEBUG === 'true') {
+      const count = res?.parsed ? Object.keys(res.parsed).length : 0;
+      // eslint-disable-next-line no-console
+      console.log(`[dotenv] loaded ${count} vars from ../../.env (override=false)`);
+      // quick sanity: show the first 60 chars of AUTHZ endpoint
+      const authz = process.env.OIDC_AUTHORIZATION_ENDPOINT || '';
+      // eslint-disable-next-line no-console
+      console.log(`[dotenv] OIDC_AUTHORIZATION_ENDPOINT=${authz.slice(0,60)}`);
+    }
+  } catch { /* ignore */ }
+})();
+
+export async function createTestApp(): Promise<INestApplication> { ... } // keep rest of file unchanged
+---
+
+RUN & PRINT
+1) echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+2) echo "=== DEV BOOT (skip .env; prove CLI/secrets win) ===" && \
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true \
+  OIDC_ENABLED=true \
+  OIDC_ISSUER="https://accounts.google.com" \
+  OIDC_CLIENT_ID="dev-dummy" \
+  OIDC_CLIENT_SECRET="dev-dummy" \
+  OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" \
+  OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth" \
+  OIDC_OFFLINE_CALLBACK=true \
+  JWT_SECRET=dev-secret \
+  npx nx run bff:dev >/tmp/bff.dotenv.log 2>&1 & ) && sleep 7
+3) echo "=== /oidc/authorize (Location clean) ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,12p'
+4) echo "=== /oidc/callback?code=fake (expect 302 + cookie) ===" && curl -sSI "http://127.0.0.1:5000/oidc/callback?code=fake" | sed -n '1,20p'
+STOP.
