@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { config } from 'dotenv';
+config({ path: '../../.env' });
 import { NestFactory } from '@nestjs/core';
 import { INestApplication, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';

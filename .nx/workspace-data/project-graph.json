@@ -12851,6 +12851,11 @@
       },
       {
         "source": "bff",
+        "target": "npm:dotenv",
+        "type": "static"
+      },
+      {
+        "source": "bff",
         "target": "npm:@nestjs/core",
         "type": "static"
       },
@@ -28568,5 +28573,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755693568801
+  "computedAt": 1755693828285
 }
