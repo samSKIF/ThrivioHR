@@ -14,8 +14,8 @@ Object.defineProperty(window, 'localStorage', {
 // Mock Response constructor for Node 20  
 if (typeof global.Response === 'undefined') {
   global.Response = class MockResponse {
-    constructor(public body: string, public init: Record<string, unknown> = {}) {}
-    json() { return JSON.parse(this.body); }
-    text() { return this.body; }
+    constructor(public _body: string, public _init: Record<string, unknown> = {}) {}
+    json() { return JSON.parse(this._body); }
+    text() { return this._body; }
   } as unknown as typeof Response;
 }

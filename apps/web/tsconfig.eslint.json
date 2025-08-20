@@ -8,7 +8,11 @@
     "src/**/*",
     "middleware.ts",
     "next.config.js",
-    "next.config.mjs"
+    "next.config.mjs",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "__tests__/**/*",
+    "jest.setup.ts"
   ],
   "exclude": [
     "node_modules",
@@ -18,10 +22,6 @@
     "../../static",
     "../../**/static",
     "**/*.d.ts",
-    "**/*.spec.ts",
-    "**/*.spec.tsx", 
-    "__tests__/**/*",
-    "jest.setup.ts",
     "jest.config.ts"
   ]
 }
