@@ -1,0 +1,78 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make Nest inject OidcService even if design-time metadata isn’t available.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+1) REPLACE the constructor to use explicit injection.
+- Ensure we import Inject from '@nestjs/common'.
+- Do NOT change routes or logic.
+
+--- before (conceptual) ---
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(private readonly svc: OidcService) {}
+  ...
+}
+
+--- after (exact) ---
+import { Controller, Get, Res, Inject } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(@Inject(OidcService) private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  authorize(@Res() res: Response) {
+    try {
+      const url = this.svc.buildAuthorizeUrl();
+      return res.redirect(url);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      const nonProd = (process.env.NODE_ENV || '') !== 'production';
+      if (msg.includes('oidc_disabled')) return res.status(503).json({ error: 'OIDC disabled' });
+      if (msg.startsWith('missing_')) return res.status(503).json({ error: 'OIDC misconfigured', detail: nonProd ? msg : undefined });
+      return res.status(500).json({ error: 'authorize_failed', detail: nonProd ? msg : undefined });
+    }
+  }
+
+  @Get('debug')
+  debug(@Res() res: Response) {
+    if ((process.env.NODE_ENV || '') === 'production') return res.status(403).json({ error: 'forbidden' });
+    return res.status(200).json(this.svc.snapshot());
+  }
+}
+---
+
+RUN & PRINT
+1) echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+2) echo "=== DEV BOOT (inline env) ===" && \
+( OIDC_ENABLED=true \
+  OIDC_ISSUER="https://accounts.google.com" \
+  OIDC_CLIENT_ID="dev-dummy" \
+  OIDC_CLIENT_SECRET="dev-dummy" \
+  OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" \
+  OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth" \
+  npx nx run bff:dev >/tmp/bff.oidc.di2.log 2>&1 & ) && sleep 7 && tail -n 40 /tmp/bff.oidc.di2.log || true
+3) echo "=== /oidc/debug ===" && curl -sS http://127.0.0.1:5000/oidc/debug | jq . || curl -sS http://127.0.0.1:5000/oidc/debug
+4) echo "=== /oidc/authorize (expect 302/307) ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,20p'
+5) echo "=== /health ===" && curl -sSI http://127.0.0.1:5000/health | sed -n '1,10p'
+
+STOP.
+
+At the end, please CONFIRM:
+- Does `/oidc/debug` show `enabled: true` and a proper `authzEndpoint`?
+- Is `/oidc/authorize` now a 302/307 with a Google Location?
+- Any regression vs Big 3a (health, /me, redirects)?
