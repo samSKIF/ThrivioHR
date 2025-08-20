@@ -1,0 +1,92 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make GET /oidc/authorize return a 302/307 to the IdP when OIDC_ENABLED=true and required env vars are present; return 503 only if explicitly disabled.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+1) apps/bff/src/modules/sso/oidc/oidc.service.ts (FULL REPLACEMENT)
+```ts
+import { Injectable } from '@nestjs/common';
+
+function required(name: string, val?: string) {
+  if (!val) throw new Error(`missing_${name}`);
+  return val;
+}
+
+@Injectable()
+export class OidcService {
+  private get enabled() {
+    return process.env.OIDC_ENABLED === 'true';
+  }
+
+  private async getClient() {
+    if (!this.enabled) throw new Error('oidc_disabled');
+    const { Issuer, generators } = await import('openid-client');
+    const issuerUrl = required('OIDC_ISSUER', process.env.OIDC_ISSUER);
+    const clientId = required('OIDC_CLIENT_ID', process.env.OIDC_CLIENT_ID);
+    const clientSecret = required('OIDC_CLIENT_SECRET', process.env.OIDC_CLIENT_SECRET);
+    const redirectUri = required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
+
+    const issuer = await Issuer.discover(issuerUrl);
+    const client = new issuer.Client({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uris: [redirectUri],
+      response_types: ['code'],
+    });
+    return { client, generators, redirectUri };
+  }
+
+  async buildAuthorizeUrl() {
+    const { client, generators } = await this.getClient();
+    const state = generators.state();
+    const nonce = generators.nonce();
+    return client.authorizationUrl({ scope: 'openid email profile', state, nonce });
+  }
+}
+apps/bff/src/modules/sso/oidc/oidc.controller.ts (FULL REPLACEMENT)
+
+ts
+Copy
+Edit
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  async authorize(@Res() res: Response) {
+    try {
+      const url = await this.svc.buildAuthorizeUrl();
+      return res.redirect(url);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('oidc_disabled')) {
+        return res.status(503).json({ error: 'OIDC disabled' });
+      }
+      if (msg.startsWith('missing_')) {
+        // Misconfiguration: treat as 503 to indicate service unavailable until configured
+        return res.status(503).json({ error: 'OIDC misconfigured', detail: msg });
+      }
+      return res.status(500).json({ error: 'authorize_failed' });
+    }
+  }
+}
+RUN & PRINT
+
+echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+
+echo "=== DEV BOOT (inline env) ===" && ( OIDC_ENABLED=true OIDC_ISSUER="https://accounts.google.com" OIDC_CLIENT_ID="dev-dummy" OIDC_CLIENT_SECRET="dev-dummy" OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" npx nx run bff:dev >/tmp/bff.oidc2.log 2>&1 & ) && sleep 7 && tail -n 60 /tmp/bff.oidc2.log
+
+echo "=== /oidc/authorize — expect 302/307 to Google ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,20p'
+
+echo "=== /health ===" && curl -sSI http://127.0.0.1:5000/health | sed -n '1,10p'
+STOP.
