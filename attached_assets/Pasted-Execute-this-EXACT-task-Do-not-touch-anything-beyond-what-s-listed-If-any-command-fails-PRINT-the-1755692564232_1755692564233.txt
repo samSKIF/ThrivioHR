@@ -1,0 +1,88 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Diagnose 500 on /oidc/authorize by exposing a dev-only /oidc/debug and better error detail. No behavior changes for production.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+1) PATCH apps/bff/src/modules/sso/oidc/oidc.service.ts — add a snapshot() helper (no breaking changes)
+--- find class OidcService { ... } and add:
+  snapshot() {
+    const enabled = process.env.OIDC_ENABLED === 'true';
+    const issuer = process.env.OIDC_ISSUER || '';
+    const clientIdPresent = Boolean(process.env.OIDC_CLIENT_ID);
+    const redirectUri = process.env.OIDC_REDIRECT_URI || '';
+    const explicitAuthz = process.env.OIDC_AUTHORIZATION_ENDPOINT || '';
+    const defaultAuthz =
+      issuer.includes('accounts.google.com')
+        ? issuer.replace(/\/$/, '') + '/o/oauth2/v2/auth'
+        : issuer ? issuer.replace(/\/$/, '') + '/authorize' : '';
+    const authzEndpoint = (explicitAuthz || defaultAuthz || '').replace(/\/$/, '');
+    return {
+      enabled,
+      issuer,
+      clientIdPresent,
+      redirectUri,
+      authzEndpoint,
+      explicitAuthzUsed: Boolean(explicitAuthz),
+      nodeEnv: process.env.NODE_ENV || '',
+    };
+  }
+
+2) REPLACE apps/bff/src/modules/sso/oidc/oidc.controller.ts with:
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  authorize(@Res() res: Response) {
+    try {
+      const url = this.svc.buildAuthorizeUrl();
+      return res.redirect(url);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      const nonProd = (process.env.NODE_ENV || '') !== 'production';
+      if (msg.includes('oidc_disabled')) {
+        return res.status(503).json({ error: 'OIDC disabled' });
+      }
+      if (msg.startsWith('missing_')) {
+        return res.status(503).json({ error: 'OIDC misconfigured', detail: nonProd ? msg : undefined });
+      }
+      return res.status(500).json({ error: 'authorize_failed', detail: nonProd ? msg : undefined });
+    }
+  }
+
+  @Get('debug')
+  debug(@Res() res: Response) {
+    const snap = this.svc.snapshot();
+    if ((process.env.NODE_ENV || '') === 'production') {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    // never reveal secrets
+    return res.status(200).json(snap);
+  }
+}
+
+RUN & PRINT
+1) echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+2) echo "=== BOOT (inline env) ===" && \
+( OIDC_ENABLED=true \
+  OIDC_ISSUER="https://accounts.google.com" \
+  OIDC_CLIENT_ID="dev-dummy" \
+  OIDC_CLIENT_SECRET="dev-dummy" \
+  OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" \
+  OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth" \
+  npx nx run bff:dev >/tmp/bff.oidc5.log 2>&1 & ) && sleep 7 && tail -n 40 /tmp/bff.oidc5.log || true
+3) echo "=== /oidc/debug (dev-only) ===" && curl -sS http://127.0.0.1:5000/oidc/debug | jq . || curl -sS http://127.0.0.1:5000/oidc/debug
+4) echo "=== /oidc/authorize (expect 302/307 with Google Location) ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,20p'
+5) echo "=== /health ===" && curl -sSI http://127.0.0.1:5000/health | sed -n '1,10p'
+
+STOP.

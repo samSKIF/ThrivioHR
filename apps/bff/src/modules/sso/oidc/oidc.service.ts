@@ -12,6 +12,28 @@ export class OidcService {
     return process.env.OIDC_ENABLED === 'true';
   }
 
+  snapshot() {
+    const enabled = process.env.OIDC_ENABLED === 'true';
+    const issuer = process.env.OIDC_ISSUER || '';
+    const clientIdPresent = Boolean(process.env.OIDC_CLIENT_ID);
+    const redirectUri = process.env.OIDC_REDIRECT_URI || '';
+    const explicitAuthz = process.env.OIDC_AUTHORIZATION_ENDPOINT || '';
+    const defaultAuthz =
+      issuer.includes('accounts.google.com')
+        ? issuer.replace(/\/$/, '') + '/o/oauth2/v2/auth'
+        : issuer ? issuer.replace(/\/$/, '') + '/authorize' : '';
+    const authzEndpoint = (explicitAuthz || defaultAuthz || '').replace(/\/$/, '');
+    return {
+      enabled,
+      issuer,
+      clientIdPresent,
+      redirectUri,
+      authzEndpoint,
+      explicitAuthzUsed: Boolean(explicitAuthz),
+      nodeEnv: process.env.NODE_ENV || '',
+    };
+  }
+
   private rnd(n = 12) {
     return randomBytes(n).toString('hex');
   }

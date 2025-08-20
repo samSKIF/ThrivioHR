@@ -13,13 +13,24 @@ export class OidcController {
       return res.redirect(url);
     } catch (e: any) {
       const msg = String(e?.message || '');
+      const nonProd = (process.env.NODE_ENV || '') !== 'production';
       if (msg.includes('oidc_disabled')) {
         return res.status(503).json({ error: 'OIDC disabled' });
       }
       if (msg.startsWith('missing_')) {
-        return res.status(503).json({ error: 'OIDC misconfigured', detail: msg });
+        return res.status(503).json({ error: 'OIDC misconfigured', detail: nonProd ? msg : undefined });
       }
-      return res.status(500).json({ error: 'authorize_failed' });
+      return res.status(500).json({ error: 'authorize_failed', detail: nonProd ? msg : undefined });
     }
+  }
+
+  @Get('debug')
+  debug(@Res() res: Response) {
+    const snap = this.svc.snapshot();
+    if ((process.env.NODE_ENV || '') === 'production') {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    // never reveal secrets
+    return res.status(200).json(snap);
   }
 }
