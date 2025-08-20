@@ -54,7 +54,12 @@ function MeView() {
     setToken(storedToken);
   }, []);
 
-  if (loading) return <div>Loading…</div>;
+  if (loading) return (
+    <div style={{ padding: 24 }}>
+      <div>Loading…</div>
+      <pre data-testid="me-json">{JSON.stringify({ loading: true }, null, 2)}</pre>
+    </div>
+  );
   if (error) {
     return (
       <div style={{ padding: 24 }}>

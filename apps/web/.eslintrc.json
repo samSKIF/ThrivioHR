@@ -1,10 +1,6 @@
 {
-  "extends": "../../.eslintrc.json",
+  "extends": ["../../.eslintrc.json"],
   "ignorePatterns": [".next/**/*", "dist/**", "build/**", "node_modules/**"],
-  "parserOptions": {
-    "ecmaVersion": 2020,
-    "sourceType": "module"
-  },
   "overrides": [
     {
       "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**", "jest.setup.ts"],

@@ -5,7 +5,10 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "parserOptions": { "sourceType": "module" },
+      "parserOptions": { 
+        "sourceType": "module",
+        "ecmaVersion": 2020
+      },
       "rules": {
         "@nx/enforce-module-boundaries": ["error", {
           "allow": [],
