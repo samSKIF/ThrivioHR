@@ -27,15 +27,15 @@ export class DirectoryController {
     if (!dto?.dryRun) {
       throw new BadRequestException('Writes not implemented yet; use dryRun=true.');
     }
-    const orgId = req.user?.orgId;
+    const orgId = req.user?.orgId as string;
     return this.svc.commitPlan(dto.csv, orgId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('import/session')
   async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: { user: Record<string, unknown> }) {
-    const orgId = req.user?.orgId; 
-    const userId = req.user?.sub;
+    const orgId = req.user?.orgId as string; 
+    const userId = req.user?.sub as string;
     if (!dto?.csv) throw new BadRequestException('csv is required');
     return this.svc.createImportSession(dto.csv, orgId, userId);
   }
@@ -51,7 +51,7 @@ export class DirectoryController {
   @Post('import/session/approve')
   async approve(@Body() dto: ImportSessionApproveDto, @Req() req: { user: Record<string, unknown> }) {
     if (!dto?.token) throw new BadRequestException('token is required');
-    const orgId = req.user?.orgId;
+    const orgId = req.user?.orgId as string;
     return this.svc.applyImportSession(dto.token, orgId);
   }
 
