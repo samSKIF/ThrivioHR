@@ -33,20 +33,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": [
-          "apps/web/**/*.{ts,tsx,js,jsx}",
-          "!apps/web/.next/**",
-          "!**/.next/**",
-          "!static/**",
-          "!**/static/**",
-          "!project-graph.html",
-          "!**/project-graph.html"
-        ],
-        "noEslintrc": false,
-        "fix": false,
-        "format": "unix"
+        "command": "cd apps/web && npx eslint . --config eslint.config.mjs",
+        "cwd": "."
       }
     }
   },

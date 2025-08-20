@@ -1,5 +1,27 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["app/**/*", "lib/**/*", "components/**/*", "pages/**/*"],
-  "exclude": ["node_modules", ".next", "dist", "coverage", "../../static", "../../**/static", "**/*.d.ts", "**/*.spec.ts", "**/*.spec.tsx", "__tests__/**/*", "jest.setup.ts"]
+  "include": [
+    "app/**/*",
+    "lib/**/*", 
+    "components/**/*",
+    "pages/**/*",
+    "src/**/*",
+    "middleware.ts",
+    "next.config.js",
+    "next.config.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist", 
+    "coverage",
+    "../../static",
+    "../../**/static",
+    "**/*.d.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx", 
+    "__tests__/**/*",
+    "jest.setup.ts",
+    "jest.config.ts"
+  ]
 }

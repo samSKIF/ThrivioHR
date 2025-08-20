@@ -1,19 +1,31 @@
 {
-  "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": [".next/**/*", "dist/**", "build/**", "node_modules/**"],
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "project": "./tsconfig.eslint.json",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended"
+  ],
+  "ignorePatterns": [".next/**/*", "dist/**", "build/**", "node_modules/**", "static/**"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-unused-vars": "off",
+    "no-undef": "off"
+  },
   "overrides": [
     {
       "files": ["**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**", "jest.setup.ts"],
       "rules": { 
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-unused-vars": "off"
-      }
-    },
-    {
-      "files": ["**/*.ts", "**/*.tsx"],
-      "parserOptions": {
-        "project": ["apps/web/tsconfig.eslint.json"],
-        "tsconfigRootDir": "__dirname"
       }
     }
   ]

@@ -298,19 +298,11 @@
       "apps/web/project.json",
       "nx/core/project-json"
     ],
-    "targets.lint.options.lintFilePatterns": [
+    "targets.lint.options.command": [
       "apps/web/project.json",
       "nx/core/project-json"
     ],
-    "targets.lint.options.noEslintrc": [
-      "apps/web/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.options.fix": [
-      "apps/web/project.json",
-      "nx/core/project-json"
-    ],
-    "targets.lint.options.format": [
+    "targets.lint.options.cwd": [
       "apps/web/project.json",
       "nx/core/project-json"
     ],

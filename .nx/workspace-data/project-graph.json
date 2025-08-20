@@ -281,20 +281,10 @@
             "parallelism": true
           },
           "lint": {
-            "executor": "@nx/eslint:lint",
+            "executor": "nx:run-commands",
             "options": {
-              "lintFilePatterns": [
-                "apps/web/**/*.{ts,tsx,js,jsx}",
-                "!apps/web/.next/**",
-                "!**/.next/**",
-                "!static/**",
-                "!**/static/**",
-                "!project-graph.html",
-                "!**/project-graph.html"
-              ],
-              "noEslintrc": false,
-              "fix": false,
-              "format": "unix"
+              "command": "cd apps/web && npx eslint . --config eslint.config.mjs",
+              "cwd": "."
             },
             "configurations": {},
             "parallelism": true
@@ -12929,6 +12919,21 @@
       {
         "source": "web",
         "target": "npm:@apollo/client",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:@eslint/js",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:@typescript-eslint/eslint-plugin",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:@typescript-eslint/parser",
         "type": "static"
       }
     ],
@@ -28563,5 +28568,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755678081047
+  "computedAt": 1755678444269
 }
