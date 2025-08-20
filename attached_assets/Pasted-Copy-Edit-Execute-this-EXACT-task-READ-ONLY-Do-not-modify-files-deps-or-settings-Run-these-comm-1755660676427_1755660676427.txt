@@ -1,0 +1,46 @@
+Copy
+Edit
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+set -u
+
+### 0) Versions, env echo, and port baseline
+1) echo "=== VERSIONS ===" && echo "Node: $(node -v)" && echo "PNPM: $(pnpm -v)" && echo "NX: $(npx nx --version || true)"
+2) echo "=== ENV KEYS (presence only) ===" && for k in NEXT_PUBLIC_BFF_URL OIDC_ENABLED JWT_SECRET DATABASE_URL; do v="${!k-}"; echo "$k: $([ -n "$v" ] && echo set || echo unset)"; done
+3) echo "=== PORTS baseline ===" && (ss -ltnp 2>/dev/null || netstat -tlnp 2>/dev/null || lsof -nPiTCP -sTCP:LISTEN 2>/dev/null || echo "no-socket-tool") | sed -n '1,120p'
+
+### 1) Build both apps (DoD: build green)
+4) echo "=== BUILD web+bff ===" && npx nx run-many --target=build --projects=web,bff --skip-nx-cache || echo "BUILD_FAIL"
+
+### 2) Boot BFF and check health + GraphQL (DoD: server boots; GraphQL usable)
+5) echo "=== BOOT BFF (dev) ===" && (npx nx run bff:dev >/tmp/bff.log 2>&1 &) && sleep 7 && echo "BFF dev started (sleep 7s)"
+6) echo "=== BFF /health (ports 5000,4000) ===" && (for p in 5000 4000; do echo "--- curl :$p/health ---"; curl -fsS -i "http://127.0.0.1:$p/health" | sed -n '1,12p' || true; done)
+7) echo "=== BFF GraphQL currentUser (UNAUTH expected) ===" && (for p in 5000 4000; do echo "--- POST :$p/graphql ---"; curl -fsS -X POST -H "content-type: application/json" --data '{"query":"{ currentUser { id email displayName } }"}' "http://127.0.0.1:$p/graphql" || true; echo; done)
+8) echo "=== BFF GraphQL currentUser (WITH JWT) ===" && node -e "const {JwtService}=require('@nestjs/jwt'); const cp=require('child_process'); (async()=>{ const jwt=new JwtService({secret:process.env.JWT_SECRET||'dev-secret'}); const t=await jwt.signAsync({sub:'dev-user-1',email:'dev.user@example.com'},{algorithm:'HS256',expiresIn:'3m'}); for (const p of [5000,4000]) { try { console.log('--- POST :'+p+'/graphql with token ---'); cp.execSync(`curl -fsS -X POST -H 'content-type: application/json' -H 'Authorization: Bearer ${t}' --data '{\"query\":\"{ currentUser { id email displayName } }\"}' http://127.0.0.1:${p}/graphql`, {stdio:'inherit'}); } catch(e){ console.log('request-failed'); } } })().catch(console.error);"
+
+### 3) Boot Web and probe key pages (DoD: UI renders currentUser via GraphQL client)
+9) echo "=== BOOT WEB (dev) ===" && (NEXT_PUBLIC_BFF_URL="http://127.0.0.1:5000/graphql" npx nx run web:dev >/tmp/web.log 2>&1 &) && for i in 1 2 3 4 5; do sleep 2; (curl -fsS http://127.0.0.1:3000/ >/dev/null && echo "web-ready" && break) || echo "wait-web"; done
+10) echo "=== /me HTML (should include Current User JSON) ===" && curl -fsS http://127.0.0.1:3000/me | sed -n '1,120p'
+11) echo "=== /me contains data-testid=me-json ===" && curl -fsS http://127.0.0.1:3000/me | grep -n 'data-testid="me-json"' -n || echo "me-json-marker-not-found"
+
+### 4) Auth behavior (DoD: unauth redirect to login; role-aware shell for auth)
+12) echo "=== Unauth redirect check: /admin -> /login ===" && curl -sSI -L http://127.0.0.1:3000/admin | sed -n '1,18p'
+13) echo "=== Login page probe ===" && curl -fsS http://127.0.0.1:3000/login | sed -n '1,60p'
+
+### 5) Shell quality: error/loading/404 (DoD: error/empty/loading + 404 page)
+14) echo "=== Look for Next.js loading/error/not-found files ===" && (ls -1 apps/web/app/loading.tsx 2>/dev/null && echo OK || echo MISSING) && (ls -1 apps/web/app/error.tsx 2>/dev/null && echo OK || echo MISSING) && (ls -1 apps/web/app/not-found.tsx 2>/dev/null && echo OK || echo MISSING)
+
+### 6) Lighthouse (best-effort; optional if Chrome unavailable)
+15) echo "=== Lighthouse shell score (optional) ===" && (npx -y @lhci/cli@0.13.0 healthcheck >/dev/null 2>&1 && npx -y @lhci/cli@0.13.0 collect --url=http://127.0.0.1:3000 --numberOfRuns=1 --quiet || echo "LHCI_UNAVAILABLE")
+
+### 7) Lint + Tests (DoD: unit + e2e smoke)
+16) echo "=== LINT web+bff ===" && npx nx run-many --target=lint --projects=web,bff --skip-nx-cache || echo "LINT_FAIL"
+17) echo "=== TEST web (unit) ===" && npx nx test web || echo "WEB_TESTS_FAIL"
+18) echo "=== TEST bff (e2e smoke) ===" && npx nx test bff || echo "BFF_TESTS_FAIL"
+
+### 8) Tail logs for clues
+19) echo "=== TAIL LOGS: BFF ===" && tail -n 120 /tmp/bff.log || true
+20) echo "=== TAIL LOGS: WEB ===" && tail -n 120 /tmp/web.log || true
+
+STOP.
