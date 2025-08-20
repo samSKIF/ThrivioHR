@@ -17,7 +17,7 @@ export class DirectoryResolver {
   async listEmployees(
     _: unknown,
     args: { limit?: number; cursor?: string },
-    @Context() ctx: any
+    @Context() ctx: { req: { orgId: string; user: Record<string, unknown> } }
   ) {
     const orgId: string = ctx.req.orgId; // from OrgScopeGuard
     const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
@@ -32,7 +32,7 @@ export class DirectoryResolver {
   }
 
   @Query('getEmployee')
-  async getEmployee(_: unknown, args: { id: string }, @Context() ctx: any) {
+  async getEmployee(_: unknown, args: { id: string }, @Context() ctx: { req: { orgId: string; user: Record<string, unknown> } }) {
     const orgId: string = ctx.req.orgId; // from OrgScopeGuard
     const u = await this.directoryService.getUserById(args.id);
     if (!u || u.organization_id !== orgId) return null; // enforce org scope
@@ -49,7 +49,7 @@ export class DirectoryResolver {
   async listEmployeesConnection(
     _: unknown,
     args: { first?: number; after?: string },
-    @Context() ctx: any
+    @Context() ctx: { req: { orgId: string; user: Record<string, unknown> } }
   ) {
     const orgId: string = ctx.req.orgId; // from OrgScopeGuard
 
@@ -91,8 +91,10 @@ export class DirectoryResolver {
     const hasNextPage = users.length > first;
     const actualUsers = hasNextPage ? users.slice(0, first) : users;
 
+    // Map user objects with type safety
+
     // Build edges with cursors
-    const edges = actualUsers.map((user: any) => ({
+    const edges = actualUsers.map((user: Record<string, unknown>) => ({
       cursor: Buffer.from(JSON.stringify({
         createdAt: user.createdAt,
         id: user.id

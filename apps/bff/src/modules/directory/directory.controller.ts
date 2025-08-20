@@ -23,7 +23,7 @@ export class DirectoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('import/commit')
-  async commit(@Body() dto: ImportCommitDto, @Req() req: any) {
+  async commit(@Body() dto: ImportCommitDto, @Req() req: { user: Record<string, unknown> }) {
     if (!dto?.dryRun) {
       throw new BadRequestException('Writes not implemented yet; use dryRun=true.');
     }
@@ -33,7 +33,7 @@ export class DirectoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('import/session')
-  async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: any) {
+  async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId; 
     const userId = req.user?.sub;
     if (!dto?.csv) throw new BadRequestException('csv is required');
@@ -49,7 +49,7 @@ export class DirectoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('import/session/approve')
-  async approve(@Body() dto: ImportSessionApproveDto, @Req() req: any) {
+  async approve(@Body() dto: ImportSessionApproveDto, @Req() req: { user: Record<string, unknown> }) {
     if (!dto?.token) throw new BadRequestException('token is required');
     const orgId = req.user?.orgId;
     return this.svc.applyImportSession(dto.token, orgId);

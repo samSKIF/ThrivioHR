@@ -1,4 +1,4 @@
-import type { CommitRecord, CommitOverview, CommitPlan } from '../lib/types';
+import type { CommitPlan } from '../lib/types';
 
 export class ImportCommitDto {
   csv!: string;

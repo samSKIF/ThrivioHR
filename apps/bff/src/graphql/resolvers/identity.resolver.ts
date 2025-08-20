@@ -11,7 +11,7 @@ export class IdentityResolver {
   @Query('currentUser')
   async currentUser(_: unknown, __: unknown, ctx: { req: Request }) {
     // JwtAuthGuard already validated; claims are in req.user
-    const claims: any = (ctx.req as any).user ?? null;
+    const claims = (ctx.req as { user?: Record<string, unknown> }).user ?? null;
     if (!claims) return null;
     
     // For now, return JWT claims data since identity service doesn't have getUserById method

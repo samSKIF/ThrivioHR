@@ -1,12 +1,12 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { IdentityRepository } from '../identity/identity.repository';
 import { signSession, verifySession } from './lib/token';
 import { collectNewDepartments, collectNewLocations } from './lib/depts_locs';
 import { buildEmailMap, diagnoseManagers } from './lib/managers';
 import { parseAndNormalizeCsv } from './lib/csv';
 import { computeDiff } from './lib/diff';
-import { summarize } from './lib/overview';
-import type { CommitPlan, CommitOverview, CommitRecord, ImportRow, NormalizedRow } from './lib/types';
+import type { CommitPlan, CommitOverview, CommitRecord, NormalizedRow } from './lib/types';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
 
@@ -21,7 +21,7 @@ type ValidationResult = {
   sampleErrors: { row: number; message: string }[];
 };
 
-type CommitAction = 'create' | 'update' | 'skip';
+// type CommitAction = 'create' | 'update' | 'skip'; // Currently unused
 type CommitResponse = {
   overview: CommitOverview;
   records: CommitRecord[];
@@ -78,7 +78,7 @@ export class DirectoryService {
   }
 
   // Original methods - for compatibility
-  async listUsersByOrgAfter(orgId: string, cursor: any, limit: number) {
+  async listUsersByOrgAfter(orgId: string, cursor: { createdAt: string; id: string } | undefined, limit: number) {
     return this.identity.listUsersByOrgAfter(orgId, cursor, limit);
   }
 
@@ -87,11 +87,11 @@ export class DirectoryService {
   }
 
   // RLS-enabled methods that accept a database context
-  async listUsersByOrgAfterWithDb(db: any, orgId: string, cursor: any, limit: number) {
+  async listUsersByOrgAfterWithDb(db: NodePgDatabase<Record<string, unknown>>, orgId: string, cursor: { createdAt: string; id: string } | undefined, limit: number) {
     return this.identity.listUsersByOrgAfterWithDb(db, orgId, cursor, limit);
   }
 
-  async countUsersByOrgWithDb(db: any, orgId: string) {
+  async countUsersByOrgWithDb(db: NodePgDatabase<Record<string, unknown>>, orgId: string) {
     return this.identity.countUsersByOrgWithDb(db, orgId);
   }
   validate(csv: string): ValidationResult {
@@ -153,7 +153,7 @@ export class DirectoryService {
 
 
 
-  async commitPlan(csv: string, orgId: string, dryRun = false): Promise<CommitResponse> {
+  async commitPlan(csv: string, orgId: string, _dryRun = false): Promise<CommitResponse> {
     if (!csv?.trim()) {
       return {
         overview: {
@@ -383,7 +383,7 @@ export class DirectoryService {
             }
           }
           if (locName) {
-            const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
             if (locCreated) locationsCreated++;
             locationCreated = locCreated;
           }
@@ -417,7 +417,7 @@ export class DirectoryService {
               }
             }
             if (locName) {
-              const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+              const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
               if (locCreated) locationsCreated++;
               locationCreated = locCreated;
             }
@@ -442,7 +442,7 @@ export class DirectoryService {
             }
           }
           if (locName) {
-            const { loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
             if (locCreated) locationsCreated++;
             locationCreated = locCreated;
           }

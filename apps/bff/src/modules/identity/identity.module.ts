@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DbModule } from '../db/db.module';
 import { IdentityController } from './identity.controller';
 import { IdentityService } from './identity.service';

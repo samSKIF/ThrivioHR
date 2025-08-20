@@ -5,18 +5,18 @@ import { normalizeRow, isValidEmail } from './normalizers';
 
 export type ParsedCsv = {
   headers: string[];
-  rawRows: any[];
+  rawRows: Record<string, unknown>[];
   normalized: NormalizedRow[];
   errors: Array<{ row: number; message: string }>;
 };
 
 export function parseAndNormalizeCsv(csv: string): ParsedCsv {
-  const records = parse(csv, { columns: true, skip_empty_lines: true, trim: true });
+  const records = parse(csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string, unknown>[];
   const headers = Object.keys(records[0] ?? {});
   const errors: Array<{ row: number; message: string }> = [];
   const normalized: NormalizedRow[] = [];
 
-  records.forEach((r: any, idx: number) => {
+  records.forEach((r, idx) => {
     const n = normalizeRow(r);
     if (!n.email || !isValidEmail(n.email)) {
       errors.push({ row: idx + 2, message: 'Invalid or missing email' });

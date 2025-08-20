@@ -3,7 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE_DB } from '../modules/db/db.module';
 
-type DrizzleDatabase = NodePgDatabase<any>;
+type DrizzleDatabase = NodePgDatabase<Record<string, unknown>>;
 
 @Injectable()
 export class OrgSqlContext {

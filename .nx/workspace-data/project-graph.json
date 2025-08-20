@@ -12821,6 +12821,11 @@
       },
       {
         "source": "bff",
+        "target": "npm:drizzle-orm",
+        "type": "static"
+      },
+      {
+        "source": "bff",
         "target": "npm:graphql",
         "type": "static"
       },
@@ -12851,11 +12856,6 @@
       },
       {
         "source": "bff",
-        "target": "npm:drizzle-orm",
-        "type": "static"
-      },
-      {
-        "source": "bff",
         "target": "npm:jsonwebtoken",
         "type": "static"
       },
@@ -12872,6 +12872,11 @@
       {
         "source": "bff",
         "target": "npm:@nestjs/testing",
+        "type": "static"
+      },
+      {
+        "source": "bff",
+        "target": "npm:csv-parse",
         "type": "static"
       },
       {
@@ -28548,5 +28553,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755658057549
+  "computedAt": 1755658758104
 }

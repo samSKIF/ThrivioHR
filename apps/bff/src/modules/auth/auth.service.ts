@@ -11,7 +11,7 @@ import type { RefreshDto } from './dto/refresh.dto';
 export class AuthService {
   private readonly jwtSecret: string;
 
-  constructor(@Inject(DRIZZLE_DB) private db: any) {
+  constructor(@Inject(DRIZZLE_DB) private db: NodePgDatabase<Record<string, unknown>>) {
     this.jwtSecret = getJwtSecret();
   }
 
@@ -82,7 +82,7 @@ export class AuthService {
     const { refreshToken } = refreshDto;
 
     try {
-      const decoded = jwt.verify(refreshToken, this.jwtSecret) as any;
+      const decoded = jwt.verify(refreshToken, this.jwtSecret) as Record<string, unknown>;
       
       // Generate new access token with same claims including user data
       const accessToken = jwt.sign(
@@ -100,7 +100,7 @@ export class AuthService {
       );
 
       return { accessToken };
-    } catch (error) {
+    } catch (_error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

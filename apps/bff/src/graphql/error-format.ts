@@ -1,5 +1,5 @@
 import { GraphQLFormattedError } from 'graphql';
-import { UnauthorizedException, ForbiddenException, BadRequestException } from '@nestjs/common';
+// Remove unused imports - error handling logic doesn't instantiate these classes
 
 export function formatGraphQLError(
   error: GraphQLFormattedError,
