@@ -1,0 +1,110 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add two tests to verify only these issues:
+1) /me renders currentUser JSON with data-testid="me-json"
+2) ESLint excludes .next-generated files from lint output
+
+TOUCH ONLY
+apps/web/app/me/page.spec.tsx
+apps/web/__tests__/eslint.ignores-next.spec.ts
+
+CHANGES
+1) Create apps/web/app/me/page.spec.tsx
+---
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import Page from './page';
+
+const mockPayload = {
+  data: {
+    currentUser: {
+      id: '6f1a81cb-d20d-4c1a-b5a6-facd561e085e',
+      email: 'csvdemo@example.com',
+      displayName: 'CSV Demo',
+      __typename: 'User',
+    },
+  },
+};
+
+beforeEach(() => {
+  // Ensure page uses our test endpoint/token if it reads env at runtime
+  (process as any).env.NEXT_PUBLIC_BFF_URL = 'http://test/graphql';
+  (process as any).env.NEXT_PUBLIC_DEV_TOKEN = 'test-dev-token';
+
+  // Mock fetch used by Apollo HttpLink
+  // Node 20 provides global Response; fall back to a simple object if needed
+  global.fetch = jest.fn(async () =>
+    new Response(JSON.stringify(mockPayload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }) as any
+  ) as any;
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
+
+test('renders current user on /me and includes data-testid="me-json"', async () => {
+  render(<Page />);
+
+  // Title present
+  await screen.findByText(/Current User/i);
+
+  // JSON block with our payload
+  const pre = await screen.findByTestId('me-json');
+  expect(pre.textContent).toContain('csvdemo@example.com');
+  expect(pre.textContent).toContain('CSV Demo');
+
+  // Also ensure the ID from your screenshot-like data flows through
+  expect(pre.textContent).toContain('6f1a81cb-d20d-4c1a-b5a6-facd561e085e');
+});
+---
+
+2) Create apps/web/__tests__/eslint.ignores-next.spec.ts
+---
+import { spawnSync } from 'child_process';
+import * as path from 'path';
+
+function runESLintJSON() {
+  // Call ESLint directly so we can parse JSON results deterministically
+  const res = spawnSync(
+    process.execPath,
+    ['node_modules/eslint/bin/eslint.js', 'apps/web', '--ext', '.ts,.tsx', '--format', 'json'],
+    { encoding: 'utf8' }
+  );
+
+  if (res.error) {
+    throw res.error;
+  }
+  const out = res.stdout?.trim() || '[]';
+  try {
+    return JSON.parse(out);
+  } catch (e) {
+    throw new Error('Failed to parse ESLint JSON output:\n' + out.slice(0, 1000));
+  }
+}
+
+test('eslint excludes .next', () => {
+  const results: Array<{ filePath: string }> = runESLintJSON();
+  const offenders = results
+    .map(r => r.filePath)
+    .filter(fp =>
+      fp &&
+      (fp.includes(`${path.sep}.next${path.sep}`) || fp.includes('/.next/'))
+    );
+
+  // This fails if any .next files slipped into lint results
+  expect(offenders).toHaveLength(0);
+});
+---
+
+RUN & PRINT
+1) echo "=== RUN ONLY THE TWO NEW TESTS ==="
+2) npx nx test web --testNamePattern="(renders current user|eslint excludes \\.next)" --runInBand
+
+STOP.
