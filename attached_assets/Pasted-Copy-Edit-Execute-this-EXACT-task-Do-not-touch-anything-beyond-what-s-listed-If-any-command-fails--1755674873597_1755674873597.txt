@@ -1,0 +1,89 @@
+Copy
+Edit
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Stop ESLint from linting generated artifacts:
+- Exclude root-level `static/**` and any other graph artifacts
+- Keep `.next/**` exclusions
+- Verify `nx lint web` no longer reports files under `/static` or `/.next`
+
+TOUCH ONLY
+.eslintignore
+apps/web/project.json
+apps/web/__tests__/eslint.ignores-static.spec.ts
+
+CHANGES
+1) Root ignore (idempotent): append ONLY if missing
+---
+# Next.js + Nx graph generated outputs
+.next
+.next/**
+**/.next/**
+static
+static/**
+**/static/**
+project-graph.html
+**/project-graph.html
+---
+
+2) Narrow Nx lint patterns to app-only and explicitly exclude generated folders
+Edit `apps/web/project.json` → `targets.lint.options` so it is EXACTLY:
+---
+"targets": {
+  "lint": {
+    "executor": "@nx/eslint:lint",
+    "options": {
+      "lintFilePatterns": [
+        "apps/web/**/*.{ts,tsx,js,jsx}",
+        "!apps/web/.next/**",
+        "!**/.next/**",
+        "!static/**",
+        "!**/static/**",
+        "!project-graph.html",
+        "!**/project-graph.html"
+      ],
+      "noEslintrc": false,
+      "fix": false,
+      "format": "unix"
+    }
+  }
+}
+---
+
+3) Add a single test to assert ESLint no longer returns any `/static/` files
+Create `apps/web/__tests__/eslint.ignores-static.spec.ts`:
+---
+import { spawnSync } from 'child_process';
+
+function runESLintJSON() {
+  const res = spawnSync(
+    process.execPath,
+    ['node_modules/eslint/bin/eslint.js', 'apps/web', '--ext', '.ts,.tsx,.js,.jsx', '--format', 'json'],
+    { encoding: 'utf8' }
+  );
+  const out = (res.stdout || '[]').trim();
+  try { return JSON.parse(out); } catch { throw new Error('Failed to parse ESLint JSON output'); }
+}
+
+test('eslint excludes /static generated files', () => {
+  const results = runESLintJSON();
+  const offenders = results
+    .map((r: any) => r.filePath as string)
+    .filter((p: string) => p.includes('/static/'));
+  expect(offenders).toHaveLength(0);
+});
+---
+
+RUN & PRINT
+1) echo "=== SHOW .eslintignore tail ===" && tail -n 20 .eslintignore
+2) echo "=== SHOW web lint target ===" && cat apps/web/project.json | sed -n '1,200p'
+3) echo "=== DRY RUN: list files nx will lint (grep static/.next) ==="
+4) npx nx lint web --skip-nx-cache --format=json | head -c 2000 >/tmp/lint.json || true && (grep -oE "/static/[^\" ]+|/\\.next/[^\" ]+" /tmp/lint.json || echo "No static/.next files reported")
+5) echo "=== LINT web (should not include static/.next) ===" && npx nx lint web --skip-nx-cache || echo "WEB_LINT_FAIL"
+6) echo "=== TEST: static ignore assertion ===" && npx nx test web --testNamePattern="eslint excludes /static generated files" --runInBand
+
+STOP.
+
+At the end: please confirm where we are vs the roadmap and whether any regression appeared.

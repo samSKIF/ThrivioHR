@@ -38,8 +38,15 @@
         "lintFilePatterns": [
           "apps/web/**/*.{ts,tsx,js,jsx}",
           "!apps/web/.next/**",
-          "!**/.next/**"
-        ]
+          "!**/.next/**",
+          "!static/**",
+          "!**/static/**",
+          "!project-graph.html",
+          "!**/project-graph.html"
+        ],
+        "noEslintrc": false,
+        "fix": false,
+        "format": "unix"
       }
     }
   },

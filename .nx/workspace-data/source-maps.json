@@ -302,6 +302,18 @@
       "apps/web/project.json",
       "nx/core/project-json"
     ],
+    "targets.lint.options.noEslintrc": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.fix": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.format": [
+      "apps/web/project.json",
+      "nx/core/project-json"
+    ],
     "targets.build.dependsOn": [
       "nx.json",
       "nx/target-defaults"

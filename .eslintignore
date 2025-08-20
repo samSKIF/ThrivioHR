@@ -18,3 +18,9 @@ pgsql
 **/__generated__/**
 apps/bff/src/modules/sso/oidc/oidc.service.ts
 apps/bff/src/modules/graphql/resolvers/directory.resolver.ts
+# Next.js + Nx graph generated outputs
+static
+static/**
+**/static/**
+project-graph.html
+**/project-graph.html

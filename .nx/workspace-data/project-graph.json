@@ -286,8 +286,15 @@
               "lintFilePatterns": [
                 "apps/web/**/*.{ts,tsx,js,jsx}",
                 "!apps/web/.next/**",
-                "!**/.next/**"
-              ]
+                "!**/.next/**",
+                "!static/**",
+                "!**/static/**",
+                "!project-graph.html",
+                "!**/project-graph.html"
+              ],
+              "noEslintrc": false,
+              "fix": false,
+              "format": "unix"
             },
             "configurations": {},
             "parallelism": true
@@ -28556,5 +28563,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755674563743
+  "computedAt": 1755675202177
 }
