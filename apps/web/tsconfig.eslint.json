@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "include": ["app/**/*", "lib/**/*", "components/**/*", "pages/**/*"],
-  "exclude": ["node_modules", ".next", "dist", "coverage", "../../static", "../../**/static", "**/*.d.ts"]
+  "exclude": ["node_modules", ".next", "dist", "coverage", "../../static", "../../**/static", "**/*.d.ts", "**/*.spec.ts", "**/*.spec.tsx", "__tests__/**/*", "jest.setup.ts"]
 }
