@@ -88,7 +88,7 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - Error/empty/loading states covered; Lighthouse perf ≥ 90 on shell page.
 - Tests: one e2e smoke for login + `currentUser`; one unit for auth link.
 
-## Big 3b — SSO (OIDC/SAML) Foundation **IN PROGRESS**
+## Big 3b — SSO (OIDC/SAML) Foundation **NEXT**
 
 ### Sub-features
 - OIDC (Auth Code + PKCE): provider config (issuer, client, scopes), nonce/state, token exchange → BFF JWT.
