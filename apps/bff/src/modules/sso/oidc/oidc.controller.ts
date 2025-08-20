@@ -26,7 +26,7 @@ export class OidcController {
       if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {
         const claims = this.svc.offlineCallback(q);
         const jwt = signUserJwt({ sub: claims.sub, email: claims.email, name: claims.name });
-        res.cookie('sid', jwt, { httpOnly: true, sameSite: 'lax' });
+        res.cookie('sid', jwt, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
         return res.redirect('/me');
       }
       // Future: real token exchange path goes here (networked)
@@ -42,7 +42,7 @@ export class OidcController {
 
   @Get('debug')
   debug(@Res() res: Response) {
-    if ((process.env.NODE_ENV || '') === 'production') return res.status(403).json({ error: 'forbidden' });
+    if ((process.env.NODE_ENV || '') === 'production' || process.env.OIDC_DEBUG !== 'true') return res.status(403).json({ error: 'forbidden' });
     return res.status(200).json(this.svc.snapshot());
   }
 }
