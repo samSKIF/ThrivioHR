@@ -1,0 +1,114 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make GET /oidc/authorize return a proper 302/307 to the IdP WITHOUT network discovery, using env overrides when needed.
+
+TOUCH ONLY
+apps/bff/src/modules/sso/oidc/oidc.service.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+1) Replace apps/bff/src/modules/sso/oidc/oidc.service.ts with:
+```ts
+import { Injectable } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+
+function required(name: string, val?: string) {
+  if (!val) throw new Error(`missing_${name}`);
+  return val;
+}
+
+@Injectable()
+export class OidcService {
+  private get enabled() {
+    return process.env.OIDC_ENABLED === 'true';
+  }
+
+  private rnd(n = 12) {
+    return randomBytes(n).toString('hex');
+  }
+
+  /**
+   * Build a front-channel authorize URL without network discovery.
+   * If OIDC_AUTHORIZATION_ENDPOINT is provided, use it.
+   * Otherwise, derive a reasonable default from OIDC_ISSUER.
+   */
+  buildAuthorizeUrl(): string {
+    if (!this.enabled) throw new Error('oidc_disabled');
+
+    const issuer = required('OIDC_ISSUER', process.env.OIDC_ISSUER);
+    const clientId = required('OIDC_CLIENT_ID', process.env.OIDC_CLIENT_ID);
+    const redirectUri = required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
+
+    // Prefer explicit endpoint override
+    const explicitAuthz = process.env.OIDC_AUTHORIZATION_ENDPOINT;
+    // Conservative default: many providers expose /authorize; Google uses /o/oauth2/v2/auth
+    const defaultAuthz =
+      issuer.includes('accounts.google.com')
+        ? `${issuer.replace(/\/$/, '')}/o/oauth2/v2/auth`
+        : `${issuer.replace(/\/$/, '')}/authorize`;
+
+    const authzEndpoint = (explicitAuthz || defaultAuthz).replace(/\/$/, '');
+    const state = this.rnd();
+    const nonce = this.rnd();
+
+    const url = new URL(authzEndpoint);
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set('state', state);
+    url.searchParams.set('nonce', nonce);
+
+    return url.toString();
+  }
+}
+Replace apps/bff/src/modules/sso/oidc/oidc.controller.ts with:
+
+ts
+Copy
+Edit
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
+import { OidcService } from './oidc.service';
+
+@Controller('oidc')
+export class OidcController {
+  constructor(private readonly svc: OidcService) {}
+
+  @Get('authorize')
+  authorize(@Res() res: Response) {
+    try {
+      const url = this.svc.buildAuthorizeUrl();
+      return res.redirect(url);
+    } catch (e: any) {
+      const msg = String(e?.message || '');
+      if (msg.includes('oidc_disabled')) {
+        return res.status(503).json({ error: 'OIDC disabled' });
+      }
+      if (msg.startsWith('missing_')) {
+        return res.status(503).json({ error: 'OIDC misconfigured', detail: msg });
+      }
+      return res.status(500).json({ error: 'authorize_failed' });
+    }
+  }
+}
+RUN & PRINT
+
+echo "=== BUILD BFF ===" && npx nx build bff --skip-nx-cache
+
+echo "=== DEV BOOT (inline env, no network discovery) ===" &&
+( OIDC_ENABLED=true
+OIDC_ISSUER="https://accounts.google.com"
+OIDC_CLIENT_ID="dev-dummy"
+OIDC_CLIENT_SECRET="dev-dummy"
+OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback"
+OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth"
+npx nx run bff:dev >/tmp/bff.oidc3.log 2>&1 & ) && sleep 7 && tail -n 40 /tmp/bff.oidc3.log || true
+
+echo "=== /oidc/authorize — expect 302/307 with Google Location ===" && curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,20p'
+
+echo "=== /health ===" && curl -sSI http://127.0.0.1:5000/health | sed -n '1,10p'
+
+STOP.

@@ -12886,17 +12886,12 @@
       },
       {
         "source": "bff",
-        "target": "npm:openid-client",
-        "type": "dynamic"
-      },
-      {
-        "source": "bff",
-        "target": "npm:openid-client",
+        "target": "npm:@nestjs/jwt",
         "type": "static"
       },
       {
         "source": "bff",
-        "target": "npm:@nestjs/jwt",
+        "target": "npm:openid-client",
         "type": "static"
       }
     ],
@@ -28573,5 +28568,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755690705215
+  "computedAt": 1755692316613
 }
