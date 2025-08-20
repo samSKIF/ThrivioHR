@@ -23,10 +23,7 @@
     {
       "files": ["apps/bff/**/*.{ts,tsx,js,jsx}"],
       "rules": {
-        "no-restricted-imports": ["error", {
-          "patterns": ["**/services/**"],
-          "message": "BFF must not import from services/* directly. Use @thrivio/contracts or a repository interface."
-        }]
+        "no-restricted-imports": ["error", "**/services/**"]
       }
     }
   ]

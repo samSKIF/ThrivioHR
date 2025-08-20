@@ -12903,17 +12903,17 @@
     "web": [
       {
         "source": "web",
+        "target": "npm:@jest/globals",
+        "type": "static"
+      },
+      {
+        "source": "web",
         "target": "npm:next",
         "type": "static"
       },
       {
         "source": "web",
         "target": "npm:react",
-        "type": "static"
-      },
-      {
-        "source": "web",
-        "target": "npm:@jest/globals",
         "type": "static"
       },
       {
@@ -28553,5 +28553,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755668541593
+  "computedAt": 1755669743478
 }

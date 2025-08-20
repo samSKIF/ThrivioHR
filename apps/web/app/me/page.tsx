@@ -70,11 +70,14 @@ function MeView() {
             <p>Token exists but may be invalid. Try <a href="/login">logging in again</a>.</p>
           </div>
         )}
+        <pre data-testid="me-json">{JSON.stringify({ error: error.message, hasToken: !!token }, null, 2)}</pre>
       </div>
     );
   }
   
   const u = data?.currentUser;
+  
+  // Always show data-testid for testing, even with no user
   return (
     <div style={{ padding: 24 }}>
       <h1>Current User Profile</h1>
@@ -89,7 +92,10 @@ function MeView() {
           <pre data-testid="me-json">{JSON.stringify(u, null, 2)}</pre>
         </div>
       ) : (
-        <p>No user data available</p>
+        <div>
+          <p>No user data available</p>
+          <pre data-testid="me-json">{JSON.stringify({ error: "No user data" }, null, 2)}</pre>
+        </div>
       )}
     </div>
   );
