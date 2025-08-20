@@ -5911,9 +5911,27 @@
         "hash": "sha512-zIHwmZPRshsCdpMDyVsqGmgyP0yT8GAgXUnkdAoJisxvf33k7yO6OuoKmcTGuXPWSsm8Oh88nZicRLA9Y0rUeA=="
       }
     },
+    "npm:dotenv@16.6.1": {
+      "type": "npm",
+      "name": "npm:dotenv@16.6.1",
+      "data": {
+        "version": "16.6.1",
+        "packageName": "dotenv",
+        "hash": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="
+      }
+    },
     "npm:dotenv": {
       "type": "npm",
       "name": "npm:dotenv",
+      "data": {
+        "version": "17.2.1",
+        "packageName": "dotenv",
+        "hash": "sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ=="
+      }
+    },
+    "npm:dotenv@16.4.7": {
+      "type": "npm",
+      "name": "npm:dotenv@16.4.7",
       "data": {
         "version": "16.4.7",
         "packageName": "dotenv",
@@ -20870,7 +20888,7 @@
     "npm:dotenv-expand": [
       {
         "source": "npm:dotenv-expand",
-        "target": "npm:dotenv",
+        "target": "npm:dotenv@16.6.1",
         "type": "static"
       }
     ],
@@ -25145,7 +25163,7 @@
       },
       {
         "source": "npm:nx",
-        "target": "npm:dotenv",
+        "target": "npm:dotenv@16.4.7",
         "type": "static"
       },
       {
@@ -28573,5 +28591,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755693828285
+  "computedAt": 1755694280606
 }
