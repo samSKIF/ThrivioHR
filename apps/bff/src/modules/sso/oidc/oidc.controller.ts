@@ -10,7 +10,7 @@ export class OidcController {
   @Get('authorize')
   async authorize(@Res() res: Response) {
     try {
-      const url = await this.svc.getAuthUrl();
+      const url = await this.svc.buildAuthorizeUrl();
       return res.redirect(url);
     } catch (e) {
       throw new HttpException(
