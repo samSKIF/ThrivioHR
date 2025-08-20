@@ -3,7 +3,6 @@ import type {
   CommitChange,
   CommitRecord as TCommitRecord,
   CommitOverview as TCommitOverview,
-  CommitPlan as TCommitPlan,
 } from "@thrivio/contracts";
 
 type Extras = Record<string, unknown>;

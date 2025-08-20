@@ -595,7 +595,7 @@ describe('GraphQL E2E', () => {
       const orgA = await request(server).post('/orgs').send({ name: 'TestOrgA' }).expect(201);
       const orgB = await request(server).post('/orgs').send({ name: 'TestOrgB' }).expect(201);
       
-      const _userAResp = await request(server)
+      const userAResp = await request(server)
         .post('/users')
         .send({
           orgId: orgA.body.id,
@@ -605,7 +605,7 @@ describe('GraphQL E2E', () => {
         })
         .expect(201);
       
-      const _userBResp = await request(server)
+      const userBResp = await request(server)
         .post('/users')
         .send({
           orgId: orgB.body.id,
@@ -653,7 +653,7 @@ describe('GraphQL E2E', () => {
       const orgA = await request(server).post('/orgs').send({ name: 'TestOrgRLS_A' }).expect(201);
       const orgB = await request(server).post('/orgs').send({ name: 'TestOrgRLS_B' }).expect(201);
       
-      const _userB = await request(server)
+      const userB = await request(server)
         .post('/users')
         .send({
           orgId: orgB.body.id,
@@ -665,7 +665,7 @@ describe('GraphQL E2E', () => {
 
       // Get instances for direct database testing
       const orgSqlContext = app.get(OrgSqlContext);
-      const _db = app.get(DRIZZLE_DB);
+      // const db = app.get(DRIZZLE_DB);
 
       // Test RLS: Try to query users table directly with wrong org context set
       const resultWithWrongOrg = await orgSqlContext.runWithOrg(orgA.body.id, async (txDb) => {
@@ -712,7 +712,7 @@ describe('GraphQL E2E', () => {
       expect(Array.isArray(result)).toBe(true);
       
       // Test with a valid UUID but non-existent org
-      const _dbModule = app.get(DRIZZLE_DB);
+      // const dbModule = app.get(DRIZZLE_DB);
       const nonExistentOrgId = '550e8400-e29b-41d4-a716-446655440000';
       const resultNoContext = await identityRepo.listUsersByOrgAfter(nonExistentOrgId, undefined, 10);
       expect(resultNoContext).toEqual([]);

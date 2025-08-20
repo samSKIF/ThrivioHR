@@ -5,7 +5,7 @@ export async function GET() {
     const response = await fetch('http://localhost:5000/health');
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ ok: false, error: 'BFF server not available' }, { status: 503 });
   }
 }

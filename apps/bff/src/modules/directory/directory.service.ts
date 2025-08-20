@@ -5,7 +5,7 @@ import { collectNewDepartments, collectNewLocations } from './lib/depts_locs';
 import { buildEmailMap, diagnoseManagers } from './lib/managers';
 import { parseAndNormalizeCsv } from './lib/csv';
 import { computeDiff } from './lib/diff';
-import type { CommitPlan, CommitOverview, CommitRecord, NormalizedRow } from './lib/types';
+import type { CommitOverview, CommitRecord, NormalizedRow } from './lib/types';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
@@ -55,10 +55,10 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 
 const REQUIRED = ['email', 'givenName', 'familyName'];
-const OPTIONAL = [
-  'jobTitle','department','managerEmail','location','employeeId','startDate',
-  'birthDate','nationality','gender','phone'
-];
+// const OPTIONAL = [
+//   'jobTitle','department','managerEmail','location','employeeId','startDate',
+//   'birthDate','nationality','gender','phone'
+// ];
 
 @Injectable()
 export class DirectoryService {
@@ -370,7 +370,7 @@ export class DirectoryService {
             await this.identity.updateUserNames(user.id, firstName, lastName);
           }
 
-          let departmentCreated = false;
+          // let departmentCreated = false;
           let membershipLinkedFlag = false;
           let locationCreated = false;
           if (deptName) {
@@ -383,7 +383,7 @@ export class DirectoryService {
             }
           }
           if (locName) {
-            const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            const { created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
             if (locCreated) locationsCreated++;
             locationCreated = locCreated;
           }
@@ -417,7 +417,7 @@ export class DirectoryService {
               }
             }
             if (locName) {
-              const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+              const { created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
               if (locCreated) locationsCreated++;
               locationCreated = locCreated;
             }
@@ -442,7 +442,7 @@ export class DirectoryService {
             }
           }
           if (locName) {
-            const { loc: _loc, created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
+            const { created: locCreated } = await this.identity.findOrCreateLocation(payload.orgId, locName);
             if (locCreated) locationsCreated++;
             locationCreated = locCreated;
           }

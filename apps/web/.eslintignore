@@ -1,2 +1,18 @@
+# Build outputs
 .next
 .next/**
+dist/**
+build/**
+
+# Dependencies
+**/node_modules/**
+
+# Generated files
+.next/types/**
+.next/static/**
+.next/server/**
+.next/cache/**
+
+# Other temp files
+*.log
+*.tmp
