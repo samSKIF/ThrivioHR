@@ -12903,6 +12903,11 @@
     "web": [
       {
         "source": "web",
+        "target": "npm:eslint",
+        "type": "static"
+      },
+      {
+        "source": "web",
         "target": "npm:@jest/globals",
         "type": "static"
       },
@@ -28568,5 +28573,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755678982184
+  "computedAt": 1755680284865
 }
