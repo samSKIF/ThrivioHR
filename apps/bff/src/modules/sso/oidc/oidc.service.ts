@@ -43,7 +43,7 @@ export class OidcService {
    * If OIDC_OFFLINE_CALLBACK=true, create a local callback URL for development.
    * Otherwise, use the real OIDC provider endpoint.
    */
-  buildAuthorizeUrl(overrideRedirectUri?: string): string {
+  buildAuthorizeUrl(overrideRedirectUri?: string, origin?: string): string {
     if (!this.enabled) throw new Error('oidc_disabled');
 
     const redirectUri = overrideRedirectUri || required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
@@ -55,6 +55,10 @@ export class OidcService {
       const url = new URL(redirectUri);
       url.searchParams.set('code', fakeCode);
       url.searchParams.set('state', fakeState);
+      // Pass origin in state for proper redirect
+      if (origin) {
+        url.searchParams.set('origin', origin);
+      }
       return url.toString();
     }
 
