@@ -1,0 +1,130 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Apply Legacy UI tokens from EmployeeRewards reliably; add dark theme block; fix port conflicts; rebuild and verify / shows Login when logged out and /me when logged in.
+
+TOUCH ONLY
+apps/web/styles/legacy.css
+apps/web/app/globals.css
+
+CHANGES
+1) FULL FILE REPLACEMENT: apps/web/styles/legacy.css
+--- BEGIN FILE ---
+/* Legacy UI Adapter (v2): EmployeeRewards tokens + utilities
+   This file intentionally contains the full token set and base utilities.
+   Safe to re-run (idempotent).
+*/
+
+/* ===== TOKENS ===== */
+:root[data-theme="legacy"] {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+}
+
+/* Dark theme overrides (mirroring EmployeeRewards) */
+[data-theme="legacy"].dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+/* ===== BASE ===== */
+:root { color-scheme: light; }
+html, body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+
+/* ===== UTILITIES ===== */
+.container { max-width: 80rem; margin: 0 auto; padding: 0 1rem; }
+.card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 10px rgba(0,0,0,.04); }
+.card-pad { padding: 1rem; }
+.muted { color: hsl(var(--muted-foreground)); }
+.link { text-decoration: underline; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; border: 1px solid transparent; }
+.btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.btn-ghost { background: transparent; border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+.input { width: 100%; border: 1px solid hsl(var(--border)); border-radius: 10px; padding: .55rem .7rem; }
+.table { width: 100%; border-collapse: collapse; }
+.table thead { background: hsl(var(--muted)); }
+.table th, .table td { text-align: left; padding: .5rem; border-bottom: 1px solid hsl(var(--border)); }
+
+/* ===== HEADER ===== */
+.site-header { border-bottom: 1px solid hsl(var(--border)); }
+.nav { display: flex; gap: .5rem; align-items: center; }
+.nav a.active { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-radius: 10px; padding: .35rem .6rem; }
+--- END FILE ---
+
+2) Ensure global import exists in apps/web/app/globals.css (no duplicates).
+--- PATCH START ---
+@@
++@import "../styles/legacy.css";
+--- PATCH END ---
+
+RUN & PRINT
+echo "=== Kill any running dev servers to clear ports ==="
+( killall node 2>/dev/null || true )
+
+echo "=== Show legacy.css token markers ==="
+grep -n -- '--primary:' apps/web/styles/legacy.css || sed -n '1,120p' apps/web/styles/legacy.css
+
+echo "=== Ensure legacy.css is imported by globals.css (idempotent) ==="
+grep -q 'styles/legacy.css' apps/web/app/globals.css || echo '@import "../styles/legacy.css";' >> apps/web/app/globals.css
+grep -n 'styles/legacy.css' apps/web/app/globals.css
+
+echo "=== Build web ==="
+npx nx build web --skip-nx-cache || true
+
+echo "=== Start BFF and Web (offline SSO) ==="
+DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true npx nx run bff:dev >/tmp/bff.legacytokens.log 2>&1 &
+sleep 7
+npx nx run web:dev >/tmp/web.legacytokens.log 2>&1 &
+sleep 7
+
+echo "=== Log tails ==="
+tail -n 30 /tmp/bff.legacytokens.log || true
+tail -n 30 /tmp/web.legacytokens.log || true
+
+echo "=== Smoke: logged-out / should show Login ==="
+curl -sS http://127.0.0.1:3000/ | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'Sign in|Organization ID|Login with SSO' -n || true
+
+echo "=== Smoke: after SSO offline, / redirects to /me ==="
+curl -i -sS "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" -c /tmp/cj.txt | sed -n '1,12p'
+curl -I -sS http://127.0.0.1:3000/ -b /tmp/cj.txt | sed -n '1,12p'
+curl -sS http://127.0.0.1:3000/me -b /tmp/cj.txt | sed -n '1,80p' | sed 's/<[^>]*>/ /g' | egrep -i 'Profile|ThrivioHR|email|organization' -n || true
+
+# Confirm where we are vs the roadmap and if there is any regression in previous features.
+STOP.
