@@ -129,7 +129,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
-              Login as Corporate
+              Login with SSO
             </button>
           </form>
         </div>
