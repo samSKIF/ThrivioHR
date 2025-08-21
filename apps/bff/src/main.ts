@@ -36,6 +36,11 @@ export async function createTestApp(): Promise<INestApplication> {
 
 export async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+  
+  // Enable cookie parsing
+  const cookieParser = require('cookie-parser');
+  app.use(cookieParser());
+  
   // CORS: allow Next.js dev app to call BFF with cookies
   const webOrigin = process.env.WEB_PUBLIC_URL;
   app.enableCors({

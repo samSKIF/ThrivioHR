@@ -16,16 +16,25 @@ export class JwtAuthGuard implements CanActivate {
     const httpReq = context.switchToHttp().getRequest();
     const gqlReq = (gqlCtx.getContext?.() as { req?: unknown })?.req;
     const req = httpReq ?? gqlReq;
+    
+    // Try Authorization header first
     const authorization = req?.headers?.authorization;
-
-    if (!authorization) {
-      throw new UnauthorizedException('No authorization header');
+    let token: string | undefined;
+    
+    if (authorization) {
+      const [bearer, headerToken] = authorization.split(' ');
+      if (bearer === 'Bearer' && headerToken) {
+        token = headerToken;
+      }
+    }
+    
+    // Fallback to cookie
+    if (!token && req?.cookies?.accessToken) {
+      token = req.cookies.accessToken;
     }
 
-    const [bearer, token] = authorization.split(' ');
-
-    if (bearer !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Invalid authorization format');
+    if (!token) {
+      throw new UnauthorizedException('No authorization header or cookie');
     }
 
     try {

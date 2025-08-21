@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Inject } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Inject, Response } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -13,8 +13,25 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Response({ passthrough: true }) res) {
+    const result = await this.authService.login(loginDto);
+    
+    // Set HTTP-only cookies
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    
+    return result;
   }
 
   @Post('refresh')
