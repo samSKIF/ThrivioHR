@@ -9,7 +9,7 @@ export default function LoginPage() {
           <form method="POST" action="/api/bff/auth/login" style={{ display: "grid", gap: 10 }}>
             <label style={{ fontSize: 14 }}>
               <div style={{ marginBottom: 6 }}>Organization ID</div>
-              <input className="input" name="organizationId" placeholder="org_123" required />
+              <input className="input" name="orgId" placeholder="org_123" required />
             </label>
             <label style={{ fontSize: 14 }}>
               <div style={{ marginBottom: 6 }}>Email</div>

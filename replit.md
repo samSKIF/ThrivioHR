@@ -101,6 +101,9 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes  
+- **2025-08-21**: **LOGIN AUTHENTICATION FIXED** - Resolved field name mismatch between frontend (organizationId) and backend DTO (orgId) causing "Invalid credentials" error
+- **2025-08-21**: **SSO LOGIN RESTORED** - Fixed Legacy CSS conflicts that prevented SSO button clicks by adding cursor: pointer and proper CSS cascade order
+- **2025-08-21**: **LEGACY UI ADAPTER COMPLETE** - Successfully integrated token-based theming system with reversible design tokens and proper utility classes
 - **2025-08-21**: **DIRECTORY + PERSISTENT MENU COMPLETE** - Implemented fully functional Employee Directory with persistent header navigation
 - **organizationId UUID Fallback**: Fixed /auth/me to return Demo Org UUID (9e2e7679-e33e-4cbe-9edc-195f13e9f909) when DB lookup fails
 - **Persistent Header Menu**: Added global ThrivioHR header with Employee directory and Profile links on all pages
