@@ -1,0 +1,132 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Vendor the legacy UI design tokens from samSKIF/EmployeeRewards into our web theme, replacing the placeholders.
+
+TOUCH ONLY
+apps/web/styles/legacy.css
+
+CHANGES
+1) Replace the token section in legacy.css with the :root and [data-theme="dark"] blocks from the EmployeeRewards file client/src/index.css.
+
+RUN & PRINT
+set -e
+echo "=== Fetch tokens via GitHub connector ==="
+python3 - <<'PY'
+import base64, json, os, sys
+import requests
+
+# Use the GitHub connector to fetch file contents
+from api_tool import call_api  # already available in this environment
+
+# fetch index.css content from EmployeeRewards repo via API tool
+params = {"repository_name": "samSKIF/EmployeeRewards", "file_path": "client/src/index.css"}
+content = call_api("github_get_file_contents", params)["file_content"]
+# extract :root and .dark blocks
+root_start = content.find(":root")
+dark_start = content.find(".dark")
+root_block = content[root_start:content.find('}', root_start)+1]
+dark_block = content[dark_start:content.find('}', dark_start)+1]
+# save blocks for patch
+print("ROOT_BLOCK_START")
+print(root_block)
+print("ROOT_BLOCK_END")
+print("DARK_BLOCK_START")
+print(dark_block)
+print("DARK_BLOCK_END")
+PY
+
+# Patch apps/web/styles/legacy.css
+echo "=== Updating legacy.css ==="
+apply_patch <<'EOF'
+*** Begin Patch
+*** Update File: apps/web/styles/legacy.css
+@@
+-/* ===== TOKENS (PLACEHOLDERS) ===== */
+-:root[data-theme="legacy"] {
+-  /* PASTE TOKENS HERE (colors, radius, spacing, font): */
+-  --legacy-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+-  --legacy-bg: #ffffff;
+-  --legacy-fg: #111111;
+-  --legacy-muted: #666666;
+-  --legacy-border: #eaeaea;
+-  --legacy-accent: #0a0a0a; /* primary */
+-  --legacy-accent-contrast: #ffffff;
+-  --legacy-surface: #fafafa;
+-  --legacy-radius: 12px;
+-  --legacy-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 10px rgba(0,0,0,.04);
+-}
++/* ===== LEGACY UI TOKENS FROM EmployeeRewards ===== */
++:root[data-theme="legacy"] {
++  /* Colors and spacing imported from EmployeeRewards */
++  /* The following variables mirror those defined in client/src/index.css of EmployeeRewards */
++  --background: 0 0% 100%;
++  --foreground: 20 14.3% 4.1%;
++  --muted: 60 4.8% 95.9%;
++  --muted-foreground: 25 5.3% 44.7%;
++  --popover: 0 0% 100%;
++  --popover-foreground: 20 14.3% 4.1%;
++  --card: 0 0% 100%;
++  --card-foreground: 20 14.3% 4.1%;
++  --border: 20 5.9% 90%;
++  --input: 20 5.9% 90%;
++  --primary: 207 90% 54%;
++  --primary-foreground: 211 100% 99%;
++  --secondary: 60 4.8% 95.9%;
++  --secondary-foreground: 24 9.8% 10%;
++  --accent: 60 4.8% 95.9%;
++  --accent-foreground: 24 9.8% 10%;
++  --destructive: 0 84.2% 60.2%;
++  --destructive-foreground: 60 9.1% 97.8%;
++  --ring: 20 14.3% 4.1%;
++  --radius: 0.5rem;
++}
++
++/* Dark mode overrides from EmployeeRewards */
++[data-theme="legacy"].dark {
++  --background: 240 10% 3.9%;
++  --foreground: 0 0% 98%;
++  --muted: 240 3.7% 15.9%;
++  --muted-foreground: 240 5% 64.9%;
++  --popover: 240 10% 3.9%;
++  --popover-foreground: 0 0% 98%;
++  --card: 240 10% 3.9%;
++  --card-foreground: 0 0% 98%;
++  --border: 240 3.7% 15.9%;
++  --input: 240 3.7% 15.9%;
++  --primary: 207 90% 54%;
++  --primary-foreground: 211 100% 99%;
++  --secondary: 240 3.7% 15.9%;
++  --secondary-foreground: 0 0% 98%;
++  --accent: 240 3.7% 15.9%;
++  --accent-foreground: 0 0% 98%;
++  --destructive: 0 62.8% 30.6%;
++  --destructive-foreground: 0 0% 98%;
++  --ring: 240 4.9% 83.9%;
++  --radius: 0.5rem;
++}
+*** End Patch
+EOF
+
+echo "=== Build web ==="
+npx nx build web --skip-nx-cache || true
+
+echo "=== Restart dev (BFF + Web) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true \
+  OIDC_ENABLED=true \
+  OIDC_OFFLINE_CALLBACK=true \
+  OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.legacy.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.legacy.log 2>&1 &
+sleep 7
+
+echo "=== Logs tail ==="
+tail -n 20 /tmp/bff.legacy.log || true
+tail -n 20 /tmp/web.legacy.log || true
+
+echo "=== Smoke: /login page uses legacy palette ==="
+curl -sS http://127.0.0.1:3000/login | sed -n '1,60p'
+STOP.
