@@ -36,7 +36,17 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const loc = headers.get("location");
   if (loc) {
     try {
-      const origin = new URL(req.url).origin;
+      // Get origin from request URL, but prefer Replit domain if available
+      let origin = new URL(req.url).origin;
+      
+      // Check for Replit preview domain in request headers
+      const host = req.headers.get("host");
+      const referer = req.headers.get("referer");
+      if (host && (host.includes("replit.dev") || host.includes("repl.co"))) {
+        origin = `https://${host}`;
+      } else if (referer && (referer.includes("replit.dev") || referer.includes("repl.co"))) {
+        origin = new URL(referer).origin;
+      }
       
       // Parse the location URL
       let l: URL;
@@ -59,8 +69,6 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
         l.href.includes("127.0.0.1:3000") ||
         l.href.includes("localhost:3000")
       ) {
-        console.log(`[PROXY] Rewriting location from ${l.href} to ${origin}${l.pathname}${l.search}`);
-        console.log(`[PROXY] Request origin: ${origin}, Request URL: ${req.url}`);
         headers.set("location", `${origin}${l.pathname}${l.search}`);
       }
     } catch (e) {
