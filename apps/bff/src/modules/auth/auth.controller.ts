@@ -13,7 +13,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto, @Response({ passthrough: true }) res) {
+  async login(@Body() loginDto: LoginDto, @Request() req, @Response() res) {
     const result = await this.authService.login(loginDto);
     
     // Set HTTP-only cookies
@@ -31,7 +31,16 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     
-    return result;
+    // Check if this is a form submission vs API call
+    const contentType = req.headers['content-type'] || '';
+    
+    // If it's a form submission, redirect to /me 
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      return res.redirect(302, '/me');
+    }
+    
+    // Otherwise return JSON response for API calls
+    return res.json(result);
   }
 
   @Post('refresh')
