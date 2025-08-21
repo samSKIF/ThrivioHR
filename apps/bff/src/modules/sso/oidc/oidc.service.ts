@@ -43,10 +43,10 @@ export class OidcService {
    * If OIDC_OFFLINE_CALLBACK=true, create a local callback URL for development.
    * Otherwise, use the real OIDC provider endpoint.
    */
-  buildAuthorizeUrl(): string {
+  buildAuthorizeUrl(overrideRedirectUri?: string): string {
     if (!this.enabled) throw new Error('oidc_disabled');
 
-    const redirectUri = required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
+    const redirectUri = overrideRedirectUri || required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
 
     // In offline mode, redirect directly to callback with a fake code
     if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {

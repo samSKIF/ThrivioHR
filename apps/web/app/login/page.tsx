@@ -48,8 +48,9 @@ export default function LoginPage() {
   };
 
   const handleSSOLogin = () => {
-    // Redirect to OIDC authorize endpoint via proxy
-    window.location.href = "/api/bff/oidc/authorize";
+    // Redirect to OIDC authorize endpoint via proxy, passing current origin
+    const origin = window.location.origin;
+    window.location.href = `/api/bff/oidc/authorize?origin=${encodeURIComponent(origin)}`;
   };
 
   return (

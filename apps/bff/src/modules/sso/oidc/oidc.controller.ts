@@ -8,8 +8,17 @@ export class OidcController {
   constructor(@Inject(OidcService) private readonly svc: OidcService) {}
 
   @Get('authorize')
-  authorize(@Res() res: Response) {
-    try { return res.redirect(this.svc.buildAuthorizeUrl()); }
+  authorize(@Res() res: Response, @Query('origin') origin?: string) {
+    try { 
+      // In offline mode, determine the correct callback URL based on request origin
+      if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {
+        // Use provided origin or default to Next.js proxy
+        const baseUrl = origin || 'http://localhost:3000';
+        const callbackUrl = `${baseUrl}/api/bff/oidc/callback`;
+        return res.redirect(this.svc.buildAuthorizeUrl(callbackUrl));
+      }
+      return res.redirect(this.svc.buildAuthorizeUrl());
+    }
     catch (e: any) {
       const msg = String(e?.message || '');
       const nonProd = (process.env.NODE_ENV || '') !== 'production';
