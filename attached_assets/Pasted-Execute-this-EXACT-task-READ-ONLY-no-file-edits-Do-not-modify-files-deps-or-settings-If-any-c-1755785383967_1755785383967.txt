@@ -1,0 +1,69 @@
+Execute this EXACT task. READ-ONLY (no file edits). Do not modify files, deps, or settings.
+If any command fails, PRINT the error and STOP.
+
+GOAL
+Free ports 3000/5000, restart both servers (fallback to 3010/5010 if needed), and verify auth + routing.
+
+Run these commands and print outputs under headers, then STOP:
+
+1) === Who is holding ports? ===
+set -e
+( command -v lsof >/dev/null && (echo "-- lsof --"; lsof -i :3000 -sTCP:LISTEN || true; lsof -i :5000 -sTCP:LISTEN || true) ) || true
+( command -v ss >/dev/null && (echo "-- ss --"; ss -ltnp | egrep ':3000|:5000' || true) ) || true
+( command -v netstat >/dev/null && (echo "-- netstat --"; netstat -ltnp 2>/dev/null | egrep ':3000|:5000' || true) ) || true
+
+2) === Brutal cleanup (kill any dev servers) ===
+( pkill -f "nx run" 2>/dev/null || true )
+( pkill -f node 2>/dev/null || true )
+sleep 2
+for p in 3000 5000; do
+  PIDS="$( (lsof -ti tcp:$p -sTCP:LISTEN 2>/dev/null) || true )"
+  if [ -n "$PIDS" ]; then echo "KILL -9 on $p: $PIDS"; kill -9 $PIDS 2>/dev/null || true; fi
+done
+sleep 2
+
+3) === Verify ports are free ===
+( command -v lsof >/dev/null && (lsof -i :3000 -sTCP:LISTEN || echo "3000 free") && (lsof -i :5000 -sTCP:LISTEN || echo "5000 free") ) || true
+
+4) === Decide ports (fallback if still busy) ===
+WEB_PORT=3000; BFF_PORT=5000
+( lsof -ti tcp:$WEB_PORT -sTCP:LISTEN >/dev/null 2>&1 ) && WEB_PORT=3010
+( lsof -ti tcp:$BFF_PORT -sTCP:LISTEN >/dev/null 2>&1 ) && BFF_PORT=5010
+echo "Using WEB_PORT=$WEB_PORT, BFF_PORT=$BFF_PORT"
+
+5) === Start BFF (offline SSO) ===
+DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true PORT=$BFF_PORT \
+  npx nx run bff:dev >/tmp/bff.reboot.log 2>&1 &
+sleep 7
+
+6) === Start Web (proxy -> chosen BFF port) ===
+BFF_INTERNAL_URL="http://127.0.0.1:$BFF_PORT" PORT=$WEB_PORT \
+  npx nx run web:dev >/tmp/web.reboot.log 2>&1 &
+sleep 7
+
+7) === Logs tail ===
+echo "--- BFF log tail ---"; tail -n 40 /tmp/bff.reboot.log || true
+echo "--- WEB log tail ---"; tail -n 40 /tmp/web.reboot.log || true
+
+8) === Smoke: logged-out / shows Login ===
+curl -sS "http://127.0.0.1:$WEB_PORT/" | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'Sign in|Organization ID|Login with SSO' -n || echo "Login markers not found"
+
+9) === Smoke: offline SSO cookie then / redirects to /me ===
+curl -i -sS "http://127.0.0.1:$WEB_PORT/api/bff/oidc/callback?code=fake" -c /tmp/cj.ports.txt | sed -n '1,15p'
+curl -I -sS "http://127.0.0.1:$WEB_PORT/" -b /tmp/cj.ports.txt | sed -n '1,12p'
+curl -sS "http://127.0.0.1:$WEB_PORT/me" -b /tmp/cj.ports.txt | sed -n '1,80p' | sed 's/<[^>]*>/ /g' | egrep -i 'Profile|ThrivioHR|email|organization' -n || true
+
+10) === Directory API quick check (optional, if orgId present) ===
+ME=$(curl -sS "http://127.0.0.1:$WEB_PORT/api/bff/auth/me" -b /tmp/cj.ports.txt -H "Accept: application/json")
+echo "$ME" | head -c 600; echo
+ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organizationId":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organization_id":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"orgId":"\([^"]*\)".*/\1/p')
+if [ -n "$ORG_ID" ]; then
+  curl -sS "http://127.0.0.1:$WEB_PORT/api/bff/directory/users?orgId=$ORG_ID&limit=3" -b /tmp/cj.ports.txt | head -c 800; echo
+else
+  echo "No orgId in /auth/me; skipping directory probe."
+fi
+
+# Confirm where we are compared to the roadmap and if there is any regression in previous features.
+STOP.
