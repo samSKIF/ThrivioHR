@@ -36,25 +36,34 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const loc = headers.get("location");
   if (loc) {
     try {
-      const l = new URL(loc, BFF_BASE);
+      const origin = new URL(req.url).origin;
+      
+      // Parse the location URL
+      let l: URL;
+      try {
+        l = new URL(loc);
+      } catch {
+        l = new URL(loc, BFF_BASE);
+      }
+      
       // If BFF redirects to itself (port 5000), proxy it through our API
       if (
         l.href.startsWith("http://127.0.0.1:5000") ||
         l.href.startsWith("http://localhost:5000") ||
         l.href.startsWith(BFF_BASE)
       ) {
-        const origin = new URL(req.url).origin;
         headers.set("location", `${origin}/api/bff${l.pathname}${l.search}`);
       }
-      // Also handle web app redirects
+      // Always rewrite web app redirects to same origin (localhost or 127.0.0.1 on port 3000)
       else if (
-        l.href.startsWith("http://127.0.0.1:3000") ||
-        l.href.startsWith("http://localhost:3000")
+        l.href.includes("127.0.0.1:3000") ||
+        l.href.includes("localhost:3000")
       ) {
-        const origin = new URL(req.url).origin;
+        console.log(`[PROXY] Rewriting location from ${l.href} to ${origin}${l.pathname}${l.search}`);
         headers.set("location", `${origin}${l.pathname}${l.search}`);
       }
-    } catch {
+    } catch (e) {
+      console.warn("Failed to rewrite location header:", loc, e);
       /* ignore malformed Location */
     }
   }
