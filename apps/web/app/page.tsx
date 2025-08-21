@@ -1,18 +1,43 @@
-import Header from "../components/Header";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/auth/me", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        
+        if (res.ok) {
+          // User is authenticated, redirect to /me
+          router.push("/me");
+        } else {
+          // User is not authenticated, redirect to login
+          router.push("/login");
+        }
+      } catch {
+        // Network error or other issue, redirect to login
+        router.push("/login");
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
   return (
-    <main className="min-h-screen bg-white text-black">
-      <Header />
-      <section className="max-w-5xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
-        <p className="text-sm text-neutral-600 mb-6">
-          Start by signing in via your identity provider. After login, visit <code>/me</code> to see your profile loaded from <code>/auth/me</code>.
-        </p>
-        <a href="http://127.0.0.1:5000/oidc/authorize" className="inline-block rounded px-4 py-2 bg-black text-white">
-          Sign in with SSO
-        </a>
-      </section>
-    </main>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
   );
 }
