@@ -32,13 +32,22 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const res = await fetch(target, init);
   const headers = new Headers(res.headers);
 
-  // Rewrite Location back to same-origin if BFF points to localhost:3000
-  // so browser lands on our web app domain (not 127.0.0.1).
+  // Rewrite Location header to proxy through our API when it points to BFF
   const loc = headers.get("location");
   if (loc) {
     try {
       const l = new URL(loc, BFF_BASE);
+      // If BFF redirects to itself (port 5000), proxy it through our API
       if (
+        l.href.startsWith("http://127.0.0.1:5000") ||
+        l.href.startsWith("http://localhost:5000") ||
+        l.href.startsWith(BFF_BASE)
+      ) {
+        const origin = new URL(req.url).origin;
+        headers.set("location", `${origin}/api/bff${l.pathname}${l.search}`);
+      }
+      // Also handle web app redirects
+      else if (
         l.href.startsWith("http://127.0.0.1:3000") ||
         l.href.startsWith("http://localhost:3000")
       ) {
