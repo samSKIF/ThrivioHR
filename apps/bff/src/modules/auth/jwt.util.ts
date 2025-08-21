@@ -6,7 +6,7 @@ export type UserClaims = { sub: string; email?: string; name?: string };
 
 export function signUserJwt(
   claims: UserClaims,
-  ttl: string | number = '15m',
+  ttl: string = '15m',
 ): string {
-  return jwt.sign(claims, SECRET, { expiresIn: ttl });
+  return jwt.sign(claims, SECRET, { expiresIn: ttl as any });
 }

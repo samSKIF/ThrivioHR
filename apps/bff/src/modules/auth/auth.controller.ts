@@ -64,7 +64,7 @@ export class AuthController {
           lastName: user.lastName,
           orgId: user.organizationId,
           orgName: org?.name || 'Unknown Organization',
-          accountStatus: user.isActive ? 'Active' : 'Inactive',
+          accountStatus: 'Active', // Default status since isActive property not available
           ...tokenData  // Include original JWT data for compatibility
         };
       }
