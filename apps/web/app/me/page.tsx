@@ -50,7 +50,7 @@ export default function MePage() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://127.0.0.1:5000/auth/logout", {
+      await fetch("/api/bff/auth/logout", {
         method: "GET",
         credentials: "include",
       });
