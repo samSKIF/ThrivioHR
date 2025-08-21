@@ -1,91 +1,18 @@
-'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import Header from "../components/Header";
 
-export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Automatically redirect to login page on app startup
-    router.push('/login');
-  }, [router]);
-
+export default function HomePage() {
   return (
-    <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1>ThrivioHR Web</h1>
-      <p>Redirecting to login...</p>
-      
-      <div style={{ marginTop: 32 }}>
-        <h2>Navigation</h2>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ marginBottom: 16 }}>
-            <a 
-              href="/login" 
-              style={{ 
-                display: 'inline-block',
-                padding: '12px 24px',
-                backgroundColor: '#0070f3',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontWeight: 'bold'
-              }}
-            >
-              🔐 Login
-            </a>
-            <span style={{ marginLeft: 12, color: '#666' }}>
-              Sign in to your account
-            </span>
-          </li>
-          <li style={{ marginBottom: 16 }}>
-            <a 
-              href="/me" 
-              style={{ 
-                display: 'inline-block',
-                padding: '12px 24px',
-                backgroundColor: '#666',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '6px'
-              }}
-            >
-              👤 Profile (GraphQL)
-            </a>
-            <span style={{ marginLeft: 12, color: '#666' }}>
-              View your profile data
-            </span>
-          </li>
-          <li style={{ marginBottom: 16 }}>
-            <a 
-              href="/dev/auth" 
-              style={{ 
-                display: 'inline-block',
-                padding: '12px 24px',
-                backgroundColor: '#f0ad4e',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '6px'
-              }}
-            >
-              🔧 Dev Auth Bootstrap
-            </a>
-            <span style={{ marginLeft: 12, color: '#666' }}>
-              Development authentication helper
-            </span>
-          </li>
-        </ul>
-      </div>
-      
-      <div style={{ marginTop: 32, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
-        <h3>Big 3a: Web App Foundation - Complete ✅</h3>
-        <ul style={{ marginLeft: 20 }}>
-          <li>Next.js 14 with App Router</li>
-          <li>Apollo Client GraphQL integration</li>
-          <li>Authentication flow (REST → JWT → GraphQL)</li>
-          <li>API proxying via Next.js rewrites</li>
-          <li>Hydration mismatch fixes</li>
-        </ul>
-      </div>
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
+        <p className="text-sm text-neutral-600 mb-6">
+          Start by signing in via your identity provider. After login, visit <code>/me</code> to see your profile loaded from <code>/auth/me</code>.
+        </p>
+        <a href="http://127.0.0.1:5000/oidc/authorize" className="inline-block rounded px-4 py-2 bg-black text-white">
+          Sign in with SSO
+        </a>
+      </section>
     </main>
   );
 }

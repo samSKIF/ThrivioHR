@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
+  reactStrictMode: true,
+  experimental: { appDir: true },
+  env: {
+    // For future use if we wire through envs; currently we hardcode 127.0.0.1:5000 in fetch
+    BFF_BASE_URL: "http://127.0.0.1:5000",
   },
-  transpilePackages: ['@thrivio/ui', '@thrivio/types'],
 };
-
 export default nextConfig;

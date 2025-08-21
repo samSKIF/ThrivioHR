@@ -1,0 +1,188 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Deliver a visible UI slice (Big 3a baseline): 
+- BFF CORS for web origin
+- Web: Login page with SSO button + /me page that calls BFF /auth/me and displays currentUser.
+
+TOUCH ONLY
+apps/bff/src/main.ts
+apps/web/app/page.tsx
+apps/web/app/me/page.tsx
+apps/web/components/Header.tsx
+apps/web/next.config.mjs
+
+CHANGES
+1) In apps/bff/src/main.ts, ENABLE CORS for web (localhost + 127.0.0.1). Keep all existing logic (incl. DOTENV_DISABLE block). Insert the cors enable right after NestFactory.create:
+--- PATCH START (apps/bff/src/main.ts) ---
+@@
+   const app = await NestFactory.create(AppModule);
++  // CORS: allow Next.js dev app to call BFF with cookies
++  app.enableCors({
++    origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
++    credentials: true,
++    methods: ['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'],
++    allowedHeaders: ['Content-Type','Authorization'],
++  });
+--- PATCH END ---
+
+2) Create/replace apps/web/components/Header.tsx with a simple header:
+--- FULL FILE (apps/web/components/Header.tsx) ---
+"use client";
+import Link from "next/link";
+export default function Header() {
+  return (
+    <header className="w-full border-b border-[#eaeaea] mb-6">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="font-semibold">ThrivioHR</Link>
+        <nav className="flex items-center gap-3">
+          <Link href="/me" className="underline">Me</Link>
+          <a href="http://127.0.0.1:5000/oidc/authorize" className="rounded px-3 py-1.5 bg-black text-white">
+            Sign in with SSO
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+--- END FILE ---
+
+3) Create/replace apps/web/app/page.tsx (Login/home). Shows SSO CTA and a quick explainer:
+--- FULL FILE (apps/web/app/page.tsx) ---
+import Header from "../components/Header";
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
+        <p className="text-sm text-neutral-600 mb-6">
+          Start by signing in via your identity provider. After login, visit <code>/me</code> to see your profile loaded from <code>/auth/me</code>.
+        </p>
+        <a href="http://127.0.0.1:5000/oidc/authorize" className="inline-block rounded px-4 py-2 bg-black text-white">
+          Sign in with SSO
+        </a>
+      </section>
+    </main>
+  );
+}
+--- END FILE ---
+
+4) Create/replace apps/web/app/me/page.tsx. Fetches current user from BFF /auth/me with credentials:
+--- FULL FILE (apps/web/app/me/page.tsx) ---
+"use client";
+
+import { useEffect, useState } from "react";
+import Header from "../../components/Header";
+
+type Me = {
+  id?: string;
+  email?: string;
+  displayName?: string;
+  [k: string]: any;
+};
+
+export default function MePage() {
+  const [me, setMe] = useState<Me | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function run() {
+      try {
+        // Call BFF with cookies
+        const res = await fetch("http://127.0.0.1:5000/auth/me", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          setError(`auth/me returned ${res.status}: ${text.slice(0,200)}`);
+          setMe(null);
+        } else {
+          const data = await res.json();
+          setMe(data);
+          setError(null);
+        }
+      } catch (e: any) {
+        setError(e?.message || "Unknown error");
+        setMe(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    run();
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-4">My Profile</h1>
+        {loading && <p>Loading…</p>}
+        {!loading && error && (
+          <div className="rounded border border-red-300 bg-red-50 p-3">
+            <div className="font-semibold mb-1">Not signed in</div>
+            <div className="text-sm">{error}</div>
+            <a href="http://127.0.0.1:5000/oidc/authorize" className="mt-3 inline-block rounded px-3 py-1.5 bg-black text-white">
+              Sign in with SSO
+            </a>
+          </div>
+        )}
+        {!loading && !error && me && (
+          <pre className="p-3 border border-[#eaeaea] rounded bg-[#fafafa] overflow-auto text-sm">
+{JSON.stringify(me, null, 2)}
+          </pre>
+        )}
+      </section>
+    </main>
+  );
+}
+--- END FILE ---
+
+5) Create/replace apps/web/next.config.mjs to allow hard-coded dev BFF origin during local dev:
+--- FULL FILE (apps/web/next.config.mjs) ---
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: { appDir: true },
+  env: {
+    // For future use if we wire through envs; currently we hardcode 127.0.0.1:5000 in fetch
+    BFF_BASE_URL: "http://127.0.0.1:5000",
+  },
+};
+export default nextConfig;
+--- END FILE ---
+
+RUN & PRINT
+echo "=== BUILD BFF (types may warn; this is just to print status) ==="
+npx nx build bff --skip-nx-cache || true
+
+echo "=== DEV: boot BFF (skip dotenv, use secrets) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true \
+  OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.ui.log 2>&1 & )
+sleep 7
+tail -n 40 /tmp/bff.ui.log || true
+
+echo "=== DEV: boot WEB ==="
+( npx nx run web:dev >/tmp/web.ui.log 2>&1 & )
+sleep 7
+tail -n 40 /tmp/web.ui.log || true
+
+echo "=== Smoke page fetch ==="
+curl -sS http://127.0.0.1:3000 | sed -n '1,80p' || true
+
+echo "=== Roadmap status quick peek ==="
+grep -n "\*\*DONE\|\*\*IN PROGRESS\|\*\*NEXT" ROADMAP.md || sed -n '1,120p' ROADMAP.md
+
+At the end, confirm:
+- Are both dev servers up (BFF :5000, web :3000)?
+- Does / show the “Sign in with SSO” CTA?
+- After you sign in via browser, does /me render the JSON from /auth/me?
+- Where are we vs Big 3a/3b/4, and any regression in previously working features?
+STOP.

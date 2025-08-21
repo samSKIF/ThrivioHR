@@ -12941,11 +12941,6 @@
       },
       {
         "source": "web",
-        "target": "npm:@apollo/client",
-        "type": "static"
-      },
-      {
-        "source": "web",
         "target": "npm:@eslint/js",
         "type": "static"
       },
@@ -12957,6 +12952,11 @@
       {
         "source": "web",
         "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:@apollo/client",
         "type": "static"
       }
     ],
@@ -28591,5 +28591,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755755954444
+  "computedAt": 1755756342105
 }

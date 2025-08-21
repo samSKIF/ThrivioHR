@@ -1,115 +1,69 @@
-'use client';
+"use client";
 
-import { ApolloClient, InMemoryCache, ApolloProvider, gql, useQuery, createHttpLink } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import Header from "../../components/Header";
 
-const httpLink = createHttpLink({
-  uri: '/api/graphql', // Use Next.js proxy route instead of direct localhost
-});
+type Me = {
+  id?: string;
+  email?: string;
+  displayName?: string;
+  [k: string]: any;
+};
 
-const authLink = setContext((_, { headers }) => {
-  // Get the authentication token from local storage if it exists
-  const token = typeof window !== 'undefined' ? (localStorage.getItem('accessToken') || localStorage.getItem('token')) : null;
-  // Return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  };
-});
+export default function MePage() {
+  const [me, setMe] = useState<Me | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
-  defaultOptions: {
-    watchQuery: {
-      fetchPolicy: 'network-only', // Always fetch fresh data
-    },
-    query: {
-      fetchPolicy: 'network-only',
-    },
-  },
-});
-
-const QUERY = gql`
-  query Me {
-    currentUser {
-      id
-      email
-      firstName
-      lastName
-      displayName
-    }
-  }
-`;
-
-function MeView() {
-  const { data, loading, error } = useQuery(QUERY);
-  const [token, setToken] = useState<string | null>(null);
-  
   useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken') || localStorage.getItem('token');
-    setToken(storedToken);
+    async function run() {
+      try {
+        // Call BFF with cookies
+        const res = await fetch("http://127.0.0.1:5000/auth/me", {
+          method: "GET",
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          setError(`auth/me returned ${res.status}: ${text.slice(0,200)}`);
+          setMe(null);
+        } else {
+          const data = await res.json();
+          setMe(data);
+          setError(null);
+        }
+      } catch (e: any) {
+        setError(e?.message || "Unknown error");
+        setMe(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    run();
   }, []);
 
-  if (loading) return (
-    <div style={{ padding: 24 }}>
-      <div>Loading…</div>
-      <pre data-testid="me-json">{JSON.stringify({ loading: true }, null, 2)}</pre>
-    </div>
-  );
-  if (error) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h1>Authentication Required</h1>
-        <p>Error: {error.message}</p>
-        {!token && (
-          <div>
-            <p>No authentication token found. Please <a href="/login">login first</a>.</p>
+  return (
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-4">My Profile</h1>
+        {loading && <p>Loading…</p>}
+        {!loading && error && (
+          <div className="rounded border border-red-300 bg-red-50 p-3">
+            <div className="font-semibold mb-1">Not signed in</div>
+            <div className="text-sm">{error}</div>
+            <a href="http://127.0.0.1:5000/oidc/authorize" className="mt-3 inline-block rounded px-3 py-1.5 bg-black text-white">
+              Sign in with SSO
+            </a>
           </div>
         )}
-        {token && (
-          <div>
-            <p>Token exists but may be invalid. Try <a href="/login">logging in again</a>.</p>
-          </div>
+        {!loading && !error && me && (
+          <pre className="p-3 border border-[#eaeaea] rounded bg-[#fafafa] overflow-auto text-sm">
+{JSON.stringify(me, null, 2)}
+          </pre>
         )}
-        <pre data-testid="me-json">{JSON.stringify({ error: error.message, hasToken: !!token }, null, 2)}</pre>
-      </div>
-    );
-  }
-  
-  const u = data?.currentUser;
-  
-  // Always show data-testid for testing, even with no user
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>Current User Profile</h1>
-      {u ? (
-        <div>
-          <p><strong>ID:</strong> {u.id}</p>
-          <p><strong>Email:</strong> {u.email}</p>
-          <p><strong>First Name:</strong> {u.firstName || 'Not set'}</p>
-          <p><strong>Last Name:</strong> {u.lastName || 'Not set'}</p>
-          <p><strong>Display Name:</strong> {u.displayName || 'Not set'}</p>
-          <hr />
-          <pre data-testid="me-json">{JSON.stringify(u, null, 2)}</pre>
-        </div>
-      ) : (
-        <div>
-          <p>No user data available</p>
-          <pre data-testid="me-json">{JSON.stringify({ error: "No user data" }, null, 2)}</pre>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function Page() {
-  return (
-    <ApolloProvider client={client}>
-      <MeView />
-    </ApolloProvider>
+      </section>
+    </main>
   );
 }
