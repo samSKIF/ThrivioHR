@@ -27,7 +27,9 @@ export class OidcController {
         const claims = this.svc.offlineCallback(q);
         const jwt = signUserJwt({ sub: claims.sub, email: claims.email, name: claims.name });
         res.cookie('sid', jwt, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
-        return res.redirect('http://127.0.0.1:3000/me');
+        // after successful token exchange / offline login
+        const webBase = process.env.WEB_PUBLIC_URL || 'http://127.0.0.1:3000';
+        return res.redirect(`${webBase.replace(/\/+$/, "")}/me`);
       }
       // Future: real token exchange path goes here (networked)
       return res.status(503).json({ error: 'OIDC callback not configured' });

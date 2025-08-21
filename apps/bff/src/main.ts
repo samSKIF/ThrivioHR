@@ -37,8 +37,13 @@ export async function createTestApp(): Promise<INestApplication> {
 export async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   // CORS: allow Next.js dev app to call BFF with cookies
+  const webOrigin = process.env.WEB_PUBLIC_URL;
   app.enableCors({
-    origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
+    origin: [
+      'http://127.0.0.1:3000',
+      'http://localhost:3000',
+      ...(webOrigin ? [webOrigin] : []),
+    ],
     credentials: true,
     methods: ['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'],
     allowedHeaders: ['Content-Type','Authorization'],

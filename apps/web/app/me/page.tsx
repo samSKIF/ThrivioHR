@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+const BFF = (process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
 import { useRouter } from "next/navigation";
 
 type Me = {
@@ -23,7 +24,7 @@ export default function MePage() {
     async function run() {
       try {
         // Call BFF with cookies
-        const res = await fetch("http://127.0.0.1:5000/auth/me", {
+        const res = await fetch(`${BFF}/auth/me`, {
           method: "GET",
           credentials: "include",
           headers: { "Accept": "application/json" },

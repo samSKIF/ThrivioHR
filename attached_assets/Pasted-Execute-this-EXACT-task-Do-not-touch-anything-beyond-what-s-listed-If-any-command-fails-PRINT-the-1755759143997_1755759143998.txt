@@ -1,0 +1,147 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Fix browser 403 on SSO by removing 127.0.0.1 hardcoding and supporting public URLs on Replit. Make SSO button and callback work from the web app domain.
+
+TOUCH ONLY
+apps/web/components/Header.tsx
+apps/web/app/page.tsx
+apps/web/app/me/page.tsx
+apps/web/next.config.mjs
+apps/bff/src/main.ts
+apps/bff/src/modules/sso/oidc/oidc.controller.ts
+
+CHANGES
+1) apps/web/next.config.mjs — expose configurable BFF base URL for the browser.
+--- FULL FILE REPLACEMENT: apps/web/next.config.mjs ---
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: { appDir: true },
+  env: {
+    // Public URL of the BFF (HTTPS on Replit). Set this in Secrets:
+    // NEXT_PUBLIC_BFF_URL=https://<your-bff-public-host>/  (no trailing slash also fine)
+    NEXT_PUBLIC_BFF_URL: process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000",
+  },
+};
+export default nextConfig;
+--- END ---
+
+2) apps/web/components/Header.tsx — use NEXT_PUBLIC_BFF_URL for the SSO link (no 127.0.0.1).
+--- FULL FILE REPLACEMENT: apps/web/components/Header.tsx ---
+"use client";
+import Link from "next/link";
+
+const BFF = (process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
+
+export default function Header() {
+  return (
+    <header className="w-full border-b border-[#eaeaea] mb-6">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="font-semibold">ThrivioHR</Link>
+        <nav className="flex items-center gap-3">
+          <Link href="/me" className="underline">Me</Link>
+          <a href={`${BFF}/oidc/authorize`} className="rounded px-3 py-1.5 bg-black text-white">
+            Sign in with SSO
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+--- END ---
+
+3) apps/web/app/page.tsx — same SSO button change.
+--- FULL FILE REPLACEMENT: apps/web/app/page.tsx ---
+import Header from "../components/Header";
+const BFF = (process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
+        <p className="text-sm text-neutral-600 mb-6">
+          Sign in, then visit <code>/me</code> to see your profile from <code>/auth/me</code>.
+        </p>
+        <a href={`${BFF}/oidc/authorize`} className="inline-block rounded px-4 py-2 bg-black text-white">
+          Sign in with SSO
+        </a>
+      </section>
+    </main>
+  );
+}
+--- END ---
+
+4) apps/web/app/me/page.tsx — fetch /auth/me from BFF using env (no 127.0.0.1).
+--- PATCH (apps/web/app/me/page.tsx) ---
+@@
+-"use client";
++ "use client";
+@@
+-import { useEffect, useState } from "react";
++import { useEffect, useState } from "react";
++const BFF = (process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
+@@
+-        const res = await fetch("http://127.0.0.1:5000/auth/me", {
++        const res = await fetch(`${BFF}/auth/me`, {
+           method: "GET",
+           credentials: "include",
+           headers: { "Accept": "application/json" },
+         });
+--- END PATCH ---
+
+5) apps/bff/src/main.ts — include configurable web origin in CORS.
+--- PATCH (apps/bff/src/main.ts) ---
+@@
+-  app.enableCors({
+-    origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
++  const webOrigin = process.env.WEB_PUBLIC_URL;
++  app.enableCors({
++    origin: [
++      'http://127.0.0.1:3000',
++      'http://localhost:3000',
++      ...(webOrigin ? [webOrigin] : []),
++    ],
+     credentials: true,
+     methods: ['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'],
+     allowedHeaders: ['Content-Type','Authorization'],
+   });
+--- END PATCH ---
+
+6) apps/bff/src/modules/sso/oidc/oidc.controller.ts — redirect callback to configured public web URL (no 127.0.0.1).
+--- PATCH (apps/bff/src/modules/sso/oidc/oidc.controller.ts) ---
+@@
+-  // after successful token exchange / offline login
+-  return res.redirect('http://127.0.0.1:3000/me');
++  // after successful token exchange / offline login
++  const webBase = process.env.WEB_PUBLIC_URL || 'http://127.0.0.1:3000';
++  return res.redirect(`${webBase.replace(/\/+$/, "")}/me`);
+--- END PATCH ---
+
+RUN & PRINT
+echo "=== Build web (to pick up NEXT_PUBLIC_BFF_URL) ==="
+npx nx build web --skip-nx-cache || true
+
+echo "=== Build BFF (may warn; we only need to boot) ==="
+npx nx build bff --skip-nx-cache || true
+
+echo "=== Boot BFF with dotenv disabled (use Secrets) ==="
+( killall node 2>/dev/null || true; DOTENV_DISABLE=true OIDC_DEBUG=true npx nx run bff:dev >/tmp/bff.fix403.log 2>&1 & )
+sleep 7
+tail -n 40 /tmp/bff.fix403.log || true
+
+echo "=== Boot Web ==="
+( npx nx run web:dev >/tmp/web.fix403.log 2>&1 & )
+sleep 7
+tail -n 40 /tmp/web.fix403.log || true
+
+echo "=== Effective envs (masked) ==="
+echo "NEXT_PUBLIC_BFF_URL=${NEXT_PUBLIC_BFF_URL:-<unset>}"
+echo "WEB_PUBLIC_URL=${WEB_PUBLIC_URL:-<unset>}"
+
+echo "=== Sanity: curl BFF /oidc/authorize internally (should 302) ==="
+curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,12p' || true
+
+STOP.
