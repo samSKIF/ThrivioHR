@@ -1,0 +1,66 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) === GIT STATUS ===
+git rev-parse --abbrev-ref HEAD
+git log --oneline -n 10
+echo "=== Changed files in last commit ==="
+git diff --name-only HEAD~1..HEAD || true
+git status -s
+
+2) === TOOLING ===
+node -v
+pnpm -v
+npx nx --version
+
+3) === ENV SNAPSHOT (masked) ===
+printenv | egrep '^(OIDC_|JWT_|NEXT_PUBLIC_BFF_URL|BFF_INTERNAL_URL|WEB_PUBLIC_URL)=' | sed 's/=.*/=***MASKED***/' || true
+
+4) === PROJECT LAYOUT (top + apps/services) ===
+ls -la
+printf "\napps & services (2 levels):\n"
+find apps -maxdepth 2 -type d -print 2>/dev/null || true
+find services -maxdepth 2 -type d -print 2>/dev/null || true
+
+5) === BUILD HEALTH ===
+echo ">>> nx build web"
+npx nx build web --skip-nx-cache || true
+echo ">>> nx build bff"
+npx nx build bff --skip-nx-cache || true
+
+6) === START DEV SERVERS (BFF with offline SSO) ===
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true \
+  OIDC_ENABLED=true \
+  OIDC_OFFLINE_CALLBACK=true \
+  OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.audit.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.audit.log 2>&1 &
+sleep 7
+echo ">>> BFF log tail"; tail -n 40 /tmp/bff.audit.log || true
+echo ">>> WEB log tail"; tail -n 40 /tmp/web.audit.log || true
+
+7) === UI SMOKE ===
+echo ">>> GET / (expect login page HTML)"
+curl -sS http://127.0.0.1:3000 | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'Sign in|Login|Organization|Email' -n || true
+
+8) === SSO VIA SAME-ORIGIN PROXY (cookie end-to-end) ===
+echo ">>> Authorize (302 expected)"
+curl -i -sS http://127.0.0.1:3000/api/bff/oidc/authorize | sed -n '1,20p'
+echo ">>> Callback (302 + Set-Cookie expected)"
+curl -i -sS "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" -c /tmp/cj.txt | sed -n '1,25p'
+echo ">>> /api/bff/auth/me with cookie (200 JSON expected)"
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.txt -H "Accept: application/json" | head -c 800; echo
+
+9) === LINT (non-blocking) ===
+echo ">>> nx lint web"; npx nx lint web || true
+echo ">>> nx lint bff"; npx nx lint bff || true
+
+10) === ROADMAP SNAPSHOT ===
+[ -f context/ROADMAP.md ] && (grep -n "\*\*DONE\|\*\*IN PROGRESS\|\*\*NEXT" context/ROADMAP.md || sed -n '1,160p' context/ROADMAP.md) || echo "context/ROADMAP.md not found"
+
+At the end, confirm:
+- Current branch & last 10 commits; any uncommitted changes.
+- Whether both builds are green.
+- Whether SSO proxy flow set cookies and /auth/me returned
