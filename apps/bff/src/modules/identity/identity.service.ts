@@ -30,4 +30,14 @@ export class IdentityService {
   async getUsersByOrg(orgId: string, limit = 20) {
     return this.repository.getUsersByOrg(orgId, limit);
   }
+
+  async getUsers(orgId: string, limit = 20) {
+    // wrapper for listing users by organization
+    return this.repository.listUsersByOrg(orgId, limit);
+  }
+
+  async getOrgs(limit = 20) {
+    // wrapper for listing organizations
+    return this.repository.getOrganizations(limit);
+  }
 }
