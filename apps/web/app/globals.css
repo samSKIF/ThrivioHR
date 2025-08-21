@@ -181,8 +181,8 @@ html, body {
   color: white;
 }
 
+@import "../styles/legacy.css";
+
 .btn-secondary:hover {
   background-color: #111827;
 }
-
-@import "../styles/legacy.css";

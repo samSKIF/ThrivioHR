@@ -34,7 +34,7 @@ html, body {
 .card-pad { padding: 1rem; }
 .muted { color: var(--legacy-muted); }
 .link { text-decoration: underline; }
-.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; border: 1px solid transparent; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; text-decoration: none; }
 .btn-primary { background: var(--legacy-accent); color: var(--legacy-accent-contrast); }
 .btn-ghost { background: transparent; border-color: var(--legacy-border); }
 .input { width: 100%; border: 1px solid var(--legacy-border); border-radius: 10px; padding: .55rem .7rem; }
