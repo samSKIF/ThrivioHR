@@ -24,7 +24,7 @@ export default function MePage() {
     async function run() {
       try {
         // Call BFF with cookies
-        const res = await fetch(`${BFF}/auth/me`, {
+        const res = await fetch(`/api/bff/auth/me`, {
           method: "GET",
           credentials: "include",
           headers: { "Accept": "application/json" },

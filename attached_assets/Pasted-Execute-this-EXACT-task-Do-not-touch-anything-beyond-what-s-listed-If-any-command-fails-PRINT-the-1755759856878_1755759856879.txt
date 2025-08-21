@@ -1,0 +1,176 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Eliminate the browser 403 by making SSO same-origin via a Next.js proxy. 
+All browser calls go to /api/bff/* (web domain), which forwards to the BFF and rewrites redirects/cookies.
+
+TOUCH ONLY
+apps/web/app/api/bff/[...path]/route.ts
+apps/web/components/Header.tsx
+apps/web/app/page.tsx
+apps/web/app/me/page.tsx
+apps/web/next.config.mjs
+
+CHANGES
+1) Create a catch-all proxy API route for the BFF.
+--- FULL FILE: apps/web/app/api/bff/[...path]/route.ts ---
+export const dynamic = "force-dynamic";
+
+const BFF_BASE =
+  process.env.BFF_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_BFF_URL ||
+  "http://127.0.0.1:5000"; // server-to-server default
+
+function buildTarget(req: Request, path: string[]) {
+  const url = new URL(req.url);
+  const search = url.search || "";
+  const cleanBase = BFF_BASE.replace(/\/+$/, "");
+  const cleanPath = path.join("/");
+  return `${cleanBase}/${cleanPath}${search}`;
+}
+
+async function proxy(req: Request, ctx: { params: { path: string[] } }) {
+  const target = buildTarget(req, ctx.params.path || []);
+  const incoming = new Headers(req.headers);
+  // Ensure Host header matches BFF (helpful for some frameworks)
+  try {
+    incoming.set("host", new URL(BFF_BASE).host);
+  } catch {}
+
+  const init: RequestInit = {
+    method: req.method,
+    headers: incoming,
+    body: ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer(),
+    redirect: "manual", // we want to pass 3xx + Location through
+  };
+
+  const res = await fetch(target, init);
+  const headers = new Headers(res.headers);
+
+  // Rewrite Location back to same-origin if BFF points to localhost:3000
+  // so browser lands on our web app domain (not 127.0.0.1).
+  const loc = headers.get("location");
+  if (loc) {
+    try {
+      const l = new URL(loc, BFF_BASE);
+      if (
+        l.href.startsWith("http://127.0.0.1:3000") ||
+        l.href.startsWith("http://localhost:3000")
+      ) {
+        const origin = new URL(req.url).origin;
+        headers.set("location", `${origin}${l.pathname}${l.search}`);
+      }
+    } catch {
+      /* ignore malformed Location */
+    }
+  }
+
+  // NOTE: Set-Cookie headers are preserved automatically by Next Response when copied from fetch's response
+  // Return raw body to preserve binary/redirect semantics.
+  const buf = await res.arrayBuffer();
+  return new Response(buf, { status: res.status, headers });
+}
+
+export { proxy as GET, proxy as POST, proxy as PUT, proxy as PATCH, proxy as DELETE, proxy as OPTIONS };
+--- END FILE ---
+
+2) Use the proxy for the SSO button (no direct 127.0.0.1 links).
+--- FULL FILE REPLACEMENT: apps/web/components/Header.tsx ---
+"use client";
+import Link from "next/link";
+export default function Header() {
+  return (
+    <header className="w-full border-b border-[#eaeaea] mb-6">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="font-semibold">ThrivioHR</Link>
+        <nav className="flex items-center gap-3">
+          <Link href="/me" className="underline">Me</Link>
+          <a href="/api/bff/oidc/authorize" className="rounded px-3 py-1.5 bg-black text-white">
+            Sign in with SSO
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+--- END FILE ---
+
+3) Home page SSO CTA → proxy.
+--- FULL FILE REPLACEMENT: apps/web/app/page.tsx ---
+import Header from "../components/Header";
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-white text-black">
+      <Header />
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
+        <p className="text-sm text-neutral-600 mb-6">
+          Sign in, then visit <code>/me</code> to see your profile (from <code>/auth/me</code>).
+        </p>
+        <a href="/api/bff/oidc/authorize" className="inline-block rounded px-4 py-2 bg-black text-white">
+          Sign in with SSO
+        </a>
+      </section>
+    </main>
+  );
+}
+--- END FILE ---
+
+4) /me fetches current user via the proxy (same-origin cookies; no CORS).
+--- PATCH: apps/web/app/me/page.tsx ---
+@@
+-import { useEffect, useState } from "react";
++import { useEffect, useState } from "react";
+@@
+-        const res = await fetch(`${BFF}/auth/me`, {
++        const res = await fetch(`/api/bff/auth/me`, {
+           method: "GET",
+           credentials: "include",
+           headers: { "Accept": "application/json" },
+         });
+--- END PATCH ---
+
+5) Keep the Next config (no change needed) but ensure env won’t break the proxy.
+--- FULL FILE REPLACEMENT: apps/web/next.config.mjs ---
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: { appDir: true },
+  env: {
+    // Optional: if you want the proxy to target a custom BFF URL server-side.
+    BFF_INTERNAL_URL: process.env.BFF_INTERNAL_URL || "http://127.0.0.1:5000",
+  },
+};
+export default nextConfig;
+--- END FILE ---
+
+RUN & PRINT
+echo "=== Rebuild web to pick up API route ==="
+npx nx build web --skip-nx-cache || true
+
+echo "=== Restart dev servers ==="
+( killall node 2>/dev/null || true; sleep 1 )
+DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true npx nx run bff:dev >/tmp/bff.proxy.log 2>&1 &
+sleep 7
+npx nx run web:dev >/tmp/web.proxy.log 2>&1 &
+sleep 7
+
+echo "=== Logs (tails) ==="
+tail -n 40 /tmp/bff.proxy.log || true
+tail -n 40 /tmp/web.proxy.log || true
+
+echo "=== Smoke: same-origin SSO via proxy (should 302) ==="
+curl -sSI http://127.0.0.1:3000/api/bff/oidc/authorize | sed -n '1,20p' || true
+
+echo "=== Smoke: offline callback (should 302 + Set-Cookie; Location → /me) ==="
+curl -sSI "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" | tr -d '\r' | sed -n '1,25p' || true
+
+echo "=== Smoke: /me through proxy (after cookie set this would show data; here we just confirm endpoint exists) ==="
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -H "Accept: application/json" -I | sed -n '1,12p' || true
+
+At the end, confirm:
+- /api/bff/oidc/authorize returns 302 (no 403) from the browser.
+- Clicking SSO now lands on /me on the same web origin.
+- Any regressions in previously working features.
+STOP.

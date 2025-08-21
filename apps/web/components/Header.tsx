@@ -1,8 +1,5 @@
 "use client";
 import Link from "next/link";
-
-const BFF = (process.env.NEXT_PUBLIC_BFF_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
-
 export default function Header() {
   return (
     <header className="w-full border-b border-[#eaeaea] mb-6">
@@ -10,7 +7,7 @@ export default function Header() {
         <Link href="/" className="font-semibold">ThrivioHR</Link>
         <nav className="flex items-center gap-3">
           <Link href="/me" className="underline">Me</Link>
-          <a href={`${BFF}/oidc/authorize`} className="rounded px-3 py-1.5 bg-black text-white">
+          <a href="/api/bff/oidc/authorize" className="rounded px-3 py-1.5 bg-black text-white">
             Sign in with SSO
           </a>
         </nav>
