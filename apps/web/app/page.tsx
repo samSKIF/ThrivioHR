@@ -1,17 +1,34 @@
-import Header from "../components/Header";
-export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-white text-black">
-      <Header />
-      <section className="max-w-5xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold mb-2">Welcome to ThrivioHR</h1>
-        <p className="text-sm text-neutral-600 mb-6">
-          Sign in, then visit <code>/me</code> to see your profile (from <code>/auth/me</code>).
-        </p>
-        <a href="/api/bff/oidc/authorize" className="inline-block rounded px-4 py-2 bg-black text-white">
-          Sign in with SSO
-        </a>
-      </section>
-    </main>
-  );
+import { headers, cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import LoginPage from "./login/page";
+
+export default async function HomePage() {
+  // Build origin from incoming request (works on Replit and localhost)
+  const h = await headers();
+  const origin =
+    `${h.get("x-forwarded-proto") || "http"}://${h.get("host") || "127.0.0.1:3000"}`;
+
+  // Forward the incoming cookie to our same-origin API proxy
+  const cookieHeader = (await cookies()).toString();
+
+  try {
+    const res = await fetch(`${origin}/api/bff/auth/me`, {
+      headers: { cookie: cookieHeader, Accept: "application/json" },
+      // we want a fresh view of auth each request
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const me = await res.json();
+      const isAuthed = !!(me?.email || me?.sub || me?.id);
+      if (isAuthed) {
+        // logged in → go to profile
+        redirect("/me");
+      }
+    }
+  } catch {
+    // ignore network/parse errors; fall through to login page
+  }
+
+  // not logged in → show login page (header/menu is in root layout)
+  return <LoginPage />;
 }

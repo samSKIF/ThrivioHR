@@ -1,0 +1,74 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make the home route (/) show the Login page when unauthenticated, and redirect to /me when authenticated — menu stays on top via layout.
+
+TOUCH ONLY
+apps/web/app/page.tsx
+
+CHANGES
+1) apps/web/app/page.tsx — server component that checks auth and redirects or renders Login.
+--- FULL FILE REPLACEMENT: apps/web/app/page.tsx ---
+import { headers, cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import LoginPage from "./login/page";
+
+export default async function HomePage() {
+  // Build origin from incoming request (works on Replit and localhost)
+  const h = headers();
+  const origin =
+    `${h.get("x-forwarded-proto") || "http"}://${h.get("host") || "127.0.0.1:3000"}`;
+
+  // Forward the incoming cookie to our same-origin API proxy
+  const cookieHeader = cookies().toString();
+
+  try {
+    const res = await fetch(`${origin}/api/bff/auth/me`, {
+      headers: { cookie: cookieHeader, Accept: "application/json" },
+      // we want a fresh view of auth each request
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const me = await res.json();
+      const isAuthed = !!(me?.email || me?.sub || me?.id);
+      if (isAuthed) {
+        // logged in → go to profile
+        redirect("/me");
+      }
+    }
+  } catch {
+    // ignore network/parse errors; fall through to login page
+  }
+
+  // not logged in → show login page (header/menu is in root layout)
+  return <LoginPage />;
+}
+--- END FILE ---
+
+RUN & PRINT
+echo "=== Build web ==="
+npx nx build web --skip-nx-cache || true
+
+echo "=== Restart dev (BFF + Web, offline SSO) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.home.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.home.log 2>&1 &
+sleep 7
+
+echo ">>> Tails"
+tail -n 30 /tmp/bff.home.log || true
+tail -n 30 /tmp/web.home.log || true
+
+echo "=== Smoke: when NOT logged in, / shows Login ==="
+curl -sS http://127.0.0.1:3000/ | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'Sign in|Organization ID|Login with SSO' -n || true
+
+echo "=== Smoke: after login, / redirects to /me ==="
+curl -i -sS "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" -c /tmp/cj.home.txt | sed -n '1,12p'
+curl -I -sS http://127.0.0.1:3000/ -b /tmp/cj.home.txt | sed -n '1,12p'
+curl -sS http://127.0.0.1:3000/me -b /tmp/cj.home.txt | sed -n '1,80p' | sed 's/<[^>]*>/ /g' | egrep -i 'Profile|ThrivioHR|email|organization' -n || true
+
+# At the end, confirm where we are vs the roadmap and if there is any regression in previous features.
+STOP.
