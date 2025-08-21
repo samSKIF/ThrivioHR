@@ -1,11 +1,14 @@
 import { Controller, Get, Query, Res, Inject, Headers } from '@nestjs/common';
 import type { Response } from 'express';
 import { OidcService } from './oidc.service';
-import { signUserJwt } from '../../auth/jwt.util';
+import { AuthService } from '../../auth/auth.service';
 
 @Controller('oidc')
 export class OidcController {
-  constructor(@Inject(OidcService) private readonly svc: OidcService) {}
+  constructor(
+    @Inject(OidcService) private readonly svc: OidcService,
+    @Inject(AuthService) private readonly authService: AuthService
+  ) {}
 
   @Get('authorize')
   authorize(@Res() res: Response, @Query('origin') origin?: string) {
@@ -34,8 +37,43 @@ export class OidcController {
       // Offline/dev path
       if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {
         const claims = this.svc.offlineCallback(q);
-        const jwt = signUserJwt({ sub: claims.sub, email: claims.email, name: claims.name });
-        res.cookie('sid', jwt, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+        
+        // Use AuthService to issue proper tokens for the user in database
+        try {
+          const authResult = await this.authService.issueTokensForEmail(claims.email, {
+            firstName: claims.name?.split(' ')[0] || undefined,
+            lastName: claims.name?.split(' ').slice(1).join(' ') || undefined,
+            displayName: claims.name
+          });
+          
+          // Set the same HTTP-only cookies as normal login
+          res.cookie('accessToken', authResult.accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+          });
+          
+          res.cookie('refreshToken', authResult.refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          });
+          
+        } catch (error) {
+          // If user doesn't exist in database, redirect to login with error
+          let redirectUrl = 'http://localhost:3000/login?error=user_not_found';
+          if (q.origin) {
+            redirectUrl = `${q.origin}/login?error=user_not_found`;
+          } else if (referer) {
+            const refererUrl = new URL(referer);
+            redirectUrl = `${refererUrl.origin}/login?error=user_not_found`;
+          } else if (process.env.WEB_PUBLIC_URL) {
+            redirectUrl = `${process.env.WEB_PUBLIC_URL.replace(/\/+$/, "")}/login?error=user_not_found`;
+          }
+          return res.redirect(redirectUrl);
+        }
         
         // Use origin from query params (passed through the flow)
         let redirectUrl = 'http://localhost:3000/me';
