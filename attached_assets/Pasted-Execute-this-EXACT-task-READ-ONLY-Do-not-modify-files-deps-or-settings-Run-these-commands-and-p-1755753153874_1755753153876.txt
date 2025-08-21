@@ -1,0 +1,72 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) === GIT & BRANCH ===
+git rev-parse --abbrev-ref HEAD
+git log --oneline -n 5
+git status -s
+
+2) === TOOLING VERSIONS ===
+node -v
+pnpm -v
+npx nx --version
+
+3) === REPO LAYOUT (top) ===
+ls -la
+printf "\n=== apps & services (2 levels) ===\n"
+find apps -maxdepth 2 -type d -print 2>/dev/null || true
+find services -maxdepth 2 -type d -print 2>/dev/null || true
+
+4) === DOTENV USAGE & FILES ===
+printf "\nFiles importing dotenv:\n"
+grep -R --line-number "dotenv" apps services || true
+printf "\n.env presence and first lines (masked):\n"
+[ -f .env ] && (ls -lh .env; head -n 10 .env | sed 's/=.*/=***MASKED***/') || echo "No .env at repo root"
+
+5) === CURRENT ENV SNAPSHOT (OIDC/JWT) ===
+printenv | egrep '^OIDC_|^JWT_' | sed 's/=.*/=***MASKED***/' || true
+
+6) === BUILD HEALTH (BFF) ===
+echo ">>> nx build bff"
+npx nx build bff --skip-nx-cache || true
+
+7) === DEV BOOT (BFF) + ENDPOINT SMOKE ===
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true \
+  OIDC_DEBUG=true \
+  OIDC_ENABLED=true \
+  OIDC_ISSUER="https://accounts.google.com" \
+  OIDC_CLIENT_ID="dev-dummy" \
+  OIDC_CLIENT_SECRET="dev-dummy" \
+  OIDC_REDIRECT_URI="http://127.0.0.1:5000/oidc/callback" \
+  OIDC_AUTHORIZATION_ENDPOINT="https://accounts.google.com/o/oauth2/v2/auth" \
+  OIDC_OFFLINE_CALLBACK=true \
+  JWT_SECRET="dev-secret" \
+  npx nx run bff:dev >/tmp/bff.diag.log 2>&1 & )
+sleep 7
+echo ">>> /tmp/bff.diag.log (tail)"
+tail -n 40 /tmp/bff.diag.log || true
+echo ">>> /health"
+curl -sS http://127.0.0.1:5000/health || true
+echo ">>> /oidc/authorize (headers)"
+curl -sSI http://127.0.0.1:5000/oidc/authorize | sed -n '1,15p' || true
+echo ">>> /oidc/callback?code=fake (headers)"
+curl -sSI "http://127.0.0.1:5000/oidc/callback?code=fake" | sed -n '1,20p' || true
+
+8) === DB & TESTS QUICK CHECK ===
+echo ">>> pnpm db:check"
+pnpm db:check || true
+echo ">>> pnpm test:identity (summary)"
+pnpm test:identity -- --reporters=default --watchAll=false | tail -n 30 || true
+
+9) === WEB APP PRESENCE ===
+[ -d apps/web ] && (echo "apps/web exists"; jq -r '.name' apps/web/project.json 2>/dev/null || true; echo ">>> nx build web"; npx nx build web --skip-nx-cache || true) || echo "apps/web not found"
+
+10) === ROADMAP SNAPSHOT ===
+echo "Statuses in ROADMAP.md:"
+grep -n "\*\*DONE\|\*\*IN PROGRESS\|\*\*NEXT" ROADMAP.md || sed -n '1,120p' ROADMAP.md
+
+At the end, confirm: 
+- Where are we vs the roadmap milestones (Big 3a/3b/4)?
+- Any regressions in previously working features (auth endpoints, identity tests, health checks)?
+STOP.
