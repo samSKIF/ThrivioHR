@@ -1,9 +1,12 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Inject, forwardRef } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 
 @Controller('directory')
 export class DirectoryController {
-  constructor(private readonly identity: IdentityService) {}
+  constructor(
+    @Inject(forwardRef(() => IdentityService))
+    private readonly identity: IdentityService,
+  ) {}
 
   /**
    * List users by organization.

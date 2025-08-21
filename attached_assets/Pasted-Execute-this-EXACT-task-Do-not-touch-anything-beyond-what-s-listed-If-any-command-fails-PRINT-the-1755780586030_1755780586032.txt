@@ -1,0 +1,72 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make DirectoryController DI reliable and verify the Directory list works after login.
+
+TOUCH ONLY
+apps/bff/src/modules/identity/directory.controller.ts
+apps/bff/src/modules/identity/identity.module.ts
+
+CHANGES
+1) apps/bff/src/modules/identity/directory.controller.ts — use explicit @Inject with forwardRef for safety.
+--- PATCH START ---
+@@
+-import { Controller, Get, Query } from '@nestjs/common';
++import { Controller, Get, Query, Inject, forwardRef } from '@nestjs/common';
+ import { IdentityService } from './identity.service';
+@@
+ export class DirectoryController {
+-  constructor(private readonly identity: IdentityService) {}
++  constructor(
++    @Inject(forwardRef(() => IdentityService))
++    private readonly identity: IdentityService,
++  ) {}
+@@
+-    const result = await this.identity.getUsers({ orgId }, limit);
++    const result = await this.identity.getUsers({ orgId }, limit);
+--- PATCH END ---
+
+2) apps/bff/src/modules/identity/identity.module.ts — ensure providers/exports include IdentityService and controller is registered.
+--- PATCH START ---
+@@
+-import { Module, forwardRef } from '@nestjs/common';
++import { Module, forwardRef } from '@nestjs/common';
+ import { IdentityService } from './identity.service';
++import { DirectoryController } from './directory.controller';
+@@
+-  providers: [IdentityService, /* existing providers */],
++  providers: [IdentityService, /* existing providers */],
++  exports: [IdentityService],
+-  controllers: [/* existing controllers here */],
++  controllers: [/* existing controllers here */, DirectoryController],
+--- PATCH END ---
+
+RUN & PRINT
+echo "=== Build BFF & Web ==="
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+
+echo "=== Restart dev (offline SSO) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.dirdi.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.dirdi.log 2>&1 &
+sleep 7
+echo ">>> BFF log tail"; tail -n 40 /tmp/bff.dirdi.log || true
+echo ">>> Web log tail"; tail -n 40 /tmp/web.dirdi.log || true
+
+echo "=== End-to-end smoke (cookie + directory) ==="
+echo "> SSO callback to get cookie"
+curl -i -sS "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" -c /tmp/cj.txt | sed -n '1,20p'
+echo "> /auth/me (JSON)"
+ME=$(curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.txt -H "Accept: application/json"); echo "$ME" | head -c 600; echo
+ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organizationId":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organization_id":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"orgId":"\([^"]*\)".*/\1/p')
+echo "> /directory/users via proxy"
+[ -n "$ORG_ID" ] && curl -sS "http://127.0.0.1:3000/api/bff/directory/users?orgId=$ORG_ID&limit=5" -b /tmp/cj.txt | head -c 800; echo
+
+# Confirm where we are vs the roadmap (Big 3a/3b/4) and if there is any regression in previous features.
+STOP.
