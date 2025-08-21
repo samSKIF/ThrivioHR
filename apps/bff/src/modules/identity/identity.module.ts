@@ -3,10 +3,11 @@ import { DbModule } from '../db/db.module';
 import { IdentityController } from './identity.controller';
 import { IdentityService } from './identity.service';
 import { IdentityRepository } from './identity.repository';
+import { DirectoryController } from './directory.controller';
 
 @Module({
   imports: [DbModule],
-  controllers: [IdentityController],
+  controllers: [IdentityController, DirectoryController],
   providers: [
     IdentityRepository,
     {

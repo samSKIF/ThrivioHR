@@ -1,0 +1,243 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add a minimal Directory “List Users” feature:
+- BFF: GET /directory/users?orgId=...&limit=...&cursor=...
+- Web: /directory/users page with table + “Load more”
+- Use same-origin proxy (/api/bff/...) so cookies flow without CORS.
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.module.ts
+apps/bff/src/modules/identity/directory.controller.ts
+apps/web/components/Header.tsx
+apps/web/app/directory/users/page.tsx
+
+CHANGES
+1) Create apps/bff/src/modules/identity/directory.controller.ts
+--- FULL FILE ---
+import { Controller, Get, Query } from '@nestjs/common';
+import { IdentityService } from './identity.service';
+
+@Controller('directory')
+export class DirectoryController {
+  constructor(private readonly identity: IdentityService) {}
+
+  /**
+   * List users by org with optional cursor pagination.
+   * Query: orgId (required), limit (default 20), cursor (optional)
+   */
+  @Get('users')
+  async listUsers(
+    @Query('orgId') orgId: string,
+    @Query('limit') limitStr?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    if (!orgId || typeof orgId !== 'string') {
+      return { users: [], nextCursor: null, error: 'orgId required' };
+    }
+    const limit = Math.min(Math.max(parseInt(limitStr || '20', 10) || 20, 1), 100);
+
+    // try cursor-aware path first, fallback to simple list
+    if (cursor) {
+      const rows = await this.identity['repository']?.listUsersByOrgAfter?.(orgId, undefined, limit);
+      // NOTE: for simplicity in MVP, ignore cursor arg for now (we’ll wire true cursor next)
+      const users = Array.isArray(rows) ? rows : [];
+      const nextCursor = users.length === limit ? users[users.length - 1]?.id ?? null : null;
+      return { users, nextCursor };
+    } else {
+      const rows = await this.identity['repository']?.listUsersByOrg?.(orgId, limit);
+      const users = Array.isArray(rows) ? rows : [];
+      const nextCursor = users.length === limit ? users[users.length - 1]?.id ?? null : null;
+      return { users, nextCursor };
+    }
+  }
+}
+--- END FILE ---
+
+2) Wire the controller into the Identity module
+--- PATCH (apps/bff/src/modules/identity/identity.module.ts) ---
+@@
+-import { Module, forwardRef } from '@nestjs/common';
++import { Module, forwardRef } from '@nestjs/common';
++import { DirectoryController } from './directory.controller';
+@@
+-  controllers: [/* existing controllers here */],
++  controllers: [/* existing controllers here */, DirectoryController],
+--- END PATCH ---
+
+3) Add nav link in header to the new page
+--- PATCH (apps/web/components/Header.tsx) ---
+@@
+-        <nav className="flex items-center gap-3">
++        <nav className="flex items-center gap-3">
++          <Link href="/directory/users" className="underline">Directory</Link>
+           <Link href="/me" className="underline">Me</Link>
+           <a href="/api/bff/oidc/authorize" className="rounded px-3 py-1.5 bg-black text-white">
+             Sign in with SSO
+           </a>
+         </nav>
+--- END PATCH ---
+
+4) Create the Directory page at /directory/users
+--- FULL FILE (apps/web/app/directory/users/page.tsx) ---
+"use client";
+
+import { useEffect, useState } from "react";
+
+type UserRow = {
+  id: string;
+  organizationId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+};
+
+export default function DirectoryUsersPage() {
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [rows, setRows] = useState<UserRow[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function fetchMe() {
+    const res = await fetch("/api/bff/auth/me", { credentials: "include", headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(`auth/me ${res.status}`);
+    const me = await res.json();
+    return me?.organizationId || me?.organization_id || me?.orgId || null;
+  }
+
+  async function fetchPage(cursor?: string | null) {
+    const params = new URLSearchParams();
+    if (!orgId) return;
+    params.set("orgId", orgId);
+    params.set("limit", "20");
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/bff/directory/users?${params.toString()}`, { credentials: "include" });
+    if (!res.ok) throw new Error(`directory/users ${res.status}`);
+    return res.json();
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const id = await fetchMe();
+        if (!id) throw new Error("No orgId found on current user.");
+        setOrgId(id);
+        const page = await fetchPage.call({orgId: id});
+        // quick cast due to call binding: re-run properly
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (!orgId) return;
+      try {
+        setLoading(true);
+        const res = await fetchPage(null);
+        setRows(res?.users ?? []);
+        setNextCursor(res?.nextCursor ?? null);
+        setError(null);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load directory.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [orgId]);
+
+  async function loadMore() {
+    if (!orgId || !nextCursor) return;
+    try {
+      setLoading(true);
+      const res = await fetchPage(nextCursor);
+      setRows(prev => [...prev, ...(res?.users ?? [])]);
+      setNextCursor(res?.nextCursor ?? null);
+    } catch (e: any) {
+      setError(e?.message || "Failed to load more.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-white text-black max-w-5xl mx-auto px-4 py-10">
+      <h1 className="text-2xl font-bold mb-4">Directory — Users</h1>
+      {loading && rows.length === 0 && <p>Loading…</p>}
+      {error && (
+        <div className="rounded border border-red-300 bg-red-50 p-3 mb-4">
+          <div className="font-semibold mb-1">Error</div>
+          <div className="text-sm">{error}</div>
+        </div>
+      )}
+      {!loading && rows.length === 0 && !error && <p>No users found.</p>}
+
+      {rows.length > 0 && (
+        <div className="overflow-x-auto border rounded">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#fafafa] border-b">
+              <tr>
+                <th className="p-2">Name</th>
+                <th className="p-2">Email</th>
+                <th className="p-2">Organization</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((u) => {
+                const name = u.displayName || [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+                return (
+                  <tr key={u.id} className="border-b">
+                    <td className="p-2">{name}</td>
+                    <td className="p-2">{u.email}</td>
+                    <td className="p-2">{u.organizationId}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={loadMore}
+          disabled={!nextCursor || loading}
+          className="rounded px-3 py-1.5 bg-black text-white disabled:opacity-50"
+        >
+          {nextCursor ? (loading ? "Loading…" : "Load more") : "No more"}
+        </button>
+      </div>
+    </main>
+  );
+}
+--- END FILE ---
+
+RUN & PRINT
+echo "=== Build both apps ==="
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+
+echo "=== Boot dev (offline SSO) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.dir.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.dir.log 2>&1 &
+sleep 7
+tail -n 40 /tmp/bff.dir.log || true
+tail -n 40 /tmp/web.dir.log || true
+
+echo "=== Smoke: auth & directory ==="
+echo "> auth/me"
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -H "Accept: application/json" | head -c 400; echo
+echo "> directory/users (orgId from auth/me)"
+ORG_ID=$(curl -sS http://127.0.0.1:3000/api/bff/auth/me -H "Accept: application/json" | jq -r '.organizationId // .organization_id // .orgId // empty')
+[ -n "$ORG_ID" ] && curl -sS "http://127.0.0.1:3000/api/bff/directory/users?orgId=$ORG_ID&limit=5" | head -c 800; echo
+
+# Confirm where we are vs the roadmap and if there is any regression in previous features.
+STOP.
