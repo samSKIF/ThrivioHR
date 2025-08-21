@@ -1,6 +1,5 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import LoginPage from "./login/page";
 
 export default async function HomePage() {
   // Build origin from incoming request (works on Replit and localhost)
@@ -29,6 +28,6 @@ export default async function HomePage() {
     // ignore network/parse errors; fall through to login page
   }
 
-  // not logged in → show login page (header/menu is in root layout)
-  return <LoginPage />;
+  // not logged in → redirect to login page
+  redirect('/login');
 }
