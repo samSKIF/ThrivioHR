@@ -60,6 +60,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
         l.href.includes("localhost:3000")
       ) {
         console.log(`[PROXY] Rewriting location from ${l.href} to ${origin}${l.pathname}${l.search}`);
+        console.log(`[PROXY] Request origin: ${origin}, Request URL: ${req.url}`);
         headers.set("location", `${origin}${l.pathname}${l.search}`);
       }
     } catch (e) {
