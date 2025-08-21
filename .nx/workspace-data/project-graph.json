@@ -10262,18 +10262,18 @@
       "type": "npm",
       "name": "npm:postcss",
       "data": {
-        "version": "8.4.31",
-        "packageName": "postcss",
-        "hash": "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ=="
-      }
-    },
-    "npm:postcss@8.5.6": {
-      "type": "npm",
-      "name": "npm:postcss@8.5.6",
-      "data": {
         "version": "8.5.6",
         "packageName": "postcss",
         "hash": "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg=="
+      }
+    },
+    "npm:postcss@8.4.31": {
+      "type": "npm",
+      "name": "npm:postcss@8.4.31",
+      "data": {
+        "version": "8.4.31",
+        "packageName": "postcss",
+        "hash": "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ=="
       }
     },
     "npm:postgres-array": {
@@ -11669,6 +11669,15 @@
         "version": "0.11.11",
         "packageName": "synckit",
         "hash": "sha512-MeQTA1r0litLUf0Rp/iisCaL8761lKAZHaimlbGK4j0HysC4PLfqygQj9srcs0m2RdtDYnF8UuYyKpbjHYp7Jw=="
+      }
+    },
+    "npm:tailwindcss": {
+      "type": "npm",
+      "name": "npm:tailwindcss",
+      "data": {
+        "version": "4.1.12",
+        "packageName": "tailwindcss",
+        "hash": "sha512-DzFtxOi+7NsFf7DBtI3BJsynR+0Yp6etH+nRPTbpWnS2pZBaSksv/JGctNwSWzbFjp0vxSqknaUylseZqMDGrA=="
       }
     },
     "npm:tapable": {
@@ -17995,7 +18004,7 @@
       },
       {
         "source": "npm:@nx/webpack",
-        "target": "npm:postcss@8.5.6",
+        "target": "npm:postcss",
         "type": "static"
       },
       {
@@ -20432,7 +20441,7 @@
       },
       {
         "source": "npm:css-loader",
-        "target": "npm:postcss@8.5.6",
+        "target": "npm:postcss",
         "type": "static"
       },
       {
@@ -25019,7 +25028,7 @@
       },
       {
         "source": "npm:next",
-        "target": "npm:postcss",
+        "target": "npm:postcss@8.4.31",
         "type": "static"
       },
       {
@@ -26014,19 +26023,19 @@
         "type": "static"
       }
     ],
-    "npm:postcss@8.5.6": [
+    "npm:postcss@8.4.31": [
       {
-        "source": "npm:postcss@8.5.6",
+        "source": "npm:postcss@8.4.31",
         "target": "npm:nanoid",
         "type": "static"
       },
       {
-        "source": "npm:postcss@8.5.6",
+        "source": "npm:postcss@8.4.31",
         "target": "npm:picocolors",
         "type": "static"
       },
       {
-        "source": "npm:postcss@8.5.6",
+        "source": "npm:postcss@8.4.31",
         "target": "npm:source-map-js",
         "type": "static"
       }
@@ -28591,5 +28600,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1755756875655
+  "computedAt": 1755757099326
 }
