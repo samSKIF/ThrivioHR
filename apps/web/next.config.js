@@ -8,6 +8,11 @@ module.exports = {
   async rewrites() {
     return [
       {
+        // Proxy all BFF API requests
+        source: '/api/bff/:path*',
+        destination: `${apiBase}/:path*`,
+      },
+      {
         // Proxy all auth requests to the BFF
         source: '/auth/:path*',
         destination: `${apiBase}/auth/:path*`,
