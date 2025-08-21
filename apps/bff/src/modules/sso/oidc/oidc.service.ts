@@ -40,15 +40,27 @@ export class OidcService {
 
   /**
    * Build a front-channel authorize URL without network discovery.
-   * If OIDC_AUTHORIZATION_ENDPOINT is provided, use it.
-   * Otherwise, derive a reasonable default from OIDC_ISSUER.
+   * If OIDC_OFFLINE_CALLBACK=true, create a local callback URL for development.
+   * Otherwise, use the real OIDC provider endpoint.
    */
   buildAuthorizeUrl(): string {
     if (!this.enabled) throw new Error('oidc_disabled');
 
+    const redirectUri = required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
+
+    // In offline mode, redirect directly to callback with a fake code
+    if (process.env.OIDC_OFFLINE_CALLBACK === 'true') {
+      const fakeCode = this.rnd();
+      const fakeState = this.rnd();
+      const url = new URL(redirectUri);
+      url.searchParams.set('code', fakeCode);
+      url.searchParams.set('state', fakeState);
+      return url.toString();
+    }
+
+    // Real OIDC flow for production
     const issuer = required('OIDC_ISSUER', process.env.OIDC_ISSUER);
     const clientId = required('OIDC_CLIENT_ID', process.env.OIDC_CLIENT_ID);
-    const redirectUri = required('OIDC_REDIRECT_URI', process.env.OIDC_REDIRECT_URI);
 
     // Prefer explicit endpoint override
     const explicitAuthz = process.env.OIDC_AUTHORIZATION_ENDPOINT;
