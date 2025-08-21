@@ -31,6 +31,7 @@ ThrivioHR is a multi-region, multi-tenant Employee Engagement OS with Recognitio
 
 ## 4) Identity & access
 - **SSO**: OIDC + SAML in MVP; **CSV/JIT** provisioning; **SCIM Phase 2**.
+- **Local Auth**: secure email/password login with Argon2 hashing, where each email belongs to exactly one organisation.
 - **RBAC roles**: PlatformSuperAdmin (Thrivio staff), TenantSuperAdmin, LocationAdmin, DepartmentAdmin, DeptInCountryAdmin, Manager, Employee. **Finance** is a capability toggle assignable by TenantSuperAdmin.
 - **Scope model**: RoleBinding with **org scopes** (Company/Department/Team) ∩ **location scopes** (Country/City/Site).
 - **Policy engine**: ABAC on top of RBAC (Cerbos/OpenFGA). Deny by default.
@@ -103,10 +104,10 @@ ThrivioHR is a multi-region, multi-tenant Employee Engagement OS with Recognitio
 - L3 white-labeling: logo, colors, fonts, design tokens; custom domain; branded emails/exports; optional per-country sub-branding.
 
 ## 17) Admin surfaces
-- **Thrivio Control** (staff): clients, entitlements, wallet funding/refunds (FinanceOps), marketplace providers, KYC/AML, recon, support sessions, audit.
+- **Thrivio Control** (staff): client creation, subscription management, credit allocation/refunds, feature toggles, marketplace provider onboarding, catalog/product management, order handling, vouchers, refunds and SLAs, entitlements, wallet funding/refunds (FinanceOps), KYC/AML, recon, support sessions, audit.
 - **Admin Console** (tenant): people/org/location, budgets, values/categories, recognition policies, branding, SSO, integrations, analytics, Rewards setup.
 - **Workspace** (employee/manager): feed, recognition, missions (light), awards/wallet/shop (if Rewards ON), insights, org chart.
-- **Merchant Center** (sellers): catalog, orders, vouchers, SLAs.
+- **Merchant Center** (sellers): merchant onboarding with KYC/AML, catalog/product management including self‑service creation, order and refund handling, voucher issuance, catalog, orders, vouchers, SLAs.
 
 ## 18) Non-goals in MVP (explicit)
 - Split-pay (cards) — adapter designed, not enabled.

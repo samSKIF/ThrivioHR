@@ -50,3 +50,6 @@ The system employs a monorepo structure managed by `pnpm` and orchestrated by `N
 - **Nx**: Monorepo orchestration.
 - **pnpm**: Package manager.
 - **TypeScript**: Primary programming language.
+
+## Recent Changes
+- **2025-08-21**: **ROADMAP & ARCHITECTURE UPDATED** - Added Big 3c (Local Auth & User Management) and Big X (Admin Platform & Merchant Center) to roadmap. Updated architecture.md to document email/password auth (unique per org) and expanded Thrivio Control and Merchant Center responsibilities.

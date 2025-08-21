@@ -294,6 +294,23 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - Pulse response rate; announcement reach; celebrations engagement.
 - Import approval throughput; error rates.
 
+## Big 3c — Local Auth & User Management **NEXT**
+
+### Sub-features
+- Email/password login endpoints; unique email per org; admin-managed users; CSV import for local users; and security policies.
+
+### DoD
+- Smoke tests, Argon2 hashing, uniqueness enforcement, CSV idempotency and an end‑to‑end registration/login test.
+
+## Big X — Admin Platform & Merchant Center **PHASE 2**
+
+### Sub-features
+- **Thrivio Control**: client/org creation and admin account management, subscription and entitlement management, credit funding/refunds, feature toggles, provider onboarding and reconciliation, support sessions and audit trail.
+- **Merchant Center**: merchant onboarding with KYC/AML, catalog/product management including self‑service creation, order and refund handling, voucher issuance.
+
+### DoD
+- Full admin platform functionality with secure access controls, audit trails, and merchant self-service capabilities.
+
 ## Notes
 - Multi-tenant isolation: all data & storage keys scoped by orgId.
 - 3 creation paths for departments/locations: manage screen, CSV, single employee create.

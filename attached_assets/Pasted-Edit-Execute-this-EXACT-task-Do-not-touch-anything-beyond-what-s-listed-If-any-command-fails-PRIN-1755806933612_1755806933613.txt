@@ -1,0 +1,30 @@
+Edit
+Execute this EXACT task. Do not touch anything beyond what's listed.
+If any command fails, PRINT the error and STOP.
+
+GOAL
+Add local email/password login (unique email per organisation), and document Thrivio Control and Merchant Center features in the architecture and roadmap.
+
+TOUCH ONLY
+context/ROADMAP.md
+architecture.md
+replit.md
+
+CHANGES
+1) architecture.md – Identity & access and Admin surfaces:
+   - Under “Identity & access,” after the SSO bullet, add a new bullet for **Local Auth** describing secure email/password login with Argon2 hashing and the rule that each email belongs to exactly one organisation.
+   - Under “Admin surfaces,” expand the descriptions for **Thrivio Control** and **Merchant Center** to include client creation, subscription management, credit allocation/refunds, feature toggles, marketplace provider onboarding, catalog/product management, order handling, vouchers, refunds and SLAs.
+
+2) context/ROADMAP.md – Append two new milestones to the end of the file:
+   - **Big 3c – Local Auth & User Management** (NEXT) with sub-features: email/password login endpoints; unique email per org; admin-managed users; CSV import for local users; and security policies; include a DoD requiring smoke tests, Argon2 hashing, uniqueness enforcement, CSV idempotency and an end‑to‑end registration/login test.
+   - **Big X – Admin Platform & Merchant Center** (PHASE 2) with sub‑features: for Thrivio Control – client/org creation and admin account management, subscription and entitlement management, credit funding/refunds, feature toggles, provider onboarding and reconciliation, support sessions and audit trail; for Merchant Center – merchant onboarding with KYC/AML, catalog/product management including self‑service creation, order and refund handling, voucher issuance, SLA tracking; note that admin and merchant flows are isolated from tenant/admin/employee flows; include a DoD covering end‑to‑end flows, audit logs, KYC checks, SLA monitoring and comprehensive test coverage.
+
+3) replit.md – In the “Recent Changes” section, add a new dated entry (2025‑08‑21) noting that the roadmap and architecture were updated to add Big 3c (Local Auth & User Management) and Big X (Admin Platform & Merchant Center), and that architecture.md now documents email/password auth (unique per org) and expanded Thrivio Control and Merchant Center responsibilities.
+
+RUN & PRINT
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+npx nx test identity --watchAll=false --reporters=default | tail -n 30 || true
+# After tests, confirm where we are vs the roadmap (noting Big 3c and Big X are now added) and whether any previously working features regressed.
+
+STOP.
