@@ -77,6 +77,12 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     }
   }
 
+  // Add debug logging for all proxy requests
+  console.log(`[PROXY] ${req.method} ${req.url} -> ${target}`);
+  if (res.status >= 400) {
+    console.error(`[PROXY ERROR] Status ${res.status} for ${req.method} ${req.url}`);
+  }
+
   // NOTE: Set-Cookie headers are preserved automatically by Next Response when copied from fetch's response
   // Return raw body to preserve binary/redirect semantics.
   const buf = await res.arrayBuffer();
