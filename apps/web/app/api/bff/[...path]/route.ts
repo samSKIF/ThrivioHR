@@ -15,7 +15,14 @@ function buildTarget(req: Request, path: string[]) {
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const params = await ctx.params;
-  const target = buildTarget(req, params.path || []);
+  const path = params.path || [];
+  
+  // Special handling for OIDC routes to ensure they work from external domains
+  if (path.length === 2 && path[0] === "oidc" && (path[1] === "callback" || path[1] === "authorize")) {
+    console.log(`[OIDC ROUTE] Processing ${path.join("/")} from ${req.headers.get("host")}`);
+  }
+  
+  const target = buildTarget(req, path);
   const incoming = new Headers(req.headers);
   // Ensure Host header matches BFF (helpful for some frameworks)
   try {
