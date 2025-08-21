@@ -1,0 +1,280 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+A) Ensure /auth/me returns a usable organizationId (fallback from DB or dev default) so the Directory works after login.
+B) Add a persistent header menu with links to “Employee directory” and “Profile”, visible on all pages.
+
+TOUCH ONLY
+apps/bff/src/modules/auth/auth.controller.ts
+apps/web/app/layout.tsx
+apps/web/components/Header.tsx
+apps/web/app/directory/users/page.tsx
+
+CHANGES
+1) apps/bff/src/modules/auth/auth.controller.ts — enrich /auth/me with organizationId
+--- PATCH START ---
+@@
+-import { Controller, Get, Req, Res } from '@nestjs/common';
++import { Controller, Get, Req, Res, Inject, forwardRef } from '@nestjs/common';
++import { IdentityService } from '../identity/identity.service';
+@@
+-  constructor(/* existing deps */) {}
++  constructor(
++    /* existing deps */ 
++    @Inject(forwardRef(() => IdentityService))
++    private readonly identityService: IdentityService,
++  ) {}
+@@
+   @Get('me')
+   async me(@Req() req, @Res() res) {
+-    // existing logic to produce 'payload' or 'user' from cookie/JWT
+-    const data = /* existing object */ ;
+-    return res.json(data);
++    // existing logic to produce 'payload' (claims/user) from cookie/JWT
++    const payload = /* keep existing extraction */ (req.user || req.claims || req.auth || {}) as any;
++
++    // Normalize email & org fields
++    const email = payload.email || payload.user?.email || null;
++    let orgId =
++      payload.organizationId ??
++      payload.orgId ??
++      payload.organization_id ??
++      null;
++
++    // If org is missing, try to enrich from DB via IdentityService
++    if (!orgId && email && this.identityService?.getUsers) {
++      try {
++        const u: any = await this.identityService.getUsers({ email });
++        if (u) {
++          orgId = u.organizationId ?? u.organization_id ?? u.orgId ?? orgId;
++        }
++      } catch { /* ignore */ }
++    }
++
++    // Final fallback in dev to keep Directory usable
++    if (!orgId) orgId = 'dev-org';
++
++    const data = {
++      ...(payload || {}),
++      organizationId: orgId,
++      orgId, // include alias for frontends that still read orgId
++    };
++    return res.json(data);
+   }
+--- PATCH END ---
+
+2) apps/web/app/layout.tsx — render Header globally (menu on every page)
+--- FULL FILE REPLACEMENT: apps/web/app/layout.tsx ---
+import "./globals.css";
+import Header from "../components/Header";
+
+export const metadata = {
+  title: "ThrivioHR",
+  description: "People operations platform",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="min-h-screen bg-white text-black">
+        <Header />
+        {children}
+      </body>
+    </html>
+  );
+}
+--- END FILE ---
+
+3) apps/web/components/Header.tsx — modern header with active menu links
+--- FULL FILE REPLACEMENT: apps/web/components/Header.tsx ---
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+  return (
+    <Link
+      href={href}
+      className={`px-3 py-1.5 rounded ${active ? "bg-black text-white" : "underline"}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export default function Header() {
+  return (
+    <header className="w-full border-b border-[#eaeaea]">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="font-semibold">ThrivioHR</Link>
+        <nav className="flex items-center gap-2">
+          <NavLink href="/directory/users">Employee directory</NavLink>
+          <NavLink href="/me">Profile</NavLink>
+          <a href="/api/bff/oidc/authorize" className="px-3 py-1.5 rounded bg-black text-white">
+            Login with SSO
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+--- END FILE ---
+
+4) apps/web/app/directory/users/page.tsx — simplify orgId bootstrap & table
+--- FULL FILE REPLACEMENT: apps/web/app/directory/users/page.tsx ---
+"use client";
+import { useEffect, useState } from "react";
+
+type UserRow = {
+  id: string;
+  organizationId?: string;
+  organization_id?: string;
+  orgId?: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+};
+
+export default function DirectoryUsersPage() {
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [rows, setRows] = useState<UserRow[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadOrgId() {
+    const res = await fetch("/api/bff/auth/me", { credentials: "include", headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error(`auth/me ${res.status}`);
+    const me = await res.json();
+    return me.organizationId || me.organization_id || me.orgId || null;
+  }
+
+  async function fetchPage(id: string, cursor?: string | null) {
+    const params = new URLSearchParams({ orgId: id, limit: "20" });
+    if (cursor) params.set("cursor", cursor);
+    const res = await fetch(`/api/bff/directory/users?${params.toString()}`, { credentials: "include" });
+    if (!res.ok) throw new Error(`directory/users ${res.status}`);
+    return res.json();
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const id = await loadOrgId();
+        if (!id) throw new Error("No organizationId found on current user.");
+        setOrgId(id);
+        const page = await fetchPage(id, null);
+        setRows(Array.isArray(page?.users) ? page.users : []);
+        setNextCursor(page?.nextCursor ?? null);
+        setError(null);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load directory.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  async function loadMore() {
+    if (!orgId || !nextCursor) return;
+    setLoading(true);
+    try {
+      const page = await fetchPage(orgId, nextCursor);
+      setRows(prev => [...prev, ...(Array.isArray(page?.users) ? page.users : [])]);
+      setNextCursor(page?.nextCursor ?? null);
+    } catch (e: any) {
+      setError(e?.message || "Failed to load more.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen max-w-5xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">Employee directory</h1>
+
+      {loading && rows.length === 0 && <p>Loading…</p>}
+      {error && (
+        <div className="rounded border border-red-300 bg-red-50 p-3 mb-4">
+          <div className="font-semibold mb-1">Error</div>
+          <div className="text-sm">{error}</div>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="overflow-x-auto border rounded">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#fafafa] border-b">
+              <tr>
+                <th className="p-2">Name</th>
+                <th className="p-2">Email</th>
+                <th className="p-2">Organization</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((u) => {
+                const name = u.displayName || [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
+                const org = u.organizationId || u.organization_id || u.orgId || "—";
+                return (
+                  <tr key={u.id} className="border-b">
+                    <td className="p-2">{name}</td>
+                    <td className="p-2">{u.email}</td>
+                    <td className="p-2">{org}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="mt-4">
+        <button
+          onClick={loadMore}
+          disabled={!nextCursor || loading}
+          className="rounded px-3 py-1.5 bg-black text-white disabled:opacity-50"
+        >
+          {nextCursor ? (loading ? "Loading…" : "Load more") : "No more"}
+        </button>
+      </div>
+    </main>
+  );
+}
+--- END FILE ---
+
+RUN & PRINT
+echo "=== Build both apps ==="
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+
+echo "=== Restart dev (offline SSO) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.menu.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.menu.log 2>&1 &
+sleep 7
+echo ">>> BFF log tail"; tail -n 40 /tmp/bff.menu.log || true
+echo ">>> Web log tail"; tail -n 40 /tmp/web.menu.log || true
+
+echo "=== End-to-end smoke ==="
+echo "> Login (offline) to get cookie"
+curl -i -sS "http://127.0.0.1:3000/api/bff/oidc/callback?code=fake" -c /tmp/cj.txt | sed -n '1,20p'
+echo "> /api/bff/auth/me (should include organizationId)"
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.txt -H "Accept: application/json" | head -c 600; echo
+echo "> /api/bff/directory/users via proxy (should return users array)"
+ME=$(curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.txt -H "Accept: application/json")
+ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organizationId":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"organization_id":"\([^"]*\)".*/\1/p')
+[ -z "$ORG_ID" ] && ORG_ID=$(printf "%s" "$ME" | sed -n 's/.*"orgId":"\([^"]*\)".*/\1/p')
+[ -n "$ORG_ID" ] && curl -sS "http://127.0.0.1:3000/api/bff/directory/users?orgId=$ORG_ID&limit=5" -b /tmp/cj.txt | head -c 800; echo
+echo "> /directory/users page HTML (menu + table)"
+curl -sS http://127.0.0.1:3000/directory/users | sed -n '1,80p' | sed 's/<[^>]*>/ /g' | egrep -n 'Employee directory|Profile|Load more|Email' || true
+
+# Confirm where we are vs the roadmap (Big 3a/3b/4) and if there is any regression in previous features.
+STOP.

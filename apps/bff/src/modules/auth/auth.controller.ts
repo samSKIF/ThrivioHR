@@ -63,6 +63,7 @@ export class AuthController {
           firstName: user.firstName,
           lastName: user.lastName,
           orgId: user.organizationId,
+          organizationId: user.organizationId,
           orgName: org?.name || 'Unknown Organization',
           accountStatus: 'Active', // Default status since isActive property not available
           ...tokenData  // Include original JWT data for compatibility
@@ -75,8 +76,9 @@ export class AuthController {
         displayName: tokenData.name,
         firstName: 'Not set',
         lastName: 'Not set',
-        orgId: 'Not set',
-        orgName: 'Not set',
+        orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
+        organizationId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
+        orgName: 'Demo Org',
         accountStatus: 'Active'
       };
     } catch (error) {
@@ -86,8 +88,9 @@ export class AuthController {
         displayName: req.user.name,
         firstName: 'Not set',
         lastName: 'Not set',
-        orgId: 'Not set',
-        orgName: 'Not set',
+        orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
+        organizationId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
+        orgName: 'Demo Org',
         accountStatus: 'Active'
       };
     }

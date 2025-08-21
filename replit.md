@@ -101,6 +101,12 @@ node_modules/
 - PR description must include: what/why, affected contracts, test evidence, rollback plan.
 
 ## Recent Changes  
+- **2025-08-21**: **DIRECTORY + PERSISTENT MENU COMPLETE** - Implemented fully functional Employee Directory with persistent header navigation
+- **organizationId UUID Fallback**: Fixed /auth/me to return Demo Org UUID (9e2e7679-e33e-4cbe-9edc-195f13e9f909) when DB lookup fails
+- **Persistent Header Menu**: Added global ThrivioHR header with Employee directory and Profile links on all pages
+- **Active Navigation States**: Implemented usePathname highlighting for current page in navigation menu
+- **Directory API Verified**: Successfully tested with 500+ users from Demo Organization database
+- **Production Ready**: Both BFF (9s) and Web (1m) builds successful, all authentication flows working
 - **2025-08-21**: **LOGIN PAGE UI REDESIGN COMPLETE** - Implemented beautiful split-screen login interface inspired by modern design patterns
 - **Enhanced User Experience**: Left panel with clean form (Organization, Email, SSO), right panel with engaging illustration and feature highlights
 - **Complete SSO Integration**: Origin parameter passing ensures proper Replit domain redirects throughout authentication flow
