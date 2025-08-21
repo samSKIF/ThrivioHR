@@ -80,13 +80,13 @@ export default function DirectoryUsersPage() {
       )}
 
       {rows.length > 0 && (
-        <div className="overflow-x-auto border rounded">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[#fafafa] border-b">
+        <div className="card">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="p-2">Name</th>
-                <th className="p-2">Email</th>
-                <th className="p-2">Organization</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Organization</th>
               </tr>
             </thead>
             <tbody>
@@ -94,10 +94,10 @@ export default function DirectoryUsersPage() {
                 const name = u.displayName || [u.firstName, u.lastName].filter(Boolean).join(" ") || "—";
                 const org = u.organizationId || u.organization_id || u.orgId || "—";
                 return (
-                  <tr key={u.id} className="border-b">
-                    <td className="p-2">{name}</td>
-                    <td className="p-2">{u.email}</td>
-                    <td className="p-2">{org}</td>
+                  <tr key={u.id}>
+                    <td>{name}</td>
+                    <td>{u.email}</td>
+                    <td>{org}</td>
                   </tr>
                 );
               })}
@@ -110,7 +110,7 @@ export default function DirectoryUsersPage() {
         <button
           onClick={loadMore}
           disabled={!nextCursor || loading}
-          className="rounded px-3 py-1.5 bg-black text-white disabled:opacity-50"
+          className="btn btn-primary"
         >
           {nextCursor ? (loading ? "Loading…" : "Load more") : "No more"}
         </button>

@@ -1,0 +1,247 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Add a Legacy UI adapter layer (tokens + utilities) and apply it to Header, Login, and Directory pages. Keep it fully reversible and ready to paste real tokens later.
+
+TOUCH ONLY
+apps/web/styles/legacy.css
+apps/web/app/globals.css
+apps/web/app/layout.tsx
+apps/web/components/Header.tsx
+apps/web/app/login/page.tsx
+apps/web/app/directory/users/page.tsx
+apps/web/next.config.mjs
+
+CHANGES
+1) Create Legacy UI stylesheet with token placeholders.
+--- FULL FILE: apps/web/styles/legacy.css ---
+/* Legacy UI Adapter Layer
+   - Paste real tokens from the previous project where indicated.
+   - This file provides CSS variables + minimal utilities used by current pages.
+*/
+
+/* ===== TOKENS (PLACEHOLDERS) ===== */
+:root[data-theme="legacy"] {
+  /* PASTE TOKENS HERE (colors, radius, spacing, font): */
+  --legacy-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --legacy-bg: #ffffff;
+  --legacy-fg: #111111;
+  --legacy-muted: #666666;
+  --legacy-border: #eaeaea;
+  --legacy-accent: #0a0a0a; /* primary */
+  --legacy-accent-contrast: #ffffff;
+  --legacy-surface: #fafafa;
+  --legacy-radius: 12px;
+  --legacy-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 10px rgba(0,0,0,.04);
+}
+
+/* ===== RESETS ===== */
+:root {
+  color-scheme: light;
+}
+html, body {
+  background: var(--legacy-bg);
+  color: var(--legacy-fg);
+  font-family: var(--legacy-font);
+}
+
+/* ===== UTILITIES ===== */
+.container { max-width: 80rem; margin-left: auto; margin-right: auto; padding: 0 1rem; }
+.card { background: var(--legacy-bg); border: 1px solid var(--legacy-border); border-radius: var(--legacy-radius); box-shadow: var(--legacy-shadow); }
+.card-pad { padding: 1rem; }
+.muted { color: var(--legacy-muted); }
+.link { text-decoration: underline; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; border: 1px solid transparent; }
+.btn-primary { background: var(--legacy-accent); color: var(--legacy-accent-contrast); }
+.btn-ghost { background: transparent; border-color: var(--legacy-border); }
+.input { width: 100%; border: 1px solid var(--legacy-border); border-radius: 10px; padding: .55rem .7rem; }
+.table { width: 100%; border-collapse: collapse; }
+.table thead { background: var(--legacy-surface); }
+.table th, .table td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--legacy-border); }
+
+/* ===== HEADER ===== */
+.site-header { border-bottom: 1px solid var(--legacy-border); }
+.nav { display: flex; gap: .5rem; align-items: center; }
+.nav a.active { background: var(--legacy-accent); color: var(--legacy-accent-contrast); border-radius: 10px; padding: .35rem .6rem; }
+--- END FILE ---
+
+2) Ensure legacy.css loads globally (keep existing globals).
+--- PATCH: apps/web/app/globals.css ---
+@@
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
++@import "../styles/legacy.css";
+--- END PATCH ---
+
+3) Make layout set the theme attribute so variables take effect.
+--- FULL FILE REPLACEMENT: apps/web/app/layout.tsx ---
+import "./globals.css";
+import Header from "../components/Header";
+
+export const metadata = {
+  title: "ThrivioHR",
+  description: "People operations platform",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" data-theme="legacy">
+      <body>
+        <Header />
+        {children}
+      </body>
+    </html>
+  );
+}
+--- END FILE ---
+
+4) Header: use legacy classes + active link styling.
+--- FULL FILE REPLACEMENT: apps/web/components/Header.tsx ---
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+  return (
+    <Link href={href} className={`link ${active ? "active" : ""}`}>{children}</Link>
+  );
+}
+
+export default function Header() {
+  return (
+    <header className="site-header">
+      <div className="container" style={{ padding: ".75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link href="/" className="link" style={{ fontWeight: 700, textDecoration: "none" }}>ThrivioHR</Link>
+        <nav className="nav">
+          <NavLink href="/directory/users">Employee directory</NavLink>
+          <NavLink href="/me">Profile</NavLink>
+          <a href="/api/bff/oidc/authorize" className="btn btn-primary">Login with SSO</a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+--- END FILE ---
+
+5) Login page: apply legacy card/inputs/buttons (no logic changes).
+--- FULL FILE REPLACEMENT: apps/web/app/login/page.tsx ---
+export default function LoginPage() {
+  return (
+    <main style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center" }}>
+      <div className="container" style={{ maxWidth: 480 }}>
+        <div className="card card-pad">
+          <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Sign in</h1>
+          <p className="muted" style={{ marginBottom: 16 }}>Use your organization email or continue with SSO.</p>
+
+          <form method="POST" action="/api/bff/auth/login" style={{ display: "grid", gap: 10 }}>
+            <label style={{ fontSize: 14 }}>
+              <div style={{ marginBottom: 6 }}>Organization ID</div>
+              <input className="input" name="organizationId" placeholder="org_123" required />
+            </label>
+            <label style={{ fontSize: 14 }}>
+              <div style={{ marginBottom: 6 }}>Email</div>
+              <input className="input" type="email" name="email" placeholder="you@company.com" required />
+            </label>
+            <button className="btn btn-primary" type="submit">Login</button>
+          </form>
+
+          <div className="muted" style={{ textAlign: "center", margin: "12px 0" }}>or</div>
+          <a className="btn btn-primary" href="/api/bff/oidc/authorize">Sign in with SSO</a>
+
+          <p className="muted" style={{ marginTop: 12 }}>After login you’ll be redirected to <code>/me</code>.</p>
+        </div>
+      </div>
+    </main>
+  );
+}
+--- END FILE ---
+
+6) Directory page: apply table/button utilities (no logic changes).
+--- PATCH: apps/web/app/directory/users/page.tsx ---
+@@
+-      {rows.length > 0 && (
+-        <div className="overflow-x-auto border rounded">
+-          <table className="w-full text-left text-sm">
+-            <thead className="bg-[#fafafa] border-b">
++      {rows.length > 0 && (
++        <div className="card">
++          <table className="table">
++            <thead>
+               <tr>
+-                <th className="p-2">Name</th>
+-                <th className="p-2">Email</th>
+-                <th className="p-2">Organization</th>
++                <th>Name</th>
++                <th>Email</th>
++                <th>Organization</th>
+               </tr>
+             </thead>
+             <tbody>
+               {rows.map((u) => {
+@@
+-                  <tr key={u.id} className="border-b">
+-                    <td className="p-2">{name}</td>
+-                    <td className="p-2">{u.email}</td>
+-                    <td className="p-2">{org}</td>
++                  <tr key={u.id}>
++                    <td>{name}</td>
++                    <td>{u.email}</td>
++                    <td>{org}</td>
+                   </tr>
+                 );
+               })}
+             </tbody>
+           </table>
+         </div>
+       )}
+@@
+-        <button
++        <button
+           onClick={loadMore}
+           disabled={!nextCursor || loading}
+-          className="rounded px-3 py-1.5 bg-black text-white disabled:opacity-50"
++          className="btn btn-primary"
+         >
+           {nextCursor ? (loading ? "Loading…" : "Load more") : "No more"}
+         </button>
+--- END PATCH ---
+
+7) Add a public theme flag for future switching (no behavior change today).
+--- PATCH: apps/web/next.config.mjs ---
+@@
+ const nextConfig = {
+   reactStrictMode: true,
+   experimental: { appDir: true },
+   env: {
+-    BFF_INTERNAL_URL: process.env.BFF_INTERNAL_URL || "http://127.0.0.1:5000",
++    BFF_INTERNAL_URL: process.env.BFF_INTERNAL_URL || "http://127.0.0.1:5000",
++    NEXT_PUBLIC_THEME: process.env.NEXT_PUBLIC_THEME || "legacy",
+   },
+ };
+ export default nextConfig;
+--- END PATCH ---
+
+RUN & PRINT
+echo "=== Build web ===" && npx nx build web --skip-nx-cache || true
+echo "=== Restart web (and BFF, offline SSO) ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.legacyui.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.legacyui.log 2>&1 &
+sleep 7
+echo ">>> Logs (tail)"
+tail -n 30 /tmp/bff.legacyui.log || true
+tail -n 30 /tmp/web.legacyui.log || true
+
+echo "=== Smoke: / shows Login when logged out ==="
+curl -sS http://127.0.0.1:3000/ | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'Sign in|Organization ID|Login with SSO' -n || true
+
+echo "=== Smoke: header menu presence ==="
+curl -sS http://127.0.0.1:3000/login | sed -n '1,120p' | sed 's/<[^>]*>/ /g' | egrep -i 'ThrivioHR|Employee directory|Profile' -n || true
+
+STOP.

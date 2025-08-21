@@ -1,0 +1,48 @@
+/* Legacy UI Adapter Layer
+   - Paste real tokens from the previous project where indicated.
+   - This file provides CSS variables + minimal utilities used by current pages.
+*/
+
+/* ===== TOKENS (PLACEHOLDERS) ===== */
+:root[data-theme="legacy"] {
+  /* PASTE TOKENS HERE (colors, radius, spacing, font): */
+  --legacy-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --legacy-bg: #ffffff;
+  --legacy-fg: #111111;
+  --legacy-muted: #666666;
+  --legacy-border: #eaeaea;
+  --legacy-accent: #0a0a0a; /* primary */
+  --legacy-accent-contrast: #ffffff;
+  --legacy-surface: #fafafa;
+  --legacy-radius: 12px;
+  --legacy-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 10px rgba(0,0,0,.04);
+}
+
+/* ===== RESETS ===== */
+:root {
+  color-scheme: light;
+}
+html, body {
+  background: var(--legacy-bg);
+  color: var(--legacy-fg);
+  font-family: var(--legacy-font);
+}
+
+/* ===== UTILITIES ===== */
+.container { max-width: 80rem; margin-left: auto; margin-right: auto; padding: 0 1rem; }
+.card { background: var(--legacy-bg); border: 1px solid var(--legacy-border); border-radius: var(--legacy-radius); box-shadow: var(--legacy-shadow); }
+.card-pad { padding: 1rem; }
+.muted { color: var(--legacy-muted); }
+.link { text-decoration: underline; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: .5rem .9rem; font-weight: 600; border: 1px solid transparent; }
+.btn-primary { background: var(--legacy-accent); color: var(--legacy-accent-contrast); }
+.btn-ghost { background: transparent; border-color: var(--legacy-border); }
+.input { width: 100%; border: 1px solid var(--legacy-border); border-radius: 10px; padding: .55rem .7rem; }
+.table { width: 100%; border-collapse: collapse; }
+.table thead { background: var(--legacy-surface); }
+.table th, .table td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--legacy-border); }
+
+/* ===== HEADER ===== */
+.site-header { border-bottom: 1px solid var(--legacy-border); }
+.nav { display: flex; gap: .5rem; align-items: center; }
+.nav a.active { background: var(--legacy-accent); color: var(--legacy-accent-contrast); border-radius: 10px; padding: .35rem .6rem; }
