@@ -21,8 +21,8 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Call BFF login endpoint
-      const res = await fetch("http://127.0.0.1:5000/auth/login", {
+      // Call BFF login endpoint via proxy
+      const res = await fetch("/api/bff/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -48,8 +48,8 @@ export default function LoginPage() {
   };
 
   const handleSSOLogin = () => {
-    // Redirect to OIDC authorize endpoint
-    window.location.href = "http://127.0.0.1:5000/oidc/authorize";
+    // Redirect to OIDC authorize endpoint via proxy
+    window.location.href = "/api/bff/oidc/authorize";
   };
 
   return (
