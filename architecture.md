@@ -30,8 +30,11 @@ ThrivioHR is a multi-region, multi-tenant Employee Engagement OS with Recognitio
 - **Entitlements** gate modules (Rewards, Surveys, Missions, SSO/SCIM, White-label tier, Isolation tier).
 
 ## 4) Identity & access
+- **Login options**: Email+Password (local), SSO (OIDC). Email is **globally unique** (one account → one organisation).
+- **First login policy**: Admin/CSV/API-created users must change password on first login. Password policy: min 12 chars, zxcvbn ≥3, deny leaked/common; Argon2id + app pepper.
+- **Org scoping**: Derive `org_id` from the user row; no org selector at login.
+- **Roles**: Start with single role on `users` {`org_admin`,`employee`} (full RBAC later when needed).
 - **SSO**: OIDC + SAML in MVP; **CSV/JIT** provisioning; **SCIM Phase 2**.
-- **Local Auth**: secure email/password login with Argon2 hashing, where each email belongs to exactly one organisation.
 - **RBAC roles**: PlatformSuperAdmin (Thrivio staff), TenantSuperAdmin, LocationAdmin, DepartmentAdmin, DeptInCountryAdmin, Manager, Employee. **Finance** is a capability toggle assignable by TenantSuperAdmin.
 - **Scope model**: RoleBinding with **org scopes** (Company/Department/Team) ∩ **location scopes** (Country/City/Site).
 - **Policy engine**: ABAC on top of RBAC (Cerbos/OpenFGA). Deny by default.
@@ -109,7 +112,29 @@ ThrivioHR is a multi-region, multi-tenant Employee Engagement OS with Recognitio
 - **Workspace** (employee/manager): feed, recognition, missions (light), awards/wallet/shop (if Rewards ON), insights, org chart.
 - **Merchant Center** (sellers): merchant onboarding with KYC/AML, catalog/product management including self‑service creation, order and refund handling, voucher issuance, catalog, orders, vouchers, SLAs.
 
-## 18) Non-goals in MVP (explicit)
+## 18) Organisation Social Presence
+- Org fields: `website_url`, `instagram_url`, `x_url` (normalize `twitter.com` → `x.com`), `linkedin_url` (company page only).
+- Employee profile: `linkedin_url` on user profile.
+- **URL-only**, `https://` required. Normalization and domain allow-lists enforced in BFF. Events emitted on change.
+
+## 19) Bulk User Import & Domain Mismatch
+- Two-step flow for CSV and API:
+  1) **Validate** (no write): parse file/payload, check global email uniqueness, seat check (warn by default), **domain mismatches** vs `organization_domains`, duplicates.
+  2) **Commit**: requires a **batch-level decision**: `acceptMismatches=true` to proceed; else 409 with preview summary.
+- Persist an `import_jobs` record for audit; emit events (`user_bulk_preview`, `user_bulk_committed`, `domain_mismatch_accepted`).
+
+## 20) User Profile & Completion
+- PII in `user_profiles`: phone (E.164), birth date, home address (json), emergency contact (name/phone/relation), avatar, cover, interests (json), LinkedIn.
+- **Profile completion**: server computes via rubric; cache % in profile; checklist UI in `/me`.
+
+## 21) Tracking & Insights (Seed)
+- Minimal `events` stream in OLTP (auth/admin/profile/import events). Warehouse/AI later.
+
+## 22) Tenancy (Confirmed)
+- Pooled Postgres today; every tenant row has `org_id`. Service-enforced scoping; DB RLS to roll out later.
+- Upgrade paths: schema-per-tenant / DB-per-tenant for high-isolation customers.
+
+## 23) Non-goals in MVP (explicit)
 - Split-pay (cards) — adapter designed, not enabled.
 - Full surveys engine (pulses/eNPS template only).
 - Deep "Performance/Competencies" — planned for Phase 3 with HR module.

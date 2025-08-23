@@ -53,3 +53,11 @@ The system employs a monorepo structure managed by `pnpm` and orchestrated by `N
 
 ## Recent Changes
 - **2025-08-21**: **ROADMAP & ARCHITECTURE UPDATED** - Added Big 3c (Local Auth & User Management) and Big X (Admin Platform & Merchant Center) to roadmap. Updated architecture.md to document email/password auth (unique per org) and expanded Thrivio Control and Merchant Center responsibilities.
+- **2025-08-21 / 2025-08-22** — **Docs & Auth Specs** - Added Local Auth & User Management spec (global email, first-login change, batch domain mismatch for CSV/API). Added org/user social URLs (URL-only + normalization). Added seed orgs (dev only) and tracking events scope. Created `docs/data_dictionary.md`.
+
+## How to smoke-check (doc-only)
+- Build still green: `npx nx build bff --skip-nx-cache && npx nx build web --skip-nx-cache`
+- Identity tests still pass: `npx nx test identity --watchAll=false --reporters=default`
+- Confirm docs: `sed -n '1,160p' docs/data_dictionary.md`
+
+> Next prompt will introduce migrations & endpoints; this one documents the plan only.

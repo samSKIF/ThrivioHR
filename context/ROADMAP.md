@@ -294,13 +294,35 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - Pulse response rate; announcement reach; celebrations engagement.
 - Import approval throughput; error rates.
 
-## Big 3c — Local Auth & User Management **NEXT**
+## Big 3c — Local Auth & User Management (NOW)
+**Scope**
+- Global-unique email accounts (no org selector at login).
+- Admin/CSV/API create users → `password_reset_required=true`; enforce first-login password change.
+- Password policy: min 12, zxcvbn≥3, deny leaked/common. Argon2id + pepper.
+- Batch-level **domain mismatch** handling for CSV & API (validate → preview → commit with `acceptMismatches`).
+- Minimal user profile (PII) + profile completion %.
+- Org social links (URL-only): website, Instagram, X, LinkedIn. User LinkedIn in profile.
+- Tracking events (auth/admin/import/profile). Simple admin audit view.
 
-### Sub-features
-- Email/password login endpoints; unique email per org; admin-managed users; CSV import for local users; and security policies.
+**Data**
+- Tables (lean): `organizations` (+ social URLs), `users` (+ password flags), `user_profiles`, `organization_domains`, `import_jobs`, `sessions` (existing), `events`.
+- **Seed (dev only)**: create orgs Canva/Loylogic/Jumia with super admins:
+  - `admin@canva.com` / `admin@loylogic.com` / `admin@jumia.com` → temp password `Admin123` → must change on first login.
 
-### DoD
-- Smoke tests, Argon2 hashing, uniqueness enforcement, CSV idempotency and an end‑to‑end registration/login test.
+**Endpoints (BFF)**
+- POST `/auth/login` (local); POST `/auth/password/change`
+- POST `/orgs/:orgId/users` `{validateOnly? acceptMismatches?}`
+- POST `/orgs/:orgId/users/import` `mode=validate|commit`
+- GET `/auth/me`, GET `/events?filter=...`
+
+**DoD**
+- Login with email+password works; `/`→ `/login` if unauth, `/`→ `/me` if auth.
+- First-login password change enforced with strength meter.
+- CSV validate returns precise counts + mismatch list with suggestions; commit enforces batch-level accept/reject.
+- API single-user path mirrors CSV with `validateOnly` and `acceptMismatches`.
+- Org & user LinkedIn/website/X/IG validated (URL-only) and normalized; changes audited.
+- Events emitted for login/profile/import; audit view shows import job summaries.
+- Data dictionary updated.
 
 ## Big X — Admin Platform & Merchant Center **PHASE 2**
 
