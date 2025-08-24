@@ -1,0 +1,54 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) === GIT & TOOLING SNAPSHOT ===
+git rev-parse --short HEAD
+node -v
+pnpm -v
+npx nx --version || true
+
+2) === DRIZZLE CONFIG & LOCATIONS ===
+echo ">> Look for drizzle config files"
+git ls-files | egrep -i 'drizzle\.config\.(ts|js|cjs|mjs)$' || true
+echo ">> Grep for drizzle usage"
+grep -RIn --line-number --exclude-dir=node_modules 'drizzle' . | head -n 40
+
+3) === SCHEMA FILES (organizations/users) ===
+echo ">> Find schema files"
+git ls-files | egrep -i '(schema|db|tables)\.(ts|tsx)$' || true
+echo ">> organizations table definitions (Drizzle pgTable/relations)"
+grep -RIn --exclude-dir=node_modules "pgTable\\(.*['\"]organizations['\"]" .
+echo ">> users table definitions"
+grep -RIn --exclude-dir=node_modules "pgTable\\(.*['\"]users['\"]" .
+echo ">> Print organizations schema (first 200 lines around matches)"
+for f in $(git ls-files | egrep -i '(schema|db|tables)\.(ts|tsx)$'); do
+  nl -ba "$f" | sed -n '1,200p' | egrep -n "pgTable\\(.*['\"]organizations['\"]|pgTable\\(.*['\"]users['\"]" -n >/dev/null && \
+  echo "---- $f (head excerpt)" && sed -n '1,200p' "$f";
+done
+
+4) === EXISTING MIGRATIONS ===
+echo ">> Known migration dirs"
+for d in drizzle apps packages services; do [ -d "$d" ] && (echo "DIR $d"; find "$d" -maxdepth 3 -type f \( -name '*.sql' -o -name '*.ts' \) | sed -n '1,80p'); done
+
+5) === PACKAGE SCRIPTS (db & seeds) ===
+echo ">> Root package.json scripts"
+node -e "console.log(require('./package.json').scripts)" || true
+echo ">> Look for seed scripts anywhere"
+grep -RIn --exclude-dir=node_modules '"seed"' package.json || true
+grep -RIn --exclude-dir=node_modules 'seed' scripts apps packages services || true
+
+6) === RUNTIME HEALTH (non-blocking) ===
+echo ">> Build web and bff (non-blocking)"
+npx nx build web --skip-nx-cache || true
+npx nx build bff --skip-nx-cache || true
+
+7) === ENV SNAPSHOT (masked) ===
+printenv | egrep 'DATABASE_URL|PGHOST|PGUSER|PGDATABASE' | sed 's/=.*/=***MASKED***/'
+
+8) === ROADMAP CHECK (Big 3c present?) ===
+grep -n "Big 3c" context/ROADMAP.md || (echo "ROADMAP HEAD"; sed -n '1,120p' context/ROADMAP.md)
+
+9) === ACCEPTANCE REMINDER ===
+echo "Confirm: where are we vs the ROADMAP milestones and any regression in previous features?"
+
+STOP.
