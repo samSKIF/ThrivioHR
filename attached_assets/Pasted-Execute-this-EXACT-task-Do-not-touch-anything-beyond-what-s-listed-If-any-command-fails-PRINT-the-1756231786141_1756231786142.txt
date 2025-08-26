@@ -1,0 +1,150 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Auto-clean duplicate user emails (dev mode): keep earliest per lower(email), update the rest to local+dup-<id6>@domain, optionally force password_reset_required=true if the column exists. Then re-run the migration to create the unique lower(email) index and verify.
+
+TOUCH ONLY
+scripts/cleanup-duplicate-emails.ts
+
+CHANGES
+--- Begin File: scripts/cleanup-duplicate-emails.ts ---
+import { Client } from 'pg';
+
+function parseEmail(e: string): { local: string; domain: string } | null {
+  const m = e.match(/^([^@]+)@(.+)$/);
+  if (!m) return null;
+  return { local: m[1], domain: m[2] };
+}
+
+async function main() {
+  const cs = process.env.DATABASE_URL;
+  if (!cs) {
+    console.error('DATABASE_URL not set');
+    process.exit(1);
+  }
+  const client = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
+  await client.connect();
+  try {
+    // Detect optional columns
+    const colRes = await client.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name='users'`
+    );
+    const cols = new Set(colRes.rows.map((r: any) => r.column_name));
+    const hasCreatedAt = cols.has('created_at');
+    const hasPRR = cols.has('password_reset_required');
+
+    // Find duplicate groups
+    const dupGroups = await client.query(
+      `SELECT lower(email) AS email_lc
+       FROM users
+       GROUP BY 1
+       HAVING COUNT(*) > 1
+       ORDER BY email_lc`
+    );
+    if (dupGroups.rowCount === 0) {
+      console.log('No duplicate emails found. Nothing to clean.');
+      return;
+    }
+
+    console.log(`Found ${dupGroups.rowCount} duplicate group(s). Starting cleanup...`);
+
+    // Begin transaction
+    await client.query('BEGIN');
+
+    let updated = 0;
+    for (const g of dupGroups.rows) {
+      const emailLc: string = g.email_lc;
+      const detailSql = hasCreatedAt
+        ? `SELECT id, email, created_at FROM users WHERE lower(email)=$1 ORDER BY created_at NULLS LAST, id ASC`
+        : `SELECT id, email        FROM users WHERE lower(email)=$1 ORDER BY id ASC`;
+      const { rows } = await client.query(detailSql, [emailLc]);
+      if (rows.length <= 1) continue;
+
+      // Keep first as canonical; change others
+      const keep = rows[0];
+      const dups = rows.slice(1);
+
+      for (const row of dups) {
+        const parsed = parseEmail(row.email);
+        if (!parsed) {
+          console.warn(`Skipping malformed email: ${row.email} (id=${row.id})`);
+          continue;
+        }
+        const baseLocal = parsed.local.split('+')[0]; // preserve anything before '+'
+        let candidate: string;
+        let attempt = 0;
+        // Prefer id prefix to ensure uniqueness
+        const id6 = String(row.id).replace(/-/g, '').slice(0, 6) || Math.random().toString(36).slice(2, 8);
+
+        while (true) {
+          const suffix = attempt === 0 ? `+dup-${id6}` : `+dup-${id6}-${attempt}`;
+          candidate = `${baseLocal}${suffix}@${parsed.domain}`;
+          const exists = await client.query(
+            `SELECT 1 FROM users WHERE lower(email)=lower($1) LIMIT 1`,
+            [candidate]
+          );
+          if (exists.rowCount === 0) break;
+          attempt++;
+          if (attempt > 10) {
+            throw new Error(`Cannot find unique candidate for ${row.email} (id=${row.id})`);
+          }
+        }
+
+        if (hasPRR) {
+          await client.query(
+            `UPDATE users SET email=$1, password_reset_required=true WHERE id=$2`,
+            [candidate, row.id]
+          );
+        } else {
+          await client.query(`UPDATE users SET email=$1 WHERE id=$2`, [candidate, row.id]);
+        }
+        updated++;
+        console.log(`Updated ${row.email} -> ${candidate} (id=${row.id})`);
+      }
+    }
+
+    await client.query('COMMIT');
+    console.log(`Cleanup complete. Emails updated: ${updated}`);
+  } catch (e: any) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error('Cleanup failed:', e?.message || e);
+    process.exit(2);
+  } finally {
+    await client.end();
+  }
+}
+
+main().catch((e) => {
+  console.error('Fatal:', e?.message || e);
+  process.exit(3);
+});
+--- End File
+
+RUN & PRINT
+echo "=== 1) Tooling ==="
+node -v && pnpm -v
+
+echo "=== 2) Dry count BEFORE cleanup ==="
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT COUNT(*)::int AS dup_groups FROM (SELECT lower(email) e FROM users GROUP BY 1 HAVING COUNT(*)>1) x`);console.log(r.rows[0]);await c.end();})();"
+
+echo "=== 3) Run cleanup ==="
+npx tsx scripts/cleanup-duplicate-emails.ts
+
+echo "=== 4) Verify no duplicates remain ==="
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT lower(email) e, COUNT(*) c FROM users GROUP BY 1 HAVING COUNT(*)>1 ORDER BY c DESC`);console.log('DUPS_AFTER:', r.rows);await c.end();})();"
+
+echo "=== 5) Re-apply migration (unique lower(email) index) ==="
+npx tsx scripts/sql-runner.ts services/identity/drizzle/migrations/20250821_big3c_local_auth.sql
+
+echo "=== 6) Confirm index present ==="
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT i.relname index_name FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace JOIN pg_index ix ON ix.indrelid=t.oid JOIN pg_class i ON i.oid=ix.indexrelid WHERE n.nspname=current_schema() AND t.relname='users' AND i.relname='users_email_unique_lower'`);console.log(r.rows.length? 'INDEX_PRESENT: yes' : 'INDEX_PRESENT: no');await c.end();})();"
+
+echo "=== 7) Seed (idempotent) and verify admins again ==="
+npx tsx services/identity/src/seeds/seed.big3c.ts
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const u=await c.query(`select email, password_hash is not null as has_hash, password_reset_required from users where lower(email) in ('admin@canva.com','admin@loylogic.com','admin@jumia.com') order by email`);console.log('ADMINS:',u.rows);await c.end();})();"
+
+echo "=== 8) Acceptance reminder ==="
+echo "Confirm where we are vs ROADMAP Big 3c and any regression in previous features."
+
+STOP.
