@@ -120,8 +120,25 @@ async function ensureAdmin(client: Client, orgId: string, email: string) {
   );
   const names = cols.map((r: any) => r.column_name);
 
-  const colNames = ['id', 'org_id', 'email', 'password_hash', 'password_reset_required', 'created_at'];
-  const vals = [userId, orgId, email.toLowerCase(), hash, true, new Date().toISOString()];
+  // Include BOTH possible org columns; whichever exists will be used.
+  const colNames = [
+    'id',
+    'org_id',
+    'organization_id',
+    'email',
+    'password_hash',
+    'password_reset_required',
+    'created_at',
+  ];
+  const vals = [
+    userId,
+    orgId,              // for org_id
+    orgId,              // for organization_id
+    email.toLowerCase(),
+    hash,
+    true,
+    new Date().toISOString(),
+  ];
 
   const fields = colNames.filter(n => names.includes(n));
   const placeholders = fields.map((_, i) => `$${i+1}`);
