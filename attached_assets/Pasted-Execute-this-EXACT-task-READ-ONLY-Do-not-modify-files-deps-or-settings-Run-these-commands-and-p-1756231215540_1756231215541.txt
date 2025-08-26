@@ -1,0 +1,22 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) === Check if unique index already exists ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT i.relname AS index_name FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace JOIN pg_index ix ON ix.indrelid=t.oid JOIN pg_class i ON i.oid=ix.indexrelid WHERE n.nspname=current_schema() AND t.relname='users' AND i.relname='users_email_unique_lower'`);console.log(r.rows.length? 'INDEX_PRESENT: yes' : 'INDEX_PRESENT: no');await c.end();})();"
+
+2) === Case-insensitive duplicate groups (lower(email)) ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const q=`SELECT lower(email) AS email_lc, COUNT(*) AS cnt, array_agg(id) AS user_ids FROM users GROUP BY 1 HAVING COUNT(*)>1 ORDER BY cnt DESC, email_lc ASC`;const r=await c.query(q);console.log('DUP_GROUPS:', r.rows);await c.end();})();"
+
+3) === Detail for first 10 duplicate groups ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const dups=await c.query(`SELECT lower(email) email_lc FROM users GROUP BY 1 HAVING COUNT(*)>1 ORDER BY email_lc ASC LIMIT 10`);for (const row of dups.rows){const det=await c.query(`SELECT id, email, org_id, created_at FROM users WHERE lower(email)=$1 ORDER BY created_at NULLS LAST, id ASC`,[row.email_lc]);console.log('---- DUP:', row.email_lc, det.rows);}await c.end();})();"
+
+4) === Count by org for duplicate addresses ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`WITH d AS (SELECT lower(email) email_lc FROM users GROUP BY 1 HAVING COUNT(*)>1) SELECT u.org_id, COUNT(*) FROM users u JOIN d ON lower(u.email)=d.email_lc GROUP BY u.org_id ORDER BY COUNT(*) DESC`);console.log('DUP_COUNTS_BY_ORG:', r.rows);await c.end();})();"
+
+5) === Preview: would the index creation still fail now? (dry-run) ===
+echo "The unique index will fail while any duplicate groups exist (see above)."
+
+6) === Acceptance reminder ===
+echo "Confirm where we are vs ROADMAP Big 3c and whether any regression exists."
+
+STOP.
