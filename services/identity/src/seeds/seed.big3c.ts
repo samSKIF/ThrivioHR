@@ -26,30 +26,81 @@ const ORGS: AdminSeed[] = [
 // NOTE: keep default; first login must change
 const ADMIN_PASSWORD = 'Admin123';
 
-async function upsertOrg(client: Client, s: AdminSeed): Promise<string> {
-  // Try get by slug, else insert.
-  const { rows: existing } = await client.query('SELECT id FROM organizations WHERE slug = $1', [s.slug]);
-  if (existing.length) return existing[0].id;
+async function tableHasColumn(client: Client, table: string, col: string): Promise<boolean> {
+  const { rows } = await client.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_name=$1 AND column_name=$2`,
+    [table, col]
+  );
+  return rows.length > 0;
+}
 
+async function tableExists(client: Client, table: string): Promise<boolean> {
+  const { rows } = await client.query(
+    `SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name=$1`,
+    [table]
+  );
+  return rows.length > 0;
+}
+
+async function upsertOrg(client: Client, s: AdminSeed): Promise<string> {
+  // 1) Prefer lookup by domain if organization_domains exists
+  if (await tableExists(client, 'organization_domains')) {
+    const byDom = await client.query(
+      `SELECT o.id
+         FROM organizations o
+         JOIN organization_domains d ON d.org_id = o.id
+        WHERE lower(d.domain) = lower($1)
+        LIMIT 1`,
+      [s.domain]
+    );
+    if (byDom.rows.length) return byDom.rows[0].id;
+  }
+
+  // 2) Fallback lookup by name (case-insensitive)
+  const byName = await client.query(
+    `SELECT id FROM organizations WHERE lower(name) = lower($1) LIMIT 1`,
+    [s.name]
+  );
+  if (byName.rows.length) return byName.rows[0].id;
+
+  // 3) Insert with only columns that exist
   const id = randomUUID();
+  const cols: string[] = ['id', 'name'];
+  const vals: any[] = [id, s.name];
+
+  if (await tableHasColumn(client, 'organizations', 'slug')) {
+    cols.push('slug'); vals.push(s.slug);
+  }
+  if (await tableHasColumn(client, 'organizations', 'status')) {
+    cols.push('status'); vals.push('active');
+  }
+  if (await tableHasColumn(client, 'organizations', 'created_at')) {
+    cols.push('created_at'); vals.push(new Date().toISOString());
+  }
+  if (await tableHasColumn(client, 'organizations', 'updated_at')) {
+    cols.push('updated_at'); vals.push(new Date().toISOString());
+  }
+
+  const placeholders = cols.map((_, i) => `$${i + 1}`).join(',');
   await client.query(
-    `INSERT INTO organizations (id, name, slug, status, created_at, updated_at)
-     VALUES ($1,$2,$3,'active', now(), now())
-     ON CONFLICT DO NOTHING`,
-    [id, s.name, s.slug]
+    `INSERT INTO organizations (${cols.join(',')}) VALUES (${placeholders})`,
+    vals
   );
 
-  // Ensure domain mapping
-  const domId = randomUUID();
-  try {
-    await client.query(
-      `INSERT INTO organization_domains (id, org_id, domain, is_primary, created_at)
-       VALUES ($1,$2,$3,true, now())`,
-      [domId, id, s.domain]
-    );
-  } catch (e: any) {
-    // ignore unique violations on domain
-    if (e?.code !== '23505') throw e;
+  // 4) Ensure domain mapping if table exists
+  if (await tableExists(client, 'organization_domains')) {
+    const domId = randomUUID();
+    try {
+      const domCols = ['id', 'org_id', 'domain'];
+      const domVals = [domId, id, s.domain.toLowerCase()];
+      const domPh = domCols.map((_, i) => `$${i + 1}`).join(',');
+      await client.query(
+        `INSERT INTO organization_domains (${domCols.join(',')}) VALUES (${domPh})`,
+        domVals
+      );
+    } catch (e: any) {
+      if (e?.code !== '23505') throw e; // ignore unique conflicts
+    }
   }
 
   return id;
@@ -91,6 +142,25 @@ async function ensureAdmin(client: Client, orgId: string, email: string) {
       [userId]
     );
   } catch { /* ignore if table absent */ }
+
+  // Best-effort: link user to org if org_membership table exists
+  if (await tableExists(client, 'org_membership')) {
+    try {
+      // Discover column names
+      const { rows: omCols } = await client.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name='org_membership'`
+      );
+      const set = new Set(omCols.map((r: any) => r.column_name));
+      if (set.has('org_id') && set.has('user_id')) {
+        await client.query(
+          `INSERT INTO org_membership (org_id, user_id) VALUES ($1, $2)`,
+          [orgId, userId]
+        );
+      }
+    } catch (e: any) {
+      if (e?.code !== '23505') console.warn('org_membership link warn:', e?.message || e);
+    }
+  }
 
   return userId;
 }
