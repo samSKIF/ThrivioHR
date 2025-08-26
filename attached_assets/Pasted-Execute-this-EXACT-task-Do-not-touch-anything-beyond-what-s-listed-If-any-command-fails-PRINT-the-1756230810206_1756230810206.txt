@@ -1,0 +1,57 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Recover from argon2 install timeout by:
+- Using @node-rs/argon2 (prebuilt) with fallback to argon2.
+- Re-running installs, migration, seeds, and verification.
+
+TOUCH ONLY
+services/identity/src/seeds/seed.big3c.ts
+
+CHANGES
+--- Begin Patch: services/identity/src/seeds/seed.big3c.ts (make hashing resilient) ---
+@@
+-import argon2 from 'argon2';
++// Resilient hashing: prefer prebuilt @node-rs/argon2; fallback to argon2 native.
++async function hashPassword(password: string): Promise<string> {
++  try {
++    // eslint-disable-next-line @typescript-eslint/no-var-requires
++    const nr = require('@node-rs/argon2');
++    // @node-rs/argon2 API: hash(password, options?)
++    // Defaults to argon2id; options can be tuned later.
++    return await nr.hash(password);
++  } catch {
++    // eslint-disable-next-line @typescript-eslint/no-var-requires
++    const a = require('argon2');
++    return await a.hash(password, { type: a.argon2id });
++  }
++}
+@@
+-  const hash = await argon2.hash(ADMIN_PASSWORD, { type: argon2.argon2id });
++  const hash = await hashPassword(ADMIN_PASSWORD);
+--- End Patch
+
+RUN & PRINT
+echo "=== 1) Tooling ==="
+node -v && pnpm -v
+
+echo "=== 2) Install deps (split; prefer prebuilt) ==="
+pnpm -w add pg
+pnpm -w add @node-rs/argon2 || pnpm -w add argon2
+
+echo "=== 3) Build (non-blocking) ==="
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+
+echo "=== 4) Apply migration ==="
+npx tsx scripts/sql-runner.ts services/identity/drizzle/migrations/20250821_big3c_local_auth.sql
+
+echo "=== 5) Seed 3 orgs + admins (idempotent) ==="
+npx tsx services/identity/src/seeds/seed.big3c.ts
+
+echo "=== 6) Verify seed (orgs + admin emails) ==="
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const o=await c.query(`select name,slug,id from organizations where slug in ('canva','loylogic','jumia') order by slug`);console.log('ORGS:',o.rows);const u=await c.query(`select email,org_id,password_hash is not null as has_hash,password_reset_required from users where lower(email) in ('admin@canva.com','admin@loylogic.com','admin@jumia.com') order by email`);console.log('ADMINS:',u.rows);await c.end();})();"
+
+echo "=== 7) Acceptance: where are we vs ROADMAP Big 3c; any regression? ==="
+STOP.

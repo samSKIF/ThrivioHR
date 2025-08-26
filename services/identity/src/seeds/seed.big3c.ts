@@ -1,6 +1,19 @@
 import { randomUUID, createHash } from 'crypto';
 import { Client } from 'pg';
-import argon2 from 'argon2';
+// Resilient hashing: prefer prebuilt @node-rs/argon2; fallback to argon2 native.
+async function hashPassword(password: string): Promise<string> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const nr = require('@node-rs/argon2');
+    // @node-rs/argon2 API: hash(password, options?)
+    // Defaults to argon2id; options can be tuned later.
+    return await nr.hash(password);
+  } catch {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const a = require('argon2');
+    return await a.hash(password, { type: a.argon2id });
+  }
+}
 
 type AdminSeed = { name: string; slug: string; domain: string; adminEmail: string; };
 
@@ -47,7 +60,7 @@ async function ensureAdmin(client: Client, orgId: string, email: string) {
   if (u.length) return u[0].id;
 
   const userId = randomUUID();
-  const hash = await argon2.hash(ADMIN_PASSWORD, { type: argon2.argon2id });
+  const hash = await hashPassword(ADMIN_PASSWORD);
 
   // Insert with safest common columns; tolerate schema variance.
   // We dynamically discover optional columns to avoid failures.
