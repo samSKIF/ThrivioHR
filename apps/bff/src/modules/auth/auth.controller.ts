@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Res, Req, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Req, HttpException, HttpStatus, Inject, forwardRef } from '@nestjs/common';
 import { IdentityService } from '../identity/identity.service';
 import { AuthService } from './auth.service';
 import { verifyPasswordHash, hashPassword, checkComplexity, getPolicy } from './password.util';
@@ -18,7 +18,9 @@ function readSidSub(req: any): string | null {
 @Controller('auth')
 export class AuthController {
   constructor(
+    @Inject(forwardRef(() => IdentityService))
     private readonly identity: IdentityService,
+    @Inject(forwardRef(() => AuthService))
     private readonly auth: AuthService,
   ) {}
 
