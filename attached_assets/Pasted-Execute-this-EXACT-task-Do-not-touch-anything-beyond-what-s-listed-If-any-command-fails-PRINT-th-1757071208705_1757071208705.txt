@@ -1,0 +1,132 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Auth routes are 404 because the AuthController is not mounted. Make wiring explicit, prove mount via /_debug/routes, and smoke-test local auth:
+- Ensure AuthModule exists and registers AuthController.
+- Ensure AppModule imports AuthModule and registers a DebugRoutesController.
+- Expose global app in main.ts for debug controller (non-invasive).
+- Force /login to be a Client Component.
+- Start dev servers with hard logs and run curl probes.
+
+TOUCH ONLY
+apps/bff/src/modules/auth/auth.module.ts
+apps/bff/src/dev/debug-routes.controller.ts
+apps/bff/src/app.module.ts
+apps/bff/src/main.ts
+apps/web/app/login/page.tsx
+
+CHANGES
+# 1) Ensure AuthModule registers AuthController (idempotent overwrite ok)
+cat > apps/bff/src/modules/auth/auth.module.ts <<'TS'
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { IdentityModule } from '../identity/identity.module';
+
+@Module({
+  imports: [forwardRef(() => IdentityModule)],
+  controllers: [AuthController],
+  providers: [AuthService],
+  exports: [AuthService],
+})
+export class AuthModule {}
+TS
+
+# 2) Add DebugRoutesController (lists all HTTP routes at /_debug/routes)
+cat > apps/bff/src/dev/debug-routes.controller.ts <<'TS'
+import { Controller, Get, Res } from '@nestjs/common';
+
+@Controller('_debug')
+export class DebugRoutesController {
+  @Get('routes')
+  list(@Res() res) {
+    try {
+      // Express adapter discovery
+      const app = (global as any).__nest_app;
+      const inst = app?.getHttpAdapter?.()?.getInstance?.();
+      const stack = inst?._router?.stack || [];
+      const routes = [];
+      stack.forEach((l: any) => {
+        if (l.route && l.route.path) {
+          const methods = Object.keys(l.route.methods || {}).filter((k) => l.route.methods[k]);
+          routes.push({ path: l.route.path, methods });
+        } else if (Array.isArray(l.handle?.stack)) {
+          l.handle.stack.forEach((s: any) => {
+            if (s.route && s.route.path) {
+              const methods = Object.keys(s.route.methods || {}).filter((k) => s.route.methods[k]);
+              routes.push({ path: s.route.path, methods });
+            }
+          });
+        }
+      });
+      return res.json({ ok: true, count: routes.length, routes });
+    } catch (e) {
+      return res.json({ ok: false, error: String(e) });
+    }
+  }
+}
+TS
+
+# 3) Wire AuthModule + DebugRoutesController in AppModule (safely edit)
+# 3a) Ensure import lines exist
+perl -0777 -pe "BEGIN{$/=undef} s{(^)}{import { AuthModule } from './modules/auth/auth.module';\nimport { DebugRoutesController } from './dev/debug-routes.controller';\n$1} unless /from '\\.\\/modules\\/auth\\/auth\\.module'/ && /from '\\.\\/dev\\/debug-routes\\.controller'/;" -i apps/bff/src/app.module.ts || { echo 'FAILED: add imports to app.module.ts'; exit 1; }
+
+# 3b) Ensure AuthModule is in @Module({ imports: [...] })
+perl -0777 -pe "s/(@Module\\(\\{[\\s\\S]*?imports\\s*:\\s*\\[)([\\s\\S]*?)(\\])/\\1\\2, AuthModule\\3/s unless /imports\\s*:\\s*\\[[^\\]]*AuthModule/;" -i apps/bff/src/app.module.ts || { echo 'FAILED: ensure AuthModule in imports'; exit 1; }
+
+# 3c) Ensure DebugRoutesController is in @Module({ controllers: [...] })
+perl -0777 -pe "if(/controllers\\s*:\\s*\\[/ && !/controllers\\s*:\\s*\\[[^\\]]*DebugRoutesController/){s/(controllers\\s*:\\s*\\[)([^\\]]*)(\\])/\\1\\2, DebugRoutesController\\3/s} elsif(!/controllers\\s*:\\s*\\[/){s/@Module\\(\\{\\s*/@Module({ controllers: [DebugRoutesController], /}" -i apps/bff/src/app.module.ts || { echo 'FAILED: ensure DebugRoutesController in controllers'; exit 1; }
+
+# 4) Expose app globally and add a small boot log in main.ts (idempotent)
+perl -0777 -pe "s/(await app\\.listen\\([^\\)]*\\);)/ (global as any).__nest_app = app; console.log('[boot] BFF listening'); \\1 /s unless /(global as any)\\.__nest_app/" -i apps/bff/src/main.ts || { echo 'FAILED: patch main.ts'; exit 1; }
+
+# 5) Force Next.js login page to be a Client Component (safe no-op if already set)
+grep -q \"^'use client'\" apps/web/app/login/page.tsx || (printf \"'use client'\\n\" | cat - apps/web/app/login/page.tsx > /tmp/login.page.tsx && mv /tmp/login.page.tsx apps/web/app/login/page.tsx)
+
+RUN & PRINT
+echo "=== Build BFF & Web ==="
+npx nx build bff --skip-nx-cache
+npx nx build web --skip-nx-cache
+
+echo "=== Start dev servers with hard logs ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.localauth_fix.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.localauth_fix.log 2>&1 &
+sleep 7
+
+echo "=== Logs (tails) ==="
+echo ">>> BFF"; tail -n 60 /tmp/bff.localauth_fix.log || true
+echo ">>> WEB"; tail -n 40 /tmp/web.localauth_fix.log || true
+
+echo "=== Route catalog (should include /auth/*) ==="
+curl -sS http://127.0.0.1:5000/_debug/routes | sed -n '1,220p' || true
+
+echo "=== Policy endpoint (proves controller responding) ==="
+curl -i -sS http://127.0.0.1:5000/auth/password/policy | sed -n '1,24p'
+
+echo "=== Login admin@canva.com / Admin123 via web proxy ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123"}' \
+  -c /tmp/cj.local.txt | sed -n '1,30p'
+
+echo "=== /auth/me (cookie) ==="
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.local.txt | sed -n '1,220p'
+
+echo "=== First-set password (expect 200) ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/password/first-set \
+  -H "Content-Type: application/json" -b /tmp/cj.local.txt \
+  -d '{"passwordNew":"Admin123!X"}' | sed -n '1,22p'
+
+echo "=== Re-login with new password (expect 200) ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123!X"}' \
+  -c /tmp/cj.local2.txt | sed -n '1,30p'
+
+echo "=== Acceptance ==="
+echo "Confirm where we are vs the ROADMAP and whether any regression exists."
+STOP.

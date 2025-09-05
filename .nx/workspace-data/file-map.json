@@ -46,28 +46,6 @@
           "hash": "2543962308852854802"
         }
       ],
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "identity": [
         {
           "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
@@ -236,62 +214,26 @@
           "hash": "63426151987760438"
         }
       ],
-      "contracts": [
+      "ledger": [
         {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
         },
         {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
         },
         {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
         },
         {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
         },
         {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
-        },
-        {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
-        },
-        {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
-        },
-        {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
-        },
-        {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
-        },
-        {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
-        },
-        {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
-        },
-        {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
-        },
-        {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
-        },
-        {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ],
       "web": [
@@ -568,7 +510,7 @@
         },
         {
           "file": "apps/bff/src/app.module.ts",
-          "hash": "4499020132796046777",
+          "hash": "976337162653363461",
           "deps": [
             "npm:@nestjs/common"
           ]
@@ -582,6 +524,13 @@
           "hash": "3384366568251969876",
           "deps": [
             "npm:drizzle-orm",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/dev/debug-routes.controller.ts",
+          "hash": "6650808617452124806",
+          "deps": [
             "npm:@nestjs/common"
           ]
         },
@@ -654,7 +603,7 @@
         },
         {
           "file": "apps/bff/src/main.ts",
-          "hash": "1469747102852554042",
+          "hash": "4009215720279969417",
           "deps": [
             "npm:reflect-metadata",
             "npm:@nestjs/core",
@@ -678,7 +627,7 @@
         },
         {
           "file": "apps/bff/src/modules/auth/auth.module.ts",
-          "hash": "10614422059509092010",
+          "hash": "8537902268466210263",
           "deps": [
             "npm:@nestjs/common"
           ]
@@ -999,6 +948,64 @@
         {
           "file": "apps/bff/tsconfig.spec.json",
           "hash": "5589598467114817326"
+        }
+      ],
+      "contracts": [
+        {
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
+        },
+        {
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
+        },
+        {
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
+        },
+        {
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
+        },
+        {
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
+        },
+        {
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
         }
       ]
     },
@@ -208396,6 +208403,10 @@
         "hash": "8572191165064959948"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_808669c1533c325755aa7cee55a8fdb1aaddc197.bin",
+        "hash": "15984826289407282470"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_80c1a130c8eb79a4f926c7824c945dba478f382f.bin",
         "hash": "8899126163697423240"
       },
@@ -208856,6 +208867,10 @@
         "hash": "505238686130917267"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_e737eedd53b5e549029008ea5653c8bbf33c8f7b.bin",
+        "hash": "190918925093297185"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_ea9ca3b06d65b0b9d62a55f2bcf81fcf613d6273.bin",
         "hash": "16237318904113771087"
       },
@@ -208973,7 +208988,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "7351390065587982796"
+        "hash": "16916967145389783210"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -208993,7 +209008,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "8445209478129405056"
+        "hash": "17405036173326633920"
       },
       {
         "file": ".prettierrc",
@@ -209254,6 +209269,18 @@
       {
         "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-touch-anything-beyond-what-s-listed-If-any-command-fails-PRINT-th-1757069897367_1757069897367.txt",
         "hash": "17609633320366535213"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-touch-anything-beyond-what-s-listed-If-any-command-fails-PRINT-th-1757070809236_1757070809237.txt",
+        "hash": "10719407757881227604"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-touch-anything-beyond-what-s-listed-If-any-command-fails-PRINT-th-1757071208705_1757071208705.txt",
+        "hash": "9793864123087327706"
+      },
+      {
+        "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-touch-anything-beyond-what-s-listed-If-any-command-fails-PRINT-th-1757071242740_1757071242740.txt",
+        "hash": "9793864123087327706"
       },
       {
         "file": "attached_assets/Pasted-Execute-this-EXACT-task-Do-not-touch-anything-beyond-what-s-listed-If-any-command-fails-PRINT-the-1754994351807_1754994351808.txt",
