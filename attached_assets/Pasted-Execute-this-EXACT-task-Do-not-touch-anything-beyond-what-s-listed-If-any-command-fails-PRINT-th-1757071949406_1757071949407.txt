@@ -1,0 +1,144 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Find the real Nest root module the BFF boots with, detect any global prefix, ensure AuthModule is imported there, add a _debug/routes controller to prove mount, then smoke-test /auth/* and show logs.
+
+TOUCH ONLY (create/patch when needed)
+apps/bff/src/dev/debug-routes.controller.ts
+<ROOT_MODULE_PATH>  # detected below; we will only edit the actual root module used by main.ts
+apps/web/app/login/page.tsx
+
+PHASE A — READ-ONLY: discover root module & prefix
+echo "=== A1) main.ts bootstrap module & possible prefix ==="
+sed -n '1,220p' apps/bff/src/main.ts || { echo "main.ts missing"; exit 1; }
+
+echo "=== A2) Locate module symbol passed to NestFactory.create ==="
+MOD_SYM=$(sed -n "s/.*NestFactory\\.create(\\s*\\([^,)]*\\).*/\\1/p" apps/bff/src/main.ts | head -1 | tr -d ' ;')
+if [ -z "$MOD_SYM" ]; then echo "Could not parse root module symbol from main.ts"; exit 1; fi
+echo "ROOT_MODULE_SYMBOL=$MOD_SYM"
+
+echo "=== A3) Find where $MOD_SYM is imported from in main.ts ==="
+ROOT_IMPORT=$(sed -n "s/^import \\{\\s*$MOD_SYM\\s*\\} from '\\(.*\\)'.*/\\1/p" apps/bff/src/main.ts | head -1)
+if [ -z "$ROOT_IMPORT" ]; then echo "Could not find import for $MOD_SYM in main.ts"; exit 1; fi
+echo "ROOT_IMPORT_SPEC=$ROOT_IMPORT"
+
+echo "=== A4) Resolve module file path (TS) ==="
+ROOT_MODULE_TS="apps/bff/src/${ROOT_IMPORT#./}.ts"
+[ -f "$ROOT_MODULE_TS" ] || ROOT_MODULE_TS="apps/bff/src/${ROOT_IMPORT#./}/index.ts"
+[ -f "$ROOT_MODULE_TS" ] || ROOT_MODULE_TS="apps/bff/src/${ROOT_IMPORT#./}.module.ts"
+[ -f "$ROOT_MODULE_TS" ] || { echo "Cannot resolve root module TS from $ROOT_IMPORT"; exit 1; }
+echo "ROOT_MODULE_TS=$ROOT_MODULE_TS"
+
+echo "=== A5) Show current root module file ==="
+sed -n '1,260p' "$ROOT_MODULE_TS"
+
+echo "=== A6) Detect global prefix in main.ts (if any) ==="
+PREFIX=$(sed -n "s/.*setGlobalPrefix(\\s*'\\([^']*\\)'.*/\\1/p" apps/bff/src/main.ts | head -1)
+echo "GLOBAL_PREFIX=${PREFIX:-<none>}"
+
+echo "=== A7) List existing controllers/modules hints ==="
+grep -n "@Controller" -R apps/bff/src | sed -n '1,120p' || true
+grep -n "export class .*Module" -R apps/bff/src | sed -n '1,160p' || true
+
+PHASE B — READ-ONLY: show AuthModule & AuthController presence
+echo "=== B1) Auth files existence ==="
+ls -la apps/bff/src/modules/auth 2>/dev/null || echo "auth module dir missing"
+[ -f apps/bff/src/modules/auth/auth.module.ts ] && sed -n '1,160p' apps/bff/src/modules/auth/auth.module.ts || echo "auth.module.ts missing"
+[ -f apps/bff/src/modules/auth/auth.controller.ts ] && sed -n '1,160p' apps/bff/src/modules/auth/auth.controller.ts || echo "auth.controller.ts missing"
+
+PHASE C — PATCH: ONLY if AuthModule not imported in the real root module
+echo "=== C1) Ensure import lines for AuthModule and DebugRoutesController in $ROOT_MODULE_TS ==="
+grep -q "from './modules/auth/auth.module'" "$ROOT_MODULE_TS" || \
+  perl -0777 -pe "BEGIN{$/=undef} s{(^)}{import { AuthModule } from './modules/auth/auth.module';\n$1}" -i "$ROOT_MODULE_TS" || { echo "FAILED to add AuthModule import"; exit 1; }
+
+grep -q "from './dev/debug-routes.controller'" "$ROOT_MODULE_TS" || \
+  perl -0777 -pe "BEGIN{$/=undef} s{(^)}{import { DebugRoutesController } from './dev/debug-routes.controller';\n$1}" -i "$ROOT_MODULE_TS" || { echo "FAILED to add DebugRoutesController import"; exit 1; }
+
+echo "=== C2) Ensure AuthModule is in @Module({ imports: [...] }) of ROOT module ==="
+perl -0777 -pe "s/(@Module\\(\\{[\\s\\S]*?imports\\s*:\\s*\\[)([\\s\\S]*?)(\\])/\\1\\2, AuthModule\\3/s unless /imports\\s*:\\s*\\[[^\\]]*AuthModule/;" -i "$ROOT_MODULE_TS" || { echo "FAILED to add AuthModule to imports"; exit 1; }
+
+echo "=== C3) Ensure DebugRoutesController is in @Module({ controllers: [...] }) ==="
+perl -0777 -pe "if(/controllers\\s*:\\s*\\[/ && !/controllers\\s*:\\s*\\[[^\\]]*DebugRoutesController/){s/(controllers\\s*:\\s*\\[)([^\\]]*)(\\])/\\1\\2, DebugRoutesController\\3/s} elsif(!/controllers\\s*:\\s*\\[/){s/@Module\\(\\{\\s*/@Module({ controllers: [DebugRoutesController], /}" -i "$ROOT_MODULE_TS" || { echo "FAILED to add DebugRoutesController to controllers"; exit 1; }
+
+echo "=== C4) Create debug controller if missing ==="
+mkdir -p apps/bff/src/dev
+[ -f apps/bff/src/dev/debug-routes.controller.ts ] || cat > apps/bff/src/dev/debug-routes.controller.ts <<'TS'
+import { Controller, Get, Res } from '@nestjs/common';
+@Controller('_debug')
+export class DebugRoutesController {
+  @Get('routes')
+  list(@Res() res) {
+    try {
+      const app = (global as any).__nest_app;
+      const inst = app?.getHttpAdapter?.()?.getInstance?.();
+      const stack = inst?._router?.stack || [];
+      const routes:any[] = [];
+      stack.forEach((l:any) => {
+        if (l.route && l.route.path) {
+          const methods = Object.keys(l.route.methods || {}).filter(k => l.route.methods[k]);
+          routes.push({ path: l.route.path, methods });
+        } else if (Array.isArray(l.handle?.stack)) {
+          l.handle.stack.forEach((s:any) => {
+            if (s.route && s.route.path) {
+              const methods = Object.keys(s.route.methods || {}).filter(k => s.route.methods[k]);
+              routes.push({ path: s.route.path, methods });
+            }
+          });
+        }
+      });
+      return res.json({ ok:true, count: routes.length, routes });
+    } catch (e) {
+      return res.json({ ok:false, error: String(e) });
+    }
+  }
+}
+TS
+
+echo "=== C5) Ensure main.ts exposes global app and logs ==="
+perl -0777 -pe "s/(await app\\.listen\\([^\\)]*\\);)/ (global as any).__nest_app = app; console.log('[boot] BFF listening'); \\1 /s unless /(global as any)\\.__nest_app/" -i apps/bff/src/main.ts || { echo "FAILED to patch main.ts"; exit 1; }
+
+echo "=== C6) Ensure login page is Client Component ==="
+grep -q \"^'use client'\" apps/web/app/login/page.tsx || (printf \"'use client'\\n\" | cat - apps/web/app/login/page.tsx > /tmp/login.page.tsx && mv /tmp/login.page.tsx apps/web/app/login/page.tsx)
+
+PHASE D — BUILD & BOOT with logs
+echo "=== D1) Build BFF & Web ==="
+npx nx build bff --skip-nx-cache
+npx nx build web --skip-nx-cache
+
+echo "=== D2) Start dev servers (fresh) with explicit logs ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff._routes.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web._routes.log 2>&1 &
+sleep 7
+
+echo "=== D3) Log tails ==="
+echo ">>> BFF"; tail -n 80 /tmp/bff._routes.log || true
+echo ">>> WEB"; tail -n 40 /tmp/web._routes.log || true
+
+PHASE E — ROUTE PROBES (try with/without global prefix)
+BASE="http://127.0.0.1:5000"
+if [ -n "$PREFIX" ]; then PFX="/$PREFIX"; else PFX=""; fi
+echo "GLOBAL_PREFIX_USED=${PFX:-<none>}"
+
+echo "=== E1) Catalog routes ==="
+curl -sS "$BASE$PFX/_debug/routes" | sed -n '1,200p' || true
+
+echo "=== E2) Policy endpoint (prefixed + unprefixed) ==="
+curl -i -sS "$BASE$PFX/auth/password/policy" | sed -n '1,20p'
+curl -i -sS "$BASE/auth/password/policy" | sed -n '1,20p'
+
+echo "=== E3) Login admin@canva.com / Admin123 via web proxy ==="
+curl -i -sS http://127.0.0.1:3000${PFX:+/api/bff}/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123"}' \
+  -c /tmp/cj.local.txt | sed -n '1,30p'
+
+echo "=== E4) /auth/me (cookie) ==="
+curl -sS http://127.0.0.1:3000${PFX:+/api/bff}/auth/me -b /tmp/cj.local.txt | sed -n '1,220p'
+
+echo "=== ACCEPTANCE ==="
+echo "Confirm where we are vs ROADMAP Big 3c and any regression."
+STOP.
