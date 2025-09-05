@@ -1,28 +1,37 @@
+import React, { useState } from 'react';
+
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null); setLoading(true);
+    const r = await fetch('/api/bff/auth/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    setLoading(false);
+    if (!r.ok) { setError('Invalid credentials'); return; }
+    const data = await r.json();
+    window.location.href = data?.passwordResetRequired ? '/password/new' : '/me';
+  }
+
   return (
-    <main style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center" }}>
-      <div className="container" style={{ maxWidth: 480 }}>
-        <div className="card card-pad">
-          <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Sign in</h1>
-          <p className="muted" style={{ marginBottom: 16 }}>Use your organization email or continue with SSO.</p>
-
-          <form method="POST" action="/api/bff/auth/login" style={{ display: "grid", gap: 10 }}>
-            <label style={{ fontSize: 14 }}>
-              <div style={{ marginBottom: 6 }}>Organization ID</div>
-              <input className="input" name="orgId" placeholder="org_123" required />
-            </label>
-            <label style={{ fontSize: 14 }}>
-              <div style={{ marginBottom: 6 }}>Email</div>
-              <input className="input" type="email" name="email" placeholder="you@company.com" required />
-            </label>
-            <button className="btn btn-primary" type="submit">Login</button>
-          </form>
-
-          <div className="muted" style={{ textAlign: "center", margin: "12px 0" }}>or</div>
-          <a className="btn btn-primary" href="/api/bff/oidc/authorize">Sign in with SSO</a>
-
-          <p className="muted" style={{ marginTop: 12 }}>After login you'll be redirected to <code>/me</code>.</p>
-        </div>
+    <main className="mx-auto max-w-md p-6">
+      <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
+      <form onSubmit={onSubmit} className="space-y-3">
+        <input value={email} onChange={e=>setEmail(e.target.value)} type="email" required placeholder="Email" className="w-full border rounded px-3 py-2" />
+        <input value={password} onChange={e=>setPassword(e.target.value)} type="password" required placeholder="Password" className="w-full border rounded px-3 py-2" />
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <button disabled={loading} className="w-full rounded bg-blue-600 text-white py-2">{loading ? 'Signing in…' : 'Login'}</button>
+      </form>
+      <div className="mt-6 text-center text-sm text-gray-500">or</div>
+      <div className="mt-3">
+        <a href="/api/bff/oidc/authorize" className="w-full inline-flex justify-center rounded border py-2">Login with SSO</a>
       </div>
     </main>
   );

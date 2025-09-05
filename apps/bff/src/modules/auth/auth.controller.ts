@@ -1,107 +1,62 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Inject, Response } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RefreshDto } from './dto/refresh.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { Controller, Get, Post, Body, Res, Req, HttpException, HttpStatus } from '@nestjs/common';
 import { IdentityService } from '../identity/identity.service';
+import { AuthService } from './auth.service';
+import { verifyPasswordHash, hashPassword, checkComplexity, getPolicy } from './password.util';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    @Inject(AuthService) private readonly authService: AuthService,
-    @Inject(IdentityService) private readonly identityService: IdentityService
+    private readonly identity: IdentityService,
+    private readonly auth: AuthService,
   ) {}
 
+  /** Email+password login */
   @Post('login')
-  async login(@Body() loginDto: LoginDto, @Request() req, @Response() res) {
-    const result = await this.authService.login(loginDto);
-    
-    // Set HTTP-only cookies
-    res.cookie('accessToken', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-    
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    
-    // Check if this is a form submission vs API call
-    const contentType = req.headers['content-type'] || '';
-    
-    // If it's a form submission, redirect to /me 
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      return res.redirect(302, '/me');
-    }
-    
-    // Otherwise return JSON response for API calls
-    return res.json(result);
-  }
+  async loginLocal(@Body() body: any, @Res() res) {
+    const email = (body?.email || '').toString().trim();
+    const password = (body?.password || '').toString();
+    if (!email || !password) throw new HttpException('missing_credentials', HttpStatus.BAD_REQUEST);
 
-  @Post('refresh')
-  async refresh(@Body() refreshDto: RefreshDto) {
-    return this.authService.refresh(refreshDto);
+    const user = await this.identity.findUserByEmailCI(email);
+    if (!user?.id || !user?.password_hash) throw new HttpException('invalid_credentials', HttpStatus.FORBIDDEN);
+
+    const ok = await verifyPasswordHash(user.password_hash, password);
+    if (!ok) throw new HttpException('invalid_credentials', HttpStatus.FORBIDDEN);
+
+    await this.identity.recordLoginSuccess(user.id).catch(() => {});
+
+    // Issue same cookies used by OIDC flow
+    await this.auth.issueTokensForEmail(email, res); // existing method used in SSO flow
+    res.json({ ok: true, passwordResetRequired: !!user.password_reset_required });
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getMe(@Request() req) {
-    try {
-      // Get JWT token data
-      const tokenData = req.user;
-      
-      // Try to fetch full user profile from database by email
-      const users = await this.identityService.getUsers({ email: tokenData.email });
-      if (users.length > 0) {
-        const user = users[0];
-        
-        // Get organization info
-        const orgs = await this.identityService.getOrgs({ id: user.organizationId });
-        const org = orgs.length > 0 ? orgs[0] : null;
-        
-        // Return enriched profile
-        return {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          orgId: user.organizationId,
-          organizationId: user.organizationId,
-          orgName: org?.name || 'Unknown Organization',
-          accountStatus: 'Active', // Default status since isActive property not available
-          ...tokenData  // Include original JWT data for compatibility
-        };
-      }
-      
-      // Fallback to token data if user not found in database
-      return {
-        ...tokenData,
-        displayName: tokenData.name,
-        firstName: 'Not set',
-        lastName: 'Not set',
-        orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
-        organizationId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
-        orgName: 'Demo Org',
-        accountStatus: 'Active'
-      };
-    } catch (error) {
-      // Fallback to token data on any error
-      return {
-        ...req.user,
-        displayName: req.user.name,
-        firstName: 'Not set',
-        lastName: 'Not set',
-        orgId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
-        organizationId: '9e2e7679-e33e-4cbe-9edc-195f13e9f909',
-        orgName: 'Demo Org',
-        accountStatus: 'Active'
-      };
-    }
+  async me(@Req() req, @Res() res) {
+    // existing implementation...
+    // Ensure passwordResetRequired is surfaced for the web app:
+    const base = await this.auth.getProfileFromRequest(req); // existing helper in your codebase
+    const passwordResetRequired = !!(base && (base as any).password_reset_required);
+    res.json({ ...base, passwordResetRequired });
+  }
+
+  /** Return password policy */
+  @Get('password/policy')
+  policy(@Res() res) {
+    res.json(getPolicy());
+  }
+
+  /** First-time password set (requires auth cookie) */
+  @Post('password/first-set')
+  async firstSet(@Req() req, @Body() body: any, @Res() res) {
+    const pw = (body?.passwordNew || '').toString();
+    const c = checkComplexity(pw);
+    if (!c.ok) throw new HttpException({ error: 'weak_password', reasons: c.reasons }, HttpStatus.BAD_REQUEST);
+
+    const prof = await this.auth.getProfileFromRequest(req);
+    if (!prof?.sub) throw new HttpException('unauthorized', HttpStatus.UNAUTHORIZED);
+
+    const newHash = await hashPassword(pw);
+    await this.identity.setUserPassword(prof.sub, newHash, true);
+    res.json({ ok: true });
   }
 }
