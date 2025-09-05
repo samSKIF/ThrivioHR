@@ -1,3 +1,5 @@
+Replace the entire contents of apps/web/app/login/page.tsx with:
+
 "use client";
 import React, { useState } from "react";
 import { CheckCircle, Award } from "lucide-react";
@@ -93,3 +95,14 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+RUN & PRINT
+
+grep -R "Empower Your Workplace" apps/web/app/login/page.tsx | head -n 2
+
+ls -la apps/web/app/login | grep layout
+
+grep -R "auth-card" apps/web/app/globals.css | head -n 3
+
+STOP.
