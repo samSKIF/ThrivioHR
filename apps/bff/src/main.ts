@@ -45,8 +45,6 @@ export async function bootstrap(): Promise<void> {
   const webOrigin = process.env.WEB_PUBLIC_URL;
   app.enableCors({
     origin: [
-      'http://127.0.0.1:5000',
-      'http://localhost:5000',
       'http://127.0.0.1:3000',
       'http://localhost:3000',
       ...(webOrigin ? [webOrigin] : []),
@@ -67,7 +65,7 @@ export async function bootstrap(): Promise<void> {
     next();
   });
   
-  const port = Number(process.env.PORT || 8000);
+  const port = Number(process.env.PORT || 5000);
 
   // Skip binding when under Jest/test
   const isJest = typeof process.env.JEST_WORKER_ID !== 'undefined' || process.env.NODE_ENV === 'test';

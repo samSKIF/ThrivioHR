@@ -7,14 +7,14 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "next dev -p 5000",
+        "command": "next dev -p 3000",
         "cwd": "apps/web"
       }
     },
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "next dev -p 5000",
+        "command": "next dev",
         "cwd": "apps/web"
       }
     },
