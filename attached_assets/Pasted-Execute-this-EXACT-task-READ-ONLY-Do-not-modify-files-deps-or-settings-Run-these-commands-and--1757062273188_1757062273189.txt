@@ -1,0 +1,19 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+Run these commands and print outputs under headers, then STOP:
+
+1) === USERS columns ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT column_name,is_nullable FROM information_schema.columns WHERE table_name='users' ORDER BY 1`);console.log(r.rows);await c.end();})();"
+
+2) === Pick FK column (organization_id vs org_id) and show admins ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const cols=await c.query(`SELECT column_name FROM information_schema.columns WHERE table_name='users'`);const names=new Set(cols.rows.map(r=>r.column_name));const fk = names.has('organization_id') ? 'organization_id' : (names.has('org_id') ? 'org_id' : null);if(!fk){console.log('FK_COL: none');process.exit(0);}console.log('FK_COL:', fk);const q = `select email, ${fk} as org_ref, first_name, last_name, (password_hash is not null) as has_hash, password_reset_required from users where lower(email) in ('admin@canva.com','admin@loylogic.com','admin@jumia.com') order by email`;const r=await c.query(q);console.log('ADMINS:', r.rows);await c.end();})();"
+
+3) === If organization_domains table exists, show orgs by domain ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const t=await c.query(`SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name='organization_domains'`);if(!t.rowCount){console.log('organization_domains: not present');await c.end();return;}const r=await c.query(`SELECT o.name, o.id, d.domain FROM organizations o JOIN organization_domains d ON d.org_id=o.id WHERE lower(d.domain)=ANY(ARRAY['canva.com','loylogic.com','jumia.com']) ORDER BY d.domain`);console.log('ORGS_BY_DOMAIN:', r.rows);await c.end();})();"
+
+4) === Confirm unique lower(email) index still present ===
+node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`SELECT i.relname index_name FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace JOIN pg_index ix ON ix.indrelid=t.oid JOIN pg_class i ON i.oid=ix.indexrelid WHERE n.nspname=current_schema() AND t.relname='users' AND i.relname='users_email_unique_lower'`);console.log(r.rows.length? 'INDEX_PRESENT: yes' : 'INDEX_PRESENT: no', r.rows);await c.end();})();"
+
+5) === Acceptance ===
+echo "Confirm where we are vs ROADMAP Big 3c and any regression."
+
+STOP.
