@@ -27,11 +27,11 @@ args = "db-diagnose-identity"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "bff-server"
+args = "web-app"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "web-dev"
+args = "api-server"
 
 [[workflows.workflow]]
 name = "test-identity"
@@ -67,28 +67,28 @@ args = "tsx scripts/diagnose-identity.ts"
 outputType = "console"
 
 [[workflows.workflow]]
-name = "bff-server"
+name = "web-app"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd apps/bff && tsx src/main.ts"
+args = "npx nx serve web --port=5000"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
 
 [[workflows.workflow]]
-name = "web-dev"
+name = "api-server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx nx serve web --port=3000"
-waitForPort = 3000
+args = "cd apps/bff && PORT=8000 tsx src/main.ts"
+waitForPort = 8000
 
 [workflows.workflow.metadata]
-outputType = "webview"
+outputType = "console"
 
 [[ports]]
 localPort = 3000
@@ -103,9 +103,5 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 42225
-externalPort = 3003
-
-[[ports]]
-localPort = 45637
-externalPort = 3001
+localPort = 8000
+externalPort = 8000
