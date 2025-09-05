@@ -1,19 +1,35 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Heart, Store, List } from 'lucide-react';
+
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email format'),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError('');
 
@@ -23,7 +39,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -31,12 +47,12 @@ export default function LoginPage() {
         throw new Error(errorData || 'Login failed');
       }
 
-      const data = await response.json();
+      const responseData = await response.json();
       
-      if (data.success) {
+      if (responseData.success) {
         window.location.href = '/profile';
       } else {
-        setError(data.message || 'Login failed');
+        setError(responseData.message || 'Login failed');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
@@ -53,7 +69,7 @@ export default function LoginPage() {
           {/* Logo/Brand Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-lg bg-blue-500 text-white flex items-center justify-center text-xl font-bold">
-              T
+              E
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-800">ThrivioHR</h1>
@@ -67,7 +83,7 @@ export default function LoginPage() {
               <h2 className="text-lg font-semibold text-gray-800">Welcome Back</h2>
             </CardHeader>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <CardContent className="space-y-4 pt-2">
                 {/* Email Field */}
                 <div className="space-y-2">
@@ -78,12 +94,13 @@ export default function LoginPage() {
                     id="email"
                     type="text"
                     placeholder="Enter your email or username"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    {...register('email')}
                     disabled={loading}
-                    required
                     className="focus:border-blue-500 focus:ring-blue-500"
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-600">{errors.email.message}</p>
+                  )}
                 </div>
                 
                 {/* Password Field */}
@@ -100,12 +117,13 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    {...register('password')}
                     disabled={loading}
-                    required
                     className="focus:border-blue-500 focus:ring-blue-500"
                   />
+                  {errors.password && (
+                    <p className="text-sm text-red-600">{errors.password.message}</p>
+                  )}
                 </div>
 
                 {error && (
@@ -164,7 +182,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column - Hero Section (50% width on desktop, hidden on mobile) */}
-      <div style={{ width: '50%', background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)', padding: '2rem' }}>
+      <div className="hidden md:block" style={{ width: '50%', background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1))', padding: '2rem' }}>
         <div className="h-full flex flex-col justify-between max-w-md mx-auto">
           {/* Hero Image and Content */}
           <div className="flex-1 flex flex-col justify-center">
@@ -226,9 +244,7 @@ export default function LoginPage() {
             {/* Feature 1: Peer Recognition */}
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
+                <Heart className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800">Peer Recognition</h3>
@@ -239,10 +255,7 @@ export default function LoginPage() {
             {/* Feature 2: Rewards & Redemption */}
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                </svg>
+                <Store className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800">Rewards & Redemption</h3>
@@ -253,9 +266,7 @@ export default function LoginPage() {
             {/* Feature 3: Polls & Surveys */}
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
+                <List className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800">Polls & Surveys</h3>

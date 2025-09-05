@@ -1,0 +1,50 @@
+Build a React TypeScript authentication page with Tailwind CSS and Shadcn UI components that matches this exact design specification:
+
+**Layout Structure:**
+- Two-column responsive layout with `min-h-screen flex flex-col md:flex-row bg-gray-50`
+- Left column: 50% width on desktop, full width on mobile, white background
+- Right column: 50% width on desktop, hidden on mobile, gradient background
+
+**Left Column - Login Form:**
+1. Logo section with circular icon (12x12, rounded-lg, blue background, white "E" letter)
+2. Organization name and "ThrivioHR Platform" subtitle
+3. Card component with shadow-lg, no border, containing:
+   - "Welcome Back" header (text-lg font-semibold text-gray-800)
+   - Email field with label "Email or Username"
+   - Password field with "Forgot password?" link on the right
+   - Primary "Sign In" button (bg-gray-700 hover:bg-gray-800)
+   - "Or" divider with horizontal line
+   - Secondary "Login as Corporate" outline button
+
+**Right Column - Hero Section:**
+1. Gradient background: `bg-gradient-to-br from-primary-color/5 to-primary-color/10`
+2. Hero image in white rounded container with shadow
+3. "Empower Your Workplace" heading (text-2xl font-bold)
+4. Three feature cards with icons and descriptions:
+   - Peer Recognition (heart icon)
+   - Rewards & Redemption (store icon)  
+   - Polls & Surveys (list icon)
+5. Copyright footer
+
+**Styling Requirements:**
+- Use exact Tailwind classes: `space-y-4`, `gap-3`, `p-8`, `rounded-xl`, `shadow-sm`
+- Color scheme: gray-50 background, gray-700/800 text, blue primary color
+- Icons: 10x10 circular backgrounds with primary-color/10 background
+- Input focus states: `focus:border-primary-color focus:ring-primary-color`
+- Mobile responsive: hide right column on mobile with `hidden md:block`
+
+**Technical Setup:**
+- Install @radix-ui/react-card, @radix-ui/react-label, @radix-ui/react-dialog
+- Install lucide-react for icons
+- Setup Tailwind with custom primary color: `207 90% 54%` (blue)
+- Include form validation with React Hook Form and Zod
+- Add toast notifications with @radix-ui/react-toast
+- Setup CSS custom properties for --primary-color
+
+**Component Structure:**
+- Main AuthPage component with state management
+- Dialog components for admin setup and subscription warnings
+- Form handling with proper TypeScript types
+- Responsive design with mobile-first approach
+
+Create the exact visual match with professional styling, proper spacing, shadow effects, and enterprise-grade design quality. Include all interactive states and proper form validation.
