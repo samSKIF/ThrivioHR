@@ -67,41 +67,53 @@ export class IdentityService {
     return [];
   }
 
-  /** Case-insensitive lookup by email; returns first match or null. */
+  /**
+   * Case-insensitive lookup by email using existing flexible getUsers().
+   * Returns first match or null.
+   */
   async findUserByEmailCI(email: string) {
-    return await this.repository.queryOne(
-      `SELECT * FROM users WHERE lower(email)=lower($1) LIMIT 1`,
-      [email]
-    );
+    const list = await (this as any).getUsers?.({ email })?.catch?.(() => []) || [];
+    return Array.isArray(list) && list.length ? list[0] : null;
   }
 
-  /** Update password_hash and optionally clear password_reset_required. */
+  /**
+   * Update a user's password hash and optionally clear the reset flag.
+   * Tolerant to different repository shapes – tries known update helpers,
+   * then falls back to a generic SQL exec if available.
+   */
   async setUserPassword(userId: string, newHash: string, clearReset = false) {
-    const cols = await this.repository.queryMany(
-      `SELECT column_name FROM information_schema.columns WHERE table_name='users'`
-    );
-    const names = new Set(cols.map((r: any) => r.column_name));
-    const sets: string[] = [];
-    const args: any[] = [];
-    if (names.has('password_hash')) { sets.push(`password_hash = $${sets.length+1}`); args.push(newHash); }
-    if (clearReset && names.has('password_reset_required')) { sets.push(`password_reset_required = $${sets.length+1}`); args.push(false); }
-    if (names.has('updated_at')) { sets.push(`updated_at = $${sets.length+1}`); args.push(new Date().toISOString()); }
-    if (!sets.length) return;
-    args.push(userId);
-    await this.repository.exec(`UPDATE users SET ${sets.join(', ')} WHERE id = $${sets.length+1}`, args);
+    const fields: any = { password_hash: newHash };
+    if (clearReset) fields.password_reset_required = false;
+
+    // Try common update helpers if present
+    const repo: any = (this as any).repository;
+    if (repo?.updateUserFields) return await repo.updateUserFields(userId, fields);
+    if (repo?.updateUser)       return await repo.updateUser(userId, fields);
+
+    // Try a generic exec/query if available
+    if (repo?.exec) {
+      const sets: string[] = [];
+      const args: any[] = [];
+      for (const [k, v] of Object.entries(fields)) { sets.push(`${k} = $${sets.length+1}`); args.push(v); }
+      args.push(userId);
+      return await repo.exec(`UPDATE users SET ${sets.join(', ')} WHERE id = $${sets.length+1}`, args);
+    }
   }
 
-  /** Mark login success (best-effort). */
+  /** Best-effort: mark successful login; ignore if columns/helpers absent. */
   async recordLoginSuccess(userId: string) {
     try {
-      await this.repository.exec(
-        `UPDATE users
-           SET last_login_at = COALESCE($1, now()),
-               failed_login_attempts = 0
-         WHERE id = $2`,
-        [new Date().toISOString(), userId]
-      );
-    } catch { /* ignore if columns absent */ }
+      const repo: any = (this as any).repository;
+      if (repo?.exec) {
+        await repo.exec(
+          `UPDATE users
+              SET last_login_at = now(),
+                  failed_login_attempts = 0
+            WHERE id = $1`,
+          [userId]
+        );
+      }
+    } catch { /* noop */ }
   }
 
   /**
