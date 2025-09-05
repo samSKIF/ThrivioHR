@@ -1,0 +1,186 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Diagnose why /auth routes return 404 and make them work:
+1) Verify module wiring (AuthController in AuthModule, AuthModule in AppModule).
+2) If missing, add them. Add a tiny _debug routes endpoint to list all routes.
+3) Ensure /auth/login and /auth/password/first-set work for seeded admins.
+4) Start dev servers with explicit logs and run curl smoke tests.
+
+PHASE A — READ-ONLY DIAGNOSTICS
+Run these and PRINT outputs:
+
+1) echo "=== A1: List files & modules ===" && ls -R apps/bff/src/modules | sed -n '1,200p'
+2) echo "=== A2: Grep for AuthController/AuthModule ===" && \
+   (grep -n "export class AuthController" -R apps/bff/src || true) && \
+   (grep -n "@Module" -R apps/bff/src/modules/auth || true)
+3) echo "=== A3: Show auth.module.ts & app.module.ts ===" && \
+   sed -n '1,220p' apps/bff/src/modules/auth/auth.module.ts 2>/dev/null || echo "auth.module.ts MISSING" && \
+   sed -n '1,260p' apps/bff/src/app.module.ts 2>/dev/null || echo "app.module.ts MISSING"
+4) echo "=== A4: main.ts CORS/prefix extract ===" && sed -n '1,200p' apps/bff/src/main.ts
+5) echo "=== A5: Are servers already running? ===" && pgrep -fl "nx run" || true
+
+PHASE B — CODE PATCHES (only if gaps exist)
+Touch ONLY these files when required:
+- apps/bff/src/modules/auth/auth.module.ts
+- apps/bff/src/app.module.ts
+- apps/bff/src/dev/debug-routes.controller.ts  (new helper)
+- apps/web/app/login/page.tsx  (Client directive, harmless if already set)
+
+Apply the following patches idempotently:
+
+--- Begin Ensure: apps/bff/src/modules/auth/auth.module.ts ---
+# If file missing OR AuthController not in controllers[], create/replace with minimal valid module.
+# Keep existing providers/imports if present; otherwise provide AuthService and IdentityService modules.
+# Print what you changed at the end.
+
+( node -e "
+const fs=require('fs'),p='apps/bff/src/modules/auth/auth.module.ts';
+let s=''; try{s=fs.readFileSync(p,'utf8')}catch{}
+if(!s.includes('AuthController')){
+  const tpl = `
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { IdentityModule } from '../identity/identity.module';
+
+@Module({
+  imports: [forwardRef(() => IdentityModule)],
+  controllers: [AuthController],
+  providers: [AuthService],
+  exports: [AuthService],
+})
+export class AuthModule {}
+`.trimStart();
+  fs.writeFileSync(p, tpl);
+  console.log('UPDATED auth.module.ts: ensured AuthController registered');
+} else {
+  console.log('auth.module.ts already references AuthController');
+}
+" )
+--- End Ensure: apps/bff/src/modules/auth/auth.module.ts ---
+
+--- Begin Ensure: apps/bff/src/app.module.ts ---
+# Ensure AuthModule is imported into root AppModule once.
+
+( node -e "
+const fs=require('fs'),p='apps/bff/src/app.module.ts';
+let s=''; try{s=fs.readFileSync(p,'utf8')}catch{process.exit(0)}
+if(!/AuthModule/.test(s)){
+  s = s.replace(/(@Module\\({[\\s\\S]*?imports:\\s*\\[)([\\s\\S]*?)(\\])/m,
+                 (m,a,b,c)=> a + (b.trim()? b.trim()+', ' : '') + 'AuthModule' + c);
+  if(!/from '\\.\\/modules\\/auth\\/auth\\.module'/.test(s)){
+    s = `import { AuthModule } from './modules/auth/auth.module';\n` + s;
+  }
+  fs.writeFileSync(p,s);
+  console.log('UPDATED app.module.ts: added AuthModule to imports');
+} else {
+  console.log('AppModule already imports AuthModule');
+}
+" )
+--- End Ensure: apps/bff/src/app.module.ts ---
+
+--- Begin Add: apps/bff/src/dev/debug-routes.controller.ts ---
+# Add a debug controller to list all routes; safe in dev.
+
+import { Controller, Get, Res } from '@nestjs/common';
+
+@Controller('_debug')
+export class DebugRoutesController {
+  @Get('routes')
+  list(@Res() res) {
+    // Works for Express adapter
+    try {
+      const app = (global as any).__nest_app;
+      const inst = app?.getHttpAdapter?.()?.getInstance?.();
+      const stack = inst?._router?.stack || [];
+      const routes = [];
+      stack.forEach((l:any)=>{
+        if(l.route && l.route.path){
+          const methods = Object.keys(l.route.methods||{}).filter(k=>l.route.methods[k]);
+          routes.push({ path: l.route.path, methods });
+        }
+      });
+      return res.json({ ok:true, routes });
+    } catch (e) {
+      return res.json({ ok:false, error: String(e) });
+    }
+  }
+}
+--- End Add: apps/bff/src/dev/debug-routes.controller.ts ---
+
+--- Begin Ensure wire-up for DebugRoutesController (dev only) ---
+# Wire it via AppModule without affecting prod.
+
+( node -e "
+const fs=require('fs'),p='apps/bff/src/app.module.ts';
+let s=fs.readFileSync(p,'utf8');
+if(!s.includes('DebugRoutesController')){
+  s = `import { DebugRoutesController } from './dev/debug-routes.controller';\n` + s;
+  s = s.replace(/controllers:\\s*\\[([\\s\\S]*?)\\]/m, (m,a)=>{
+    const list = a.trim().replace(/\\s+/g,' ');
+    if(list.length && !/DebugRoutesController/.test(list)) return `controllers: [${list}, DebugRoutesController]`;
+    return 'controllers: [DebugRoutesController]';
+  });
+  fs.writeFileSync(p,s);
+  console.log('UPDATED app.module.ts: added DebugRoutesController');
+} else {
+  console.log('DebugRoutesController already registered');
+}
+" )
+--- End Ensure wire-up for DebugRoutesController ---
+
+--- Begin Ensure: apps/bff/src/main.ts captures app globally & logs routes on boot ---
+# Make sure we stash the Nest app into global for debug controller and log a banner.
+
+( node -e "
+const fs=require('fs'),p='apps/bff/src/main.ts';
+let s=fs.readFileSync(p,'utf8');
+if(!s.includes(\"(global as any).__nest_app\")){
+  s = s.replace(/(await app\\.listen\\([^\\)]*\\);?)/,
+    `(global as any).__nest_app = app; console.log('[boot] BFF starting...'); $1`);
+  fs.writeFileSync(p,s); console.log('UPDATED main.ts: expose app on global + boot log');
+} else {
+  console.log('main.ts already exposes __nest_app');
+}
+" )
+--- End Ensure: apps/bff/src/main.ts ---
+
+--- Begin Ensure: apps/web/app/login/page.tsx is Client ---
+( node -e "
+const fs=require('fs'),p='apps/web/app/login/page.tsx';
+let s=''; try{s=fs.readFileSync(p,'utf8')}catch{process.exit(0)}
+if(!s.startsWith(\"'use client'\")){ s = `'use client';\n` + s; fs.writeFileSync(p,s); console.log('Updated login page to Client Component'); }
+else { console.log('Login page already Client Component'); }
+" )
+--- End Ensure: apps/web/app/login/page.tsx ---
+
+PHASE C — START SERVERS WITH HARD LOGS
+1) echo "=== C1: Kill any servers and boot dev ===" && \
+   ( killall node 2>/dev/null || true; \
+     DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+     npx nx run bff:dev >/tmp/bff.localauth_fix.log 2>&1 & ) && sleep 7 && \
+   ( npx nx run web:dev >/tmp/web.localauth_fix.log 2>&1 & ) && sleep 7
+
+2) echo "=== C2: Log tails ===" && tail -n 60 /tmp/bff.localauth_fix.log || true && \
+   echo "---" && tail -n 40 /tmp/web.localauth_fix.log || true
+
+PHASE D — RUNTIME PROBES
+1) echo "=== D1: Route catalog (should include /auth/*) ===" && curl -sS http://127.0.0.1:5000/_debug/routes | sed -n '1,200p'
+2) echo "=== D2: Policy/diag ===" && \
+   curl -i -sS http://127.0.0.1:5000/auth/password/policy | sed -n '1,20p'
+3) echo "=== D3: DB sanity (admins present?) ===" && node -e "const {Client}=require('pg');(async()=>{const c=new Client({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});await c.connect();const r=await c.query(`select email, (password_hash is not null) as has_hash from users where lower(email) in ('admin@canva.com','admin@loylogic.com','admin@jumia.com') order by 1`);console.log(r.rows);await c.end();})();"
+4) echo "=== D4: Login (admin@canva.com / Admin123) via proxy ===" && \
+   curl -i -sS http://127.0.0.1:3000/api/bff/auth/login -H 'Content-Type: application/json' \
+        -d '{"email":"admin@canva.com","password":"Admin123"}' -c /tmp/cj.local.txt | sed -n '1,30p'
+5) echo "=== D5: /auth/me (cookie) ===" && \
+   curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.local.txt | sed -n '1,200p'
+6) echo "=== D6: First-set password (expect 200) ===" && \
+   curl -i -sS http://127.0.0.1:3000/api/bff/auth/password/first-set -H 'Content-Type: application/json' \
+        -b /tmp/cj.local.txt -d '{"passwordNew":"Admin123!X"}' | sed -n '1,22p'
+
+PHASE E — ACCEPTANCE
+echo "=== E) Acceptance ==="
+echo "Confirm where we are vs ROADMAP Big 3c and any regression in previous features."
+STOP.

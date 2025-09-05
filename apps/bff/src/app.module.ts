@@ -1,3 +1,4 @@
+import { DebugRoutesController } from './dev/debug-routes.controller';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { LogoutController } from './modules/auth/logout.controller';
@@ -17,6 +18,6 @@ import { OidcModule } from './modules/sso/oidc/oidc.module';
     BffGraphqlModule,
     OidcModule
   ],
-  controllers: [AppController, LogoutController],
+  controllers: [AppController, LogoutController, DebugRoutesController],
 })
 export class AppModule {}
