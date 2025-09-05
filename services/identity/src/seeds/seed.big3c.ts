@@ -113,46 +113,82 @@ async function ensureAdmin(client: Client, orgId: string, email: string) {
   const userId = randomUUID();
   const hash = await hashPassword(ADMIN_PASSWORD);
 
-  // Insert with safest common columns; tolerate schema variance.
-  // We dynamically discover optional columns to avoid failures.
-  const { rows: cols } = await client.query(
-    `SELECT column_name FROM information_schema.columns WHERE table_name='users'`
+  // Discover users columns, nullability, defaults, and types.
+  const { rows: meta } = await client.query(
+    `SELECT column_name, is_nullable, data_type, column_default
+       FROM information_schema.columns
+      WHERE table_name='users'
+      ORDER BY ordinal_position`
   );
-  const names = cols.map((r: any) => r.column_name);
+  const names = new Set(meta.map((r: any) => r.column_name));
+  const needValue = meta.filter((r: any) =>
+    r.is_nullable === 'NO' && r.column_default == null
+  ).map((r: any) => ({ name: r.column_name, type: r.data_type }));
 
-  // Include BOTH possible org columns; whichever exists will be used.
-  const colNames = [
-    'id',
-    'org_id',
-    'organization_id',
-    'email',
-    'password_hash',
-    'password_reset_required',
-    'created_at',
-  ];
-  const vals = [
-    userId,
-    orgId,              // for org_id
-    orgId,              // for organization_id
-    email.toLowerCase(),
-    hash,
-    true,
-    new Date().toISOString(),
-  ];
+  // Base payload with common columns; include both org_id flavors.
+  const base: Record<string, any> = {
+    id: userId,
+    email: email.toLowerCase(),
+    password_hash: hash,
+    password_reset_required: true,
+    created_at: new Date().toISOString(),
+  };
+  if (names.has('org_id')) base['org_id'] = orgId;
+  if (names.has('organization_id')) base['organization_id'] = orgId;
 
-  const fields = colNames.filter(n => names.includes(n));
-  const placeholders = fields.map((_, i) => `$${i+1}`);
-  const args = fields.map((n) => vals[colNames.indexOf(n)]);
+  // Provide sensible defaults for required NOT NULL columns without default.
+  // (Only if such columns exist in this schema and not already set.)
+  const setIf = (col: string, val: any) => {
+    if (names.has(col) && base[col] === undefined) base[col] = val;
+  };
+  // Common text fields
+  setIf('first_name', 'Admin');
+  setIf('last_name', 'User');
+  setIf('display_name', 'Admin User');
+  setIf('status', 'active');           // if enum/text status
+  // Common booleans
+  setIf('is_active', true);
+  setIf('enabled', true);
+  // Common timestamps
+  setIf('updated_at', new Date().toISOString());
+  setIf('created_at', base['created_at']);
+  // Optional locale/timezone
+  setIf('locale', 'en');
+  setIf('timezone', 'UTC');
 
-  if (fields.length < 3) throw new Error('users table missing required columns for seed');
+  // For any other NOT NULL columns with no default and still unset, fill by type.
+  for (const c of needValue) {
+    const col = c.name;
+    if (base[col] !== undefined) continue; // already filled
+    switch (c.type) {
+      case 'boolean': base[col] = false; break;
+      case 'integer':
+      case 'bigint':
+      case 'numeric': base[col] = 0; break;
+      case 'json':
+      case 'jsonb': base[col] = {}; break;
+      case 'timestamp without time zone':
+      case 'timestamp with time zone':
+      case 'timestamp': base[col] = new Date().toISOString(); break;
+      default: base[col] = 'N/A';
+    }
+  }
+
+  // Build dynamic INSERT
+  const fields = Object.keys(base).filter((k) => names.has(k));
+  if (!fields.includes('email') || !fields.includes('password_hash')) {
+    throw new Error('users table missing required columns for seed');
+  }
+  const placeholders = fields.map((_, i) => `$${i + 1}`).join(',');
+  const args = fields.map((k) => base[k]);
 
   await client.query(
-    `INSERT INTO users (${fields.join(',')}) VALUES (${placeholders.join(',')})`,
+    `INSERT INTO users (${fields.join(',')}) VALUES (${placeholders})`,
     args
   );
 
   // Create empty profile row if table exists
-  const profileExists = cols.some((r: any) => r.column_name === 'profile_completion_pct');
+  const profileExists = await tableExists(client, 'user_profiles');
   try {
     await client.query(
       `INSERT INTO user_profiles (user_id, updated_at) VALUES ($1, now())`,
