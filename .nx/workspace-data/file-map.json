@@ -24,62 +24,26 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
-      "contracts": [
+      "recognition": [
         {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
         },
         {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
         },
         {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
         },
         {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
         },
         {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
-        },
-        {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
-        },
-        {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
-        },
-        {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
-        },
-        {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
-        },
-        {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
-        },
-        {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
-        },
-        {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
-        },
-        {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
-        },
-        {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ],
       "bff": [
@@ -215,21 +179,21 @@
         },
         {
           "file": "apps/bff/src/modules/auth/auth.controller.ts",
-          "hash": "12153915209868522920",
+          "hash": "4318779293566545757",
           "deps": [
             "npm:@nestjs/common"
           ]
         },
         {
           "file": "apps/bff/src/modules/auth/auth.module.ts",
-          "hash": "8537902268466210263",
+          "hash": "5666692843515879385",
           "deps": [
             "npm:@nestjs/common"
           ]
         },
         {
           "file": "apps/bff/src/modules/auth/auth.service.ts",
-          "hash": "8483248889275741566",
+          "hash": "6005401275424071374",
           "deps": [
             "npm:@nestjs/common",
             "npm:drizzle-orm",
@@ -545,6 +509,86 @@
           "hash": "5589598467114817326"
         }
       ],
+      "contracts": [
+        {
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
+        },
+        {
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
+        },
+        {
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
+        },
+        {
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
+        },
+        {
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
+        },
+        {
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
+        }
+      ],
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
       "web": [
         {
           "file": "apps/web/.env.example",
@@ -794,50 +838,6 @@
         {
           "file": "apps/web/tsconfig.json",
           "hash": "15254262727132550022"
-        }
-      ],
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
-        },
-        {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
-        },
-        {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
         }
       ],
       "identity": [
@@ -207887,6 +207887,10 @@
         "hash": "11358914660797524710"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_1163c8025ba2666b50d8a5bffbbce459b88bc52e.bin",
+        "hash": "11892287179631364397"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_130f8afb82ba4f0aa244a300f1d74871511cf4af.bin",
         "hash": "5858235856624891166"
       },
@@ -207905,6 +207909,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_15253508528ffec002aa2a03fa01d54de00cad1f.bin",
         "hash": "2284208371982724533"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_15393f5e605297dbf83b3862cbc207b1d9fd2912.bin",
+        "hash": "10114692580227476109"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_15e33fb3fc8c3491b12af8ea7dadc2c0b581235e.bin",
@@ -207975,6 +207983,10 @@
         "hash": "6526076242533070785"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_1f2666d078710af9341c54fac88971a211378588.bin",
+        "hash": "3383543393145327689"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_1f879fa3b70b99304101c872b55d7ae93546a39b.bin",
         "hash": "3363322149111506633"
       },
@@ -207985,6 +207997,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_20f21c10502c3a34e8fd9e38b303b1c09b12e069.bin",
         "hash": "4076121424521820924"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_231aa60476f26ea08555a38d7176aebe102ef3e6.bin",
+        "hash": "457387541020671788"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_233c388b0c034f54dee957147984eacc1ed8634b.bin",
@@ -208005,6 +208021,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_24b13dd61c9c0c1670338a3f6965079546284590.bin",
         "hash": "13639226567420903721"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_257ead42db2f110f90a6b4660dc616a308afd59d.bin",
+        "hash": "6608409865109917695"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_263cd5de5bfd05bb73141681f904fac0e85f2e54.bin",
@@ -208119,8 +208139,20 @@
         "hash": "11306487405685016218"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_3ceb8727764eb00394f769c8ea21733f04e696c7.bin",
+        "hash": "12577559564879582567"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_3d369267cd075d5393ef0b99cea5164956f4dfd9.bin",
         "hash": "1805009401267847157"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_3defb9fede4ec629272f6cb6704b125ba3765671.bin",
+        "hash": "10520833054827243524"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_3e5a6ab262eaaf49aea9de9f4e82397a0caa9d67.bin",
+        "hash": "11676016559536084726"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_41229087f6c2f6da3164d03e6c9320df9efeb2fa.bin",
@@ -208139,8 +208171,16 @@
         "hash": "17997802591864372615"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_48c9526d16611c1642f3f6d46510577f753b622a.bin",
+        "hash": "2271948317926955395"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_49a840f712d3e5a5872b4032e15a8025479fb564.bin",
         "hash": "6250202133735981366"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_4b3193f5ed5fd1ebe99ba9cee7e167f69598e75c.bin",
+        "hash": "15733747219099553489"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_4b375bf5b9b0f8082335ac0c6f125bee61cdd0f9.bin",
@@ -208299,6 +208339,10 @@
         "hash": "13002547121227651423"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_69301679fbb63eb875a1d054823b660a27aa10fb.bin",
+        "hash": "15293375568058121430"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_694de0798e7127e02379f291c078a26a200c906e.bin",
         "hash": "11733565957571423200"
       },
@@ -208309,6 +208353,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_6b79474a6b254fda9acc2f88411a59657eb6cd5b.bin",
         "hash": "4091462615848453523"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_6b999b9d44a1f0a9b339e593f1caa74b6bfe1f44.bin",
+        "hash": "11736283745496037937"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_6bc782536183c18c7f729802e95fc25049198390.bin",
@@ -208367,6 +208415,10 @@
         "hash": "9074383610576170942"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_77e25dce3a080b11008d49bb8921b196f131fe8e.bin",
+        "hash": "5341818172024176667"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_782f23856ff9449c75c236de1a1e3d9f45b2aac8.bin",
         "hash": "5781160338007219408"
       },
@@ -208403,6 +208455,10 @@
         "hash": "17133461733518297890"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_7e3e5d8eaffa383a3ee761a1a6187a938fefdf39.bin",
+        "hash": "10234533232810863965"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_7f9ea973a1afe433379d894772f15e46d6c8470c.bin",
         "hash": "8572191165064959948"
       },
@@ -208419,6 +208475,10 @@
         "hash": "8374395663412074996"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_81e353c882b591bec8b3495850aedd9bd12124ea.bin",
+        "hash": "1979557434214330510"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_827ef2375850e6e6cad5d32403929fd902db3f10.bin",
         "hash": "17163445823734752431"
       },
@@ -208429,6 +208489,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_834453a0177ae97b728c2bfc5915d2de28f0ad40.bin",
         "hash": "4296830794188398169"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_85da9a08106a56a1150c94e27daa9b81c5495521.bin",
+        "hash": "14015925728811137393"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_85ecb01619855d945af1f65b5fe516347fe75f69.bin",
@@ -208591,6 +208655,10 @@
         "hash": "5356258031489644067"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_9b8c2e10ddfc0171c4bebc139f799b497a6acdf6.bin",
+        "hash": "4744022433440835974"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_9ba461d29a9761fbe5ec0cb6e5ae5155cbafbc12.bin",
         "hash": "5087407627364788657"
       },
@@ -208651,6 +208719,10 @@
         "hash": "13130060497762492424"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_a9e92e1fdb4f192ae6602ff0935b803ac45cdd64.bin",
+        "hash": "13826320231072399432"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_aaeba7c0c67a5190fa7137859012493c600e2396.bin",
         "hash": "14898076338215806142"
       },
@@ -208687,6 +208759,10 @@
         "hash": "6914841938950299281"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_afb8b614cb143e9bd4d6cfa4557c327ed93ff2b0.bin",
+        "hash": "5642639659737256517"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_b1af6958111c2cfe45eacea72fe26a351281c7e8.bin",
         "hash": "15755817417548829946"
       },
@@ -208697,6 +208773,14 @@
       {
         "file": ".local/state/replit/agent/.agent_state_b5f30d8f0b048e8061f65efd3bd789fbf246b7fa.bin",
         "hash": "7560080864847499107"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_b6bf286f1c93fef688e3803034412aaf80fb1fad.bin",
+        "hash": "119845431025877658"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_b78bd3b3c91ec4ee75c57fd49fa527d57bfcdd7c.bin",
+        "hash": "11622037204664825429"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_b901a7d36ef712f488680daf3854071562082b56.bin",
@@ -208899,12 +208983,20 @@
         "hash": "12139094588077020459"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_f3990e898dae6037a61b225deda4a3abbc18ffe1.bin",
+        "hash": "3161279130195726086"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_f3add75c692b265d218564ef9fbcc85d98b27f01.bin",
         "hash": "4696797517709528098"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_f3d06606404dbb71a3929e53e1f39ea1f4e3728f.bin",
         "hash": "6982840446750464150"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_f3d65eadb97dc866f719c668a1a4a67c70579a89.bin",
+        "hash": "8658631149778091115"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_f4e82cbaf6ce9945a7d05459abeaa0e0763c271c.bin",
@@ -208996,15 +209088,15 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "15074203534577443795"
+        "hash": "7270721876195284767"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
-        "hash": "3688231244080053223"
+        "hash": "17412117875630725255"
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
-        "hash": "9566162551272052928"
+        "hash": "9373231130528774771"
       },
       {
         "file": ".local/state/replit/agent/rapid_build_started",
@@ -209016,7 +209108,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "14011199125089024623"
+        "hash": "2690462099756567113"
       },
       {
         "file": ".prettierrc",
@@ -209028,7 +209120,7 @@
       },
       {
         "file": ".upm/store.json",
-        "hash": "12143427456879819682"
+        "hash": "11763307991102052084"
       },
       {
         "file": "architecture.md",
