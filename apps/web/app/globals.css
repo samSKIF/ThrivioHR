@@ -195,12 +195,11 @@ html, body {
 }
 .auth-left {
   flex: 1;
-  max-width: 480px;
-  padding: 2rem;
-  background: white;
   display: flex;
-  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  background: white;
+  padding: 2rem;
 }
 .auth-right {
   flex: 1;
@@ -210,6 +209,16 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: flex-start;
+}
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 .auth-feature {
   display: flex;
@@ -233,9 +242,10 @@ html, body {
 }
 .secondary-button {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.8);
-  color: white;
+  border: 1px solid #1f2937;
+  color: #1f2937;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   margin-top: 1rem;
+  width: 100%;
 }
