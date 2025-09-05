@@ -18,5 +18,5 @@ FOR SELECT
 USING (
   -- Expecting the app to set the current org in the session for tests
   -- e.g., SELECT set_config('app.org_id', '<uuid>', true);
-  org_id::text = current_setting('app.org_id', true)
+  organization_id::text = current_setting('app.org_id', true)
 );
