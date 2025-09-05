@@ -42,8 +42,11 @@ export class AuthController {
     res.json({ ok: true, passwordResetRequired: !!user.password_reset_required });
   }
 
-  // DO NOT override existing /auth/me handler; retain previous implementation in the file.
-  // (If this method does not exist in your file, ignore this comment — no changes applied.)
+  /** quick diagnostic to prove controller is mounted */
+  @Get('diag')
+  diag(@Res() res) {
+    res.json({ ok: true, routes: ['POST /auth/login','POST /auth/password/first-set','GET /auth/password/policy'] });
+  }
 
   /** Return password policy */
   @Get('password/policy')

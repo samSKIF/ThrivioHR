@@ -67,53 +67,67 @@ export class IdentityService {
     return [];
   }
 
-  /**
-   * Case-insensitive lookup by email using existing flexible getUsers().
-   * Returns first match or null.
-   */
+  /** internal helper: run a one-off pg function using DATABASE_URL */
+  private async withPg<T>(fn: (c: any) => Promise<T>): Promise<T> {
+    const { Client } = require('pg');
+    const c = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    await c.connect();
+    try { return await fn(c); }
+    finally { await c.end(); }
+  }
+
+  /** Case-insensitive lookup by email; returns first match or null. */
   async findUserByEmailCI(email: string) {
-    const list = await (this as any).getUsers?.({ email })?.catch?.(() => []) || [];
-    return Array.isArray(list) && list.length ? list[0] : null;
+    // Prefer any existing flexible method if present
+    try {
+      const list = await (this as any).getUsers?.({ email }) ;
+      if (Array.isArray(list) && list.length) return list[0];
+    } catch { /* fall through */ }
+    // Fallback: direct SQL via pg
+    return await this.withPg(async (c) => {
+      const q = `
+        SELECT id, email, password_hash, password_reset_required
+        FROM users
+        WHERE lower(email)=lower($1)
+        ORDER BY created_at ASC
+        LIMIT 1`;
+      const r = await c.query(q, [email]);
+      return r.rows[0] || null;
+    });
   }
 
-  /**
-   * Update a user's password hash and optionally clear the reset flag.
-   * Tolerant to different repository shapes – tries known update helpers,
-   * then falls back to a generic SQL exec if available.
-   */
+  /** Update password_hash and optionally clear password_reset_required (best-effort). */
   async setUserPassword(userId: string, newHash: string, clearReset = false) {
-    const fields: any = { password_hash: newHash };
-    if (clearReset) fields.password_reset_required = false;
-
-    // Try common update helpers if present
+    // Try repo helpers if they exist
     const repo: any = (this as any).repository;
-    if (repo?.updateUserFields) return await repo.updateUserFields(userId, fields);
-    if (repo?.updateUser)       return await repo.updateUser(userId, fields);
-
-    // Try a generic exec/query if available
-    if (repo?.exec) {
-      const sets: string[] = [];
-      const args: any[] = [];
-      for (const [k, v] of Object.entries(fields)) { sets.push(`${k} = $${sets.length+1}`); args.push(v); }
+    if (repo?.updateUserFields) return await repo.updateUserFields(userId, { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
+    if (repo?.updateUser)       return await repo.updateUser(userId,       { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
+    // Fallback: direct SQL
+    return await this.withPg(async (c) => {
+      const sets: string[] = ['password_hash = $1'];
+      const args: any[] = [newHash];
+      if (clearReset) { sets.push('password_reset_required = false'); }
+      sets.push('updated_at = now()');
       args.push(userId);
-      return await repo.exec(`UPDATE users SET ${sets.join(', ')} WHERE id = $${sets.length+1}`, args);
-    }
+      await c.query(`UPDATE users SET ${sets.join(', ')} WHERE id = $2`, args);
+    });
   }
 
-  /** Best-effort: mark successful login; ignore if columns/helpers absent. */
+  /** Best-effort login bookkeeping (ignore if columns absent). */
   async recordLoginSuccess(userId: string) {
     try {
       const repo: any = (this as any).repository;
       if (repo?.exec) {
-        await repo.exec(
-          `UPDATE users
-              SET last_login_at = now(),
-                  failed_login_attempts = 0
-            WHERE id = $1`,
-          [userId]
-        );
+        await repo.exec(`UPDATE users SET last_login_at = now(), failed_login_attempts = 0 WHERE id = $1`, [userId]);
+        return;
       }
-    } catch { /* noop */ }
+    } catch { /* ignore and try pg */ }
+    await this.withPg(async (c) => {
+      try { await c.query(`UPDATE users SET last_login_at = now(), failed_login_attempts = 0 WHERE id = $1`, [userId]); } catch {}
+    });
   }
 
   /**

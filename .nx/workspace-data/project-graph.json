@@ -12941,6 +12941,11 @@
       },
       {
         "source": "bff",
+        "target": "npm:pg",
+        "type": "dynamic"
+      },
+      {
+        "source": "bff",
         "target": "npm:@nestjs/jwt",
         "type": "static"
       },
@@ -28635,5 +28640,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757068575304
+  "computedAt": 1757069950062
 }

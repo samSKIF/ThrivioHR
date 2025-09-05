@@ -1,0 +1,188 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Make Big 3c local-auth endpoints actually work and be debuggable:
+- Fix findUserByEmailCI / setUserPassword / recordLoginSuccess without assuming repository helpers.
+- Provide /auth/diag and /auth/password/policy to confirm controller is loaded.
+- Ensure /login is a Client Component.
+- Start dev servers and print logs + smoke tests.
+
+TOUCH ONLY
+apps/bff/src/modules/identity/identity.service.ts
+apps/bff/src/modules/auth/auth.controller.ts
+apps/web/app/login/page.tsx
+
+CHANGES
+--- Begin Patch: apps/bff/src/modules/identity/identity.service.ts ---
+@@
+ export class IdentityService {
+@@
++  /** internal helper: run a one-off pg function using DATABASE_URL */
++  private async withPg<T>(fn: (c: any) => Promise<T>): Promise<T> {
++    const { Client } = require('pg');
++    const c = new Client({
++      connectionString: process.env.DATABASE_URL,
++      ssl: { rejectUnauthorized: false }
++    });
++    await c.connect();
++    try { return await fn(c); }
++    finally { await c.end(); }
++  }
++
++  /** Case-insensitive lookup by email; returns first match or null. */
++  async findUserByEmailCI(email: string) {
++    // Prefer any existing flexible method if present
++    try {
++      const list = await (this as any).getUsers?.({ email }) ;
++      if (Array.isArray(list) && list.length) return list[0];
++    } catch { /* fall through */ }
++    // Fallback: direct SQL via pg
++    return await this.withPg(async (c) => {
++      const q = `
++        SELECT id, email, password_hash, password_reset_required
++        FROM users
++        WHERE lower(email)=lower($1)
++        ORDER BY created_at ASC
++        LIMIT 1`;
++      const r = await c.query(q, [email]);
++      return r.rows[0] || null;
++    });
++  }
++
++  /** Update password_hash and optionally clear password_reset_required (best-effort). */
++  async setUserPassword(userId: string, newHash: string, clearReset = false) {
++    // Try repo helpers if they exist
++    const repo: any = (this as any).repository;
++    if (repo?.updateUserFields) return await repo.updateUserFields(userId, { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
++    if (repo?.updateUser)       return await repo.updateUser(userId,       { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
++    // Fallback: direct SQL
++    return await this.withPg(async (c) => {
++      const sets: string[] = ['password_hash = $1'];
++      const args: any[] = [newHash];
++      if (clearReset) { sets.push('password_reset_required = false'); }
++      sets.push('updated_at = now()');
++      args.push(userId);
++      await c.query(`UPDATE users SET ${sets.join(', ')} WHERE id = $2`, args);
++    });
++  }
++
++  /** Best-effort login bookkeeping (ignore if columns absent). */
++  async recordLoginSuccess(userId: string) {
++    try {
++      const repo: any = (this as any).repository;
++      if (repo?.exec) {
++        await repo.exec(`UPDATE users SET last_login_at = now(), failed_login_attempts = 0 WHERE id = $1`, [userId]);
++        return;
++      }
++    } catch { /* ignore and try pg */ }
++    await this.withPg(async (c) => {
++      try { await c.query(`UPDATE users SET last_login_at = now(), failed_login_attempts = 0 WHERE id = $1`, [userId]); } catch {}
++    });
++  }
+--- End Patch: apps/bff/src/modules/identity/identity.service.ts ---
+
+--- Begin Patch: apps/bff/src/modules/auth/auth.controller.ts ---
+@@
+-import { Controller, Get, Post, Body, Res, Req, HttpException, HttpStatus } from '@nestjs/common';
++import { Controller, Get, Post, Body, Res, Req, HttpException, HttpStatus } from '@nestjs/common';
+ import { IdentityService } from '../identity/identity.service';
+ import { AuthService } from './auth.service';
+ import { verifyPasswordHash, hashPassword, checkComplexity, getPolicy } from './password.util';
+ 
+ // Lightweight JWT payload decode (no signature verify) to read `sub` from sid cookie.
+ function readSidSub(req: any): string | null {
+@@
+   constructor(
+     private readonly identity: IdentityService,
+     private readonly auth: AuthService,
+   ) {}
+ 
++  /** quick diagnostic to prove controller is mounted */
++  @Get('diag')
++  diag(@Res() res) {
++    res.json({ ok: true, routes: ['POST /auth/login','POST /auth/password/first-set','GET /auth/password/policy'] });
++  }
++
+   /** Return password policy */
+   @Get('password/policy')
+   policy(@Res() res) {
+     res.json(getPolicy());
+   }
+@@
+   @Post('login')
+   async loginLocal(@Body() body: any, @Res() res) {
+     const email = (body?.email || '').toString().trim();
+     const password = (body?.password || '').toString();
+     if (!email || !password) throw new HttpException('missing_credentials', HttpStatus.BAD_REQUEST);
+@@
+     await this.identity.recordLoginSuccess(user.id).catch(() => {});
+ 
+     // Issue same cookies used by OIDC flow
+     await this.auth.issueTokensForEmail(email, res); // existing SSO helper
+     res.json({ ok: true, passwordResetRequired: !!user.password_reset_required });
+   }
+@@
+   @Post('password/first-set')
+   async firstSet(@Req() req, @Body() body: any, @Res() res) {
+     const pw = (body?.passwordNew || '').toString();
+     const c = checkComplexity(pw);
+     if (!c.ok) throw new HttpException({ error: 'weak_password', reasons: c.reasons }, HttpStatus.BAD_REQUEST);
+@@
+     const newHash = await hashPassword(pw);
+     await this.identity.setUserPassword(sub, newHash, true);
+     res.json({ ok: true });
+   }
+--- End Patch: apps/bff/src/modules/auth/auth.controller.ts ---
+
+--- Begin Patch: apps/web/app/login/page.tsx ---
++'use client';
+ import React, { useState } from 'react';
+ 
+ export default function LoginPage() {
+@@
+ }
+--- End Patch: apps/web/app/login/page.tsx ---
+
+RUN & PRINT
+echo "=== Build BFF & Web ==="
+npx nx build bff --skip-nx-cache || true
+npx nx build web --skip-nx-cache || true
+
+echo "=== Start dev servers with logs ==="
+( killall node 2>/dev/null || true; \
+  DOTENV_DISABLE=true OIDC_ENABLED=true OIDC_OFFLINE_CALLBACK=true OIDC_DEBUG=true \
+  npx nx run bff:dev >/tmp/bff.localauth3.log 2>&1 & )
+sleep 7
+npx nx run web:dev >/tmp/web.localauth3.log 2>&1 &
+sleep 7
+echo ">>> BFF log tail"; tail -n 30 /tmp/bff.localauth3.log || true
+echo ">>> WEB log tail"; tail -n 20 /tmp/web.localauth3.log || true
+
+echo "=== Diagnostics ==="
+curl -sS http://127.0.0.1:5000/auth/diag | sed -n '1,120p' || true
+curl -sS http://127.0.0.1:5000/auth/password/policy | sed -n '1,60p' || true
+
+echo "=== Login: email+password (admin@canva.com / Admin123) via web proxy ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123"}' \
+  -c /tmp/cj.local.txt | sed -n '1,22p'
+
+echo "=== auth/me after login (cookie) ==="
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.local.txt | head -c 400; echo
+
+echo "=== First set strong password (expect 200) ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/password/first-set \
+  -H "Content-Type: application/json" -b /tmp/cj.local.txt \
+  -d '{"passwordNew":"Admin123!X"}' | sed -n '1,14p'
+
+echo "=== Re-login with new password (expect 200) ==="
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123!X"}' \
+  -c /tmp/cj.local2.txt | sed -n '1,22p'
+
+echo "=== Acceptance ==="
+echo "Confirm: local auth ok + routes visible; no regressions with SSO."
+STOP.
