@@ -184,8 +184,10 @@ export default function LoginPage() {
       {/* Right Column - Hero Section (50% width on desktop, hidden on mobile) */}
       <div className="hidden md:block" style={{ width: '50%', background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1))', padding: '2rem' }}>
         <div className="h-full flex flex-col max-w-md mx-auto">
+          {/* Spacer to push hero content to center */}
+          <div className="flex-1"></div>
+          
           {/* Hero Image and Content - Centered */}
-          <div className="flex-1 flex flex-col justify-center">
           <div className="text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
               <img
@@ -237,7 +239,9 @@ export default function LoginPage() {
               Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
             </p>
           </div>
-          </div>
+
+          {/* Spacer to push feature cards to bottom */}
+          <div className="flex-1"></div>
 
           {/* Feature Cards - At the bottom */}
           <div className="space-y-3 mb-4">
