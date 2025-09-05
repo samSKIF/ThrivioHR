@@ -240,7 +240,7 @@
           "dev": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "next dev -p 3000",
+              "command": "next dev -p 5000",
               "cwd": "apps/web"
             },
             "configurations": {},
@@ -249,7 +249,7 @@
           "serve": {
             "executor": "nx:run-commands",
             "options": {
-              "command": "next dev",
+              "command": "next dev -p 5000",
               "cwd": "apps/web"
             },
             "configurations": {},
@@ -28640,5 +28640,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757072679024
+  "computedAt": 1757074162170
 }
