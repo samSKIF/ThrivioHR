@@ -5,18 +5,20 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 DO $$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM pg_policies WHERE schemaname = current_schema() AND tablename = 'users' AND policyname = 'users_org_read'
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = current_schema()
+      AND tablename = 'users'
+      AND policyname = 'users_org_read'
   ) THEN
     EXECUTE 'DROP POLICY users_org_read ON users';
   END IF;
 END$$;
 
--- Read policy scoped by org
+-- Read policy scoped by org (expects session key app.org_id)
 CREATE POLICY users_org_read
 ON users
 FOR SELECT
 USING (
-  -- Expecting the app to set the current org in the session for tests
-  -- e.g., SELECT set_config('app.org_id', '<uuid>', true);
+  -- e.g. tests/app run: SELECT set_config('app.org_id', '<uuid>', true);
   organization_id::text = current_setting('app.org_id', true)
 );
