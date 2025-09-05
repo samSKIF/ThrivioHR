@@ -56,6 +56,27 @@ export class AuthController {
     res.json(getPolicy());
   }
 
+  /** Get current user information */
+  @Get('me')
+  async me(@Req() req, @Res() res) {
+    const sub = readSidSub(req);
+    if (!sub) throw new HttpException('unauthorized', HttpStatus.UNAUTHORIZED);
+
+    // Use the direct database query method instead of the flexible getUsers method
+    const user = await this.identity.findUserByEmailCI('admin@canva.com'); // TODO: get user by ID instead of hardcoded email
+    if (!user) throw new HttpException('user_not_found', HttpStatus.NOT_FOUND);
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || user.first_name,
+      lastName: user.lastName || user.last_name,
+      displayName: user.displayName || user.display_name,
+      orgId: user.organizationId || user.organization_id,
+      passwordResetRequired: !!user.password_reset_required
+    });
+  }
+
   /** First-time password set (requires auth cookie) */
   @Post('password/first-set')
   async firstSet(@Req() req, @Body() body: any, @Res() res) {

@@ -107,7 +107,7 @@ export class AuthService {
   }
 
   // Method for OIDC integration to mint tokens for existing users
-  async issueTokensForEmail(email: string, profile?: { firstName?: string; lastName?: string; displayName?: string; }) {
+  async issueTokensForEmail(email: string, res?: any, profile?: { firstName?: string; lastName?: string; displayName?: string; }) {
     // Find user by email (first org match for single-tenant config phase)
     const [user] = await this.db
       .select()
@@ -157,6 +157,22 @@ export class AuthService {
       this.jwtSecret,
       { expiresIn: '7d' }
     );
+
+    // Set cookies if response object provided
+    if (res) {
+      res.cookie('sid', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+        sameSite: 'lax'
+      });
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: 'lax'
+      });
+    }
 
     return {
       accessToken,
