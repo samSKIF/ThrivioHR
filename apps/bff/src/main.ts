@@ -70,7 +70,7 @@ export async function bootstrap(): Promise<void> {
   // Skip binding when under Jest/test
   const isJest = typeof process.env.JEST_WORKER_ID !== 'undefined' || process.env.NODE_ENV === 'test';
   if (!isJest) {
-    (global as any).__nest_app = app; console.log('[boot] BFF starting...');  (global as any).__nest_app = app; console.log('[boot] BFF listening'); await app.listen(port); 
+     (global as any).__nest_app = app; console.log('[boot] BFF listening'); await app.listen(port); 
     new Logger('Bootstrap').log(`BFF listening on http://localhost:${port}`);
   }
 }

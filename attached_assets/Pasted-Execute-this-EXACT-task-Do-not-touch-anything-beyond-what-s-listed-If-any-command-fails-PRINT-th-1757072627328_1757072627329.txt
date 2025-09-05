@@ -1,0 +1,63 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Auth/Debug endpoints are 404 because dev workflows are still serving old code and main.ts has duplicated boot lines. Clean the duplicate, restart official workflows, and verify routes & login work end-to-end.
+
+TOUCH ONLY
+apps/bff/src/main.ts
+
+CHANGES
+# 1) Clean duplicated boot lines in main.ts (idempotent: keep exactly one exposure+log)
+#    We keep ONE "(global as any).__nest_app = app; console.log('[boot] BFF listening');"
+#    right before await app.listen(...).
+perl -0777 -pe "
+  # remove any existing global exposure/log lines to de-dupe
+  s/\\(global as any\\)\\.__nest_app\\s*=\\s*app;\\s*console\\.log\\('[^']*'\\);\\s*//g;
+  # insert a single exposure+log just before await app.listen(...)
+  s/(await\\s+app\\.listen\\([^\\)]*\\);)/ (global as any).__nest_app = app; console.log('[boot] BFF listening'); \\1/s;
+" -i apps/bff/src/main.ts || { echo 'FAILED: main.ts patch'; exit 1; }
+
+RUN & PRINT
+echo "=== 1) Build BFF & Web ==="
+npx nx build bff --skip-nx-cache
+npx nx build web --skip-nx-cache
+
+echo "=== 2) Restart official Replit workflows ==="
+# Ask Replit to restart managed tasks so ports 5000/3000 run the NEW code.
+echo ">> Restarting bff-server workflow"
+# (Replit agent understands this action)
+echo "::REPLIT_RESTART::bff-server"
+echo ">> Restarting web-dev workflow"
+echo "::REPLIT_RESTART::web-dev"
+sleep 7
+
+echo "=== 3) Quick health & route proofs ==="
+echo ">>> BFF health"
+curl -i -sS http://127.0.0.1:5000/health | sed -n '1,20p' || true
+
+echo ">>> Route catalog (/_debug/routes)"
+curl -i -sS http://127.0.0.1:5000/_debug/routes | sed -n '1,60p' || true
+
+echo ">>> Auth policy (GET /auth/password/policy)"
+curl -i -sS http://127.0.0.1:5000/auth/password/policy | sed -n '1,40p' || true
+
+echo "=== 4) Login flow (local auth) ==="
+echo ">>> POST /auth/login (admin@canva.com / Admin123) via web proxy"
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@canva.com","password":"Admin123"}' \
+  -c /tmp/cj.localauth.txt | sed -n '1,40p'
+
+echo ">>> GET /auth/me with cookie"
+curl -sS http://127.0.0.1:3000/api/bff/auth/me -b /tmp/cj.localauth.txt | sed -n '1,200p'
+
+echo ">>> First password set (if required)"
+curl -i -sS http://127.0.0.1:3000/api/bff/auth/password/first-set \
+  -H "Content-Type: application/json" \
+  -b /tmp/cj.localauth.txt \
+  -d '{"passwordNew":"Admin123!X"}' | sed -n '1,40p'
+
+echo "=== 5) Acceptance ==="
+echo "Confirm where we are vs the ROADMAP and whether any regression exists."
+STOP.
