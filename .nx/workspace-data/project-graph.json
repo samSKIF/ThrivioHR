@@ -2707,6 +2707,24 @@
         "hash": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="
       }
     },
+    "npm:@node-rs/argon2-linux-x64-gnu": {
+      "type": "npm",
+      "name": "npm:@node-rs/argon2-linux-x64-gnu",
+      "data": {
+        "version": "2.0.2",
+        "packageName": "@node-rs/argon2-linux-x64-gnu",
+        "hash": "sha512-ZM3jrHuJ0dKOhvA80gKJqBpBRmTJTFSo2+xVZR+phQcbAKRlDMSZMFDiKbSTnctkfwNFtjgDdh5g1vaEV04AvA=="
+      }
+    },
+    "npm:@node-rs/argon2": {
+      "type": "npm",
+      "name": "npm:@node-rs/argon2",
+      "data": {
+        "version": "2.0.2",
+        "packageName": "@node-rs/argon2",
+        "hash": "sha512-t64wIsPEtNd4aUPuTAyeL2ubxATCBGmeluaKXEMAFk/8w6AJIVVkeLKMBpgLW6LU2t5cQxT+env/c6jxbtTQBg=="
+      }
+    },
     "npm:@nodelib/fs.scandir": {
       "type": "npm",
       "name": "npm:@nodelib/fs.scandir",
@@ -5002,6 +5020,15 @@
         "hash": "sha512-3kMVRF2io8N8pY1IFIXlho9r8IPUUIfHe2hYVtiebvAzU2XeQFXTv+XI4WX+TnXmtwXMDcjngcpkiPM0O9PvLw=="
       }
     },
+    "npm:class-variance-authority": {
+      "type": "npm",
+      "name": "npm:class-variance-authority",
+      "data": {
+        "version": "0.7.1",
+        "packageName": "class-variance-authority",
+        "hash": "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg=="
+      }
+    },
     "npm:cli-cursor": {
       "type": "npm",
       "name": "npm:cli-cursor",
@@ -5054,6 +5081,15 @@
         "version": "1.0.4",
         "packageName": "clone",
         "hash": "sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg=="
+      }
+    },
+    "npm:clsx": {
+      "type": "npm",
+      "name": "npm:clsx",
+      "data": {
+        "version": "2.1.1",
+        "packageName": "clsx",
+        "hash": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="
       }
     },
     "npm:co": {
@@ -11689,6 +11725,15 @@
         "hash": "sha512-MeQTA1r0litLUf0Rp/iisCaL8761lKAZHaimlbGK4j0HysC4PLfqygQj9srcs0m2RdtDYnF8UuYyKpbjHYp7Jw=="
       }
     },
+    "npm:tailwind-merge": {
+      "type": "npm",
+      "name": "npm:tailwind-merge",
+      "data": {
+        "version": "3.3.1",
+        "packageName": "tailwind-merge",
+        "hash": "sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g=="
+      }
+    },
     "npm:tailwindcss": {
       "type": "npm",
       "name": "npm:tailwindcss",
@@ -12974,6 +13019,21 @@
       {
         "source": "web",
         "target": "npm:react",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:class-variance-authority",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:clsx",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:tailwind-merge",
         "type": "static"
       },
       {
@@ -17310,6 +17370,13 @@
         "type": "static"
       }
     ],
+    "npm:@node-rs/argon2": [
+      {
+        "source": "npm:@node-rs/argon2",
+        "target": "npm:@node-rs/argon2-linux-x64-gnu",
+        "type": "static"
+      }
+    ],
     "npm:@nodelib/fs.scandir": [
       {
         "source": "npm:@nodelib/fs.scandir",
@@ -20137,6 +20204,13 @@
       {
         "source": "npm:class-validator",
         "target": "npm:validator",
+        "type": "static"
+      }
+    ],
+    "npm:class-variance-authority": [
+      {
+        "source": "npm:class-variance-authority",
+        "target": "npm:clsx",
         "type": "static"
       }
     ],
@@ -28640,5 +28714,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757074646746
+  "computedAt": 1757076515761
 }
