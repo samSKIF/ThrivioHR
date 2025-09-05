@@ -1,0 +1,78 @@
+Error: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerScrollAndFocusHandler segmentPath={[...]} focusAndScrollRef={{apply:false, ...}}>
+      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+        <LoadingBoundary loading={null}>
+          <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+            <RedirectBoundary>
+              <RedirectErrorBoundary router={{...}}>
+                <InnerLayoutRouter url="/login" tree={[...]} cacheNode={{lazyData:null, ...}} segmentPath={[...]}>
+                  <ClientPageRoot Component={function LoginPage} searchParams={{}} params={{}}>
+                    <LoginPage params={Promise} searchParams={Promise}>
+                      <div className="min-h-scre...">
+                        <div className="flex-1 fle...">
+                          <div className="w-full max...">
+                            <div>
+                            <div>
+                            <form onSubmit={function onSubmit} className="space-y-4">
+                              <div>
+                                <label>
+                                <input
+                                  id="email"
+                                  type="email"
+                                  value=""
+                                  onChange={function onChange}
+                                  required={true}
+                                  placeholder="Enter your email or username"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outlin..."
+-                                 fdprocessedid="rpxain"
+                                >
+                              <div>
+                                <div>
+                                <input
+                                  id="password"
+                                  type="password"
+                                  value=""
+                                  onChange={function onChange}
+                                  required={true}
+                                  placeholder="Enter your password"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outlin..."
+-                                 fdprocessedid="2ygg"
+                                >
+                              <button
+                                type="submit"
+                                disabled={false}
+                                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md..."
+-                               fdprocessedid="xivsk8"
+                              >
++                               Sign In
+                              ...
+                        ...
+                  ...
+
+    at createConsoleError (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/next-devtools/shared/console-error.js:23:71)
+    at handleConsoleError (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js:45:54)
+    at console.error (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:50:57)
+    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:4709:19)
+    at runWithFiberInDEV (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:873:30)
+    at emitPendingHydrationWarnings (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:4708:9)
+    at completeWork (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11881:17)
+    at runWithFiberInDEV (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:873:30)
+    at completeUnitOfWork (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15814:19)
+    at performUnitOfWork (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15695:11)
+    at workLoopConcurrentByScheduler (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15672:9)
+    at renderRootConcurrent (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15647:15)
+    at performWorkOnRoot (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14941:13)
+    at performWorkOnRootViaSchedulerTask (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16767:7)
+    at MessagePort.performWorkUntilDeadline (webpack-internal:///(app-pages-browser)/../../node_modules/.pnpm/next@15.4.6_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.1_react@19.1.1__react@19.1.1_sass@1.91.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45:48)
