@@ -164,26 +164,26 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Hero image and features */}
-      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-color/5 to-primary-color/10 p-8">
+      <div className="hidden md:block md:w-1/2 p-8" style={{ background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1))' }}>
         <div className="max-w-md mx-auto h-full flex flex-col">
-          <div className="mb-8 text-center">
-            <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
+          <div className="flex-1 flex flex-col justify-center text-center">
+            <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-6 mx-auto">
               <img
                 src="https://img.freepik.com/free-vector/people-celebrating-achievement-award-ceremony-winners-competition-company-managers-achievement-announcement-award-receiving-ceremony-concept-illustration_335657-2378.jpg?w=700"
                 alt="Team Recognition"
-                className="h-64 w-auto rounded-xl"
+                className="w-48 h-32 object-cover rounded-xl"
               />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-3">
               Empower Your Workplace
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-8">
               Connect, engage and recognize your colleagues with our
               comprehensive employee engagement platform
             </p>
           </div>
 
-          <div className="space-y-4 mt-auto">
+          <div className="space-y-3 mt-auto">
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-primary-color/10 rounded-full flex items-center justify-center text-primary-color mr-3 flex-shrink-0">
                 <svg
@@ -267,7 +267,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <p className="text-center text-sm text-gray-500 mt-8">
+          <p className="text-center text-sm text-gray-500 mt-6">
             © 2025 ThrivioHR. All rights reserved.
           </p>
         </div>
