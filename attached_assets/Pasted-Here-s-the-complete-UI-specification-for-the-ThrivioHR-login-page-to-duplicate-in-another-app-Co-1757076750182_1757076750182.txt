@@ -1,0 +1,178 @@
+Here's the complete UI specification for the ThrivioHR login page to duplicate in another app:
+
+Complete Login Page UI Structure
+Layout Architecture
+Two-column design on desktop (hidden on mobile)
+Left column: Login form (50% width on desktop, full width on mobile)
+Right column: Hero section with features (50% width on desktop, hidden on mobile)
+Background: bg-gray-50 for overall container
+Left Column - Login Form Section
+Container:
+
+<div className="md:w-1/2 bg-white p-8 flex flex-col justify-center items-center">
+Logo/Brand Header:
+
+<div className="flex items-center gap-3 mb-8">
+  <div className="w-12 h-12 rounded-lg bg-primary-color text-white flex items-center justify-center text-xl font-bold">
+    E
+  </div>
+  <div>
+    <h1 className="text-xl font-bold text-gray-800">{organizationName}</h1>
+    <p className="text-sm text-gray-500">ThrivioHR Platform</p>
+  </div>
+</div>
+Login Card:
+
+<Card className="border-0 shadow-lg">
+  <CardHeader className="text-center pb-4">
+    <h2 className="text-lg font-semibold text-gray-800">Welcome Back</h2>
+  </CardHeader>
+  
+  <CardContent className="space-y-4 pt-2">
+    <!-- Email Field -->
+    <div className="space-y-2">
+      <Label htmlFor="email" className="text-sm text-gray-600">
+        Email or Username
+      </Label>
+      <Input
+        id="email"
+        type="text"
+        placeholder="Enter your email or username"
+        className="focus:border-primary-color focus:ring-primary-color"
+      />
+    </div>
+    
+    <!-- Password Field -->
+    <div className="space-y-2">
+      <div className="flex justify-between">
+        <Label htmlFor="password" className="text-sm text-gray-600">
+          Password
+        </Label>
+        <a href="#" className="text-sm text-primary-color hover:text-primary-color/80">
+          Forgot password?
+        </a>
+      </div>
+      <Input
+        id="password"
+        type="password"
+        placeholder="Enter your password"
+        className="focus:border-primary-color focus:ring-primary-color"
+      />
+    </div>
+  </CardContent>
+  
+  <CardFooter className="flex flex-col space-y-4 pt-2">
+    <!-- Primary Login Button -->
+    <Button
+      type="submit"
+      className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium shadow-md"
+    >
+      Sign In
+    </Button>
+    
+    <!-- Divider -->
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-white px-2 text-gray-500">Or</span>
+      </div>
+    </div>
+    
+    <!-- Secondary Button -->
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+    >
+      Login as Corporate
+    </Button>
+  </CardFooter>
+</Card>
+Right Column - Hero Section
+Container:
+
+<div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-color/5 to-primary-color/10 p-8">
+Hero Image:
+
+<div className="mb-8 text-center">
+  <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
+    <img
+      src="https://img.freepik.com/free-vector/people-celebrating-achievement-award-ceremony-winners-competition-company-managers-achievement-announcement-award-receiving-ceremony-concept-illustration_335657-2378.jpg?w=700"
+      alt="Team Recognition"
+      className="h-64 w-auto rounded-xl"
+    />
+  </div>
+  <h2 className="text-2xl font-bold text-gray-800 mb-3">
+    Empower Your Workplace
+  </h2>
+  <p className="text-gray-600">
+    Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
+  </p>
+</div>
+Feature Cards:
+
+<div className="space-y-4 mt-auto">
+  <!-- Feature 1: Peer Recognition -->
+  <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+    <div className="w-10 h-10 bg-primary-color/10 rounded-full flex items-center justify-center text-primary-color mr-3 flex-shrink-0">
+      <!-- Heart Icon SVG -->
+    </div>
+    <div>
+      <h3 className="font-semibold text-gray-800">Peer Recognition</h3>
+      <p className="text-sm text-gray-500">Celebrate achievements and milestones with colleagues</p>
+    </div>
+  </div>
+  
+  <!-- Feature 2: Rewards & Redemption -->
+  <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+    <div className="w-10 h-10 bg-primary-color/10 rounded-full flex items-center justify-center text-primary-color mr-3 flex-shrink-0">
+      <!-- Store Icon SVG -->
+    </div>
+    <div>
+      <h3 className="font-semibold text-gray-800">Rewards & Redemption</h3>
+      <p className="text-sm text-gray-500">Earn and redeem points for real-world rewards</p>
+    </div>
+  </div>
+  
+  <!-- Feature 3: Polls & Surveys -->
+  <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+    <div className="w-10 h-10 bg-primary-color/10 rounded-full flex items-center justify-center text-primary-color mr-3 flex-shrink-0">
+      <!-- List Icon SVG -->
+    </div>
+    <div>
+      <h3 className="font-semibold text-gray-800">Polls & Surveys</h3>
+      <p className="text-sm text-gray-500">Voice your opinion and participate in company decisions</p>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<p className="text-center text-sm text-gray-500 mt-8">
+  © 2025 {organizationName}. All rights reserved.
+</p>
+CSS Variables (Add to your CSS)
+:root {
+  --primary-color: #3b82f6; /* Blue-500 */
+}
+.primary-color {
+  background-color: var(--primary-color);
+}
+Required Dependencies
+{
+  "@radix-ui/react-card": "^1.x.x",
+  "@radix-ui/react-label": "^2.x.x",
+  "@radix-ui/react-dialog": "^1.x.x",
+  "tailwindcss": "^3.x.x",
+  "lucide-react": "^0.x.x"
+}
+Key Design Features
+Responsive: Two-column on desktop, single column on mobile
+Gradient Background: Subtle primary color gradient on hero section
+Shadow System: Cards use shadow-lg and shadow-sm
+Color Palette: Gray-700/800 for text, primary color for accents
+Typography: Bold headers, medium text, small labels
+Interactive States: Hover effects on buttons and links
+Icon Integration: 10x10 circular backgrounds for feature icons
+Professional Layout: Clean spacing with p-8, space-y-4, gap-3
+This gives you the exact visual structure and styling to recreate the ThrivioHR login page in any React application with Tailwind CSS.
