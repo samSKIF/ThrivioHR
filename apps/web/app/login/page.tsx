@@ -165,8 +165,9 @@ export default function LoginPage() {
 
       {/* Right Column - Hero Section (50% width on desktop, hidden on mobile) */}
       <div style={{ width: '50%', background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)', padding: '2rem' }}>
-        <div className="h-full flex flex-col justify-center max-w-md mx-auto">
+        <div className="h-full flex flex-col justify-between max-w-md mx-auto">
           {/* Hero Image and Content */}
+          <div className="flex-1 flex flex-col justify-center">
           <div className="mb-8 text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
               <img
@@ -218,9 +219,10 @@ export default function LoginPage() {
               Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
             </p>
           </div>
+          </div>
 
-          {/* Feature Cards */}
-          <div className="space-y-4 mt-auto">
+          {/* Feature Cards - Positioned at bottom */}
+          <div className="space-y-4">
             {/* Feature 1: Peer Recognition */}
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
@@ -262,10 +264,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Footer */}
-          <p className="text-center text-sm text-gray-500 mt-8">
-            © 2025 ThrivioHR. All rights reserved.
-          </p>
+            {/* Footer */}
+            <p className="text-center text-sm text-gray-500 mt-6">
+              © 2025 ThrivioHR. All rights reserved.
+            </p>
         </div>
       </div>
     </div>
