@@ -46,9 +46,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#f9fafb' }}>
       {/* Left Column - Login Form (50% width on desktop, full width on mobile) */}
-      <div className="md:w-1/2 bg-white p-8 flex flex-col justify-center items-center">
+      <div style={{ width: '50%', backgroundColor: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <div className="max-w-md mx-auto w-full">
           {/* Logo/Brand Header */}
           <div className="flex items-center gap-3 mb-8">
@@ -117,14 +117,26 @@ export default function LoginPage() {
               
               <CardFooter className="flex flex-col space-y-4 pt-2">
                 {/* Primary Login Button */}
-                <Button
+                <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium shadow-md"
-                  style={{ backgroundColor: '#374151' }} // Fallback inline style
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#374151',
+                    color: 'white',
+                    fontWeight: '500',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    fontSize: '0.875rem'
+                  }}
+                  onMouseOver={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#1f2937'}
+                  onMouseOut={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#374151'}
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
-                </Button>
+                </button>
                 
                 {/* Divider */}
                 <div className="relative">
@@ -152,18 +164,50 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column - Hero Section (50% width on desktop, hidden on mobile) */}
-      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-8">
+      <div style={{ width: '50%', background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)', padding: '2rem' }}>
         <div className="h-full flex flex-col justify-center max-w-md mx-auto">
           {/* Hero Image and Content */}
           <div className="mb-8 text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
-              {/* Illustration placeholder - using CSS shapes for reliability */}
-              <div className="h-64 w-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <div className="text-white text-center">
-                  <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <div className="w-8 h-8 bg-white rounded-full"></div>
+              <img
+                src="https://img.freepik.com/free-vector/people-celebrating-achievement-award-ceremony-winners-competition-company-managers-achievement-announcement-award-receiving-ceremony-concept-illustration_335657-2378.jpg?w=700"
+                alt="Team Recognition"
+                style={{ height: '16rem', width: 'auto', borderRadius: '0.75rem' }}
+                onError={(e) => {
+                  // Fallback to illustration if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const nextSibling = target.nextSibling as HTMLElement;
+                  if (nextSibling) {
+                    nextSibling.style.display = 'flex';
+                  }
+                }}
+              />
+              <div style={{ 
+                height: '16rem', 
+                width: '16rem', 
+                background: 'linear-gradient(to bottom right, #3b82f6, #8b5cf6)',
+                borderRadius: '0.75rem',
+                display: 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                textAlign: 'center'
+              }}>
+                <div>
+                  <div style={{
+                    width: '4rem',
+                    height: '4rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '50%',
+                    margin: '0 auto 1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <div style={{ width: '2rem', height: '2rem', backgroundColor: 'white', borderRadius: '50%' }}></div>
                   </div>
-                  <div className="text-lg font-bold">Team Recognition</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>Team Recognition</div>
                 </div>
               </div>
             </div>
