@@ -183,10 +183,10 @@ export default function LoginPage() {
 
       {/* Right Column - Hero Section (50% width on desktop, hidden on mobile) */}
       <div className="hidden md:block" style={{ width: '50%', background: 'linear-gradient(to bottom right, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1))', padding: '2rem' }}>
-        <div className="h-full flex flex-col justify-between max-w-md mx-auto">
-          {/* Hero Image and Content */}
+        <div className="h-full flex flex-col max-w-md mx-auto">
+          {/* Hero Image and Content - Centered */}
           <div className="flex-1 flex flex-col justify-center">
-          <div className="mb-8 text-center">
+          <div className="text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
               <img
                 src="https://img.freepik.com/free-vector/people-celebrating-achievement-award-ceremony-winners-competition-company-managers-achievement-announcement-award-receiving-ceremony-concept-illustration_335657-2378.jpg?w=700"
@@ -239,8 +239,8 @@ export default function LoginPage() {
           </div>
           </div>
 
-          {/* Feature Cards - Positioned at bottom */}
-          <div className="space-y-4">
+          {/* Feature Cards - At the bottom */}
+          <div className="space-y-3 mb-4">
             {/* Feature 1: Peer Recognition */}
             <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
               <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
@@ -275,10 +275,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-            {/* Footer */}
-            <p className="text-center text-sm text-gray-500 mt-6">
-              © 2025 ThrivioHR. All rights reserved.
-            </p>
+          {/* Footer - Even lower */}
+          <div className="text-center text-sm text-gray-500">
+            © 2025 ThrivioHR. All rights reserved.
+          </div>
         </div>
       </div>
     </div>
