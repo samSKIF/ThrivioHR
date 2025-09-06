@@ -34,6 +34,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
     headers: incoming,
     body: ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer(),
     redirect: "manual", // we want to pass 3xx + Location through
+    signal: AbortSignal.timeout(5000), // 5 second timeout
   };
 
   const res = await fetch(target, init);
