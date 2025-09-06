@@ -41,7 +41,7 @@ export default function LoginPage() {
               <label className="block mb-2 text-gray-700">Email or Username</label>
               <input
                 type="text"
-                className="w-full border border-gray-300 rounded-lg p-2 focus:border-blue-500 focus:ring-2"
+                className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base focus:border-blue-500 focus:ring-2"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -51,7 +51,7 @@ export default function LoginPage() {
               <label className="block mb-2 text-gray-700">Password</label>
               <input
                 type="password"
-                className="w-full border border-gray-300 rounded-lg p-2 focus:border-blue-500 focus:ring-2"
+                className="w-full border border-gray-300 rounded-lg py-3 px-4 text-base focus:border-blue-500 focus:ring-2"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
