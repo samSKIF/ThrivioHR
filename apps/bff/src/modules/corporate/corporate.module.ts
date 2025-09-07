@@ -10,12 +10,13 @@ import { JwtStrategy } from './jwt.strategy';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: process.env.JWT_SECRET || 'fallback-secret-key',
       signOptions: { expiresIn: '8h' },
     }),
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AuthController, CorporateController],
   providers: [AuthService, CorporateService, JwtStrategy],
+  exports: [AuthService],
 })
 export class CorporateModule {}

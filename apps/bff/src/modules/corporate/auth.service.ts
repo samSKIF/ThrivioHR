@@ -8,7 +8,10 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {
+    console.log('AuthService constructor called - jwtService:', this.jwtService);
+    console.log('AuthService constructor - this:', this);
+  }
 
   async login(email: string, password: string) {
     const result = await pool.query(
