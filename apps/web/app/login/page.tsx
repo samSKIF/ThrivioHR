@@ -140,7 +140,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Hero Section */}
-      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-8">
+      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-color/5 to-primary-color/10 p-8">
         <div className="max-w-md mx-auto h-full flex flex-col">
           <div className="mb-8 text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
