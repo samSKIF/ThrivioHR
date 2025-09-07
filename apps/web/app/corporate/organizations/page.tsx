@@ -21,6 +21,8 @@ interface Organization {
   userCount: number;
   createdAt: string;
   subscription: Subscription | null;
+  settings?: any;
+  superuserEmail?: string;
 }
 
 export default function OrganizationsPage() {
