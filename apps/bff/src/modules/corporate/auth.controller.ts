@@ -2,10 +2,6 @@ import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
-/**
- * Handles corporate admin authentication endpoints.
- * TODO: add guards and JWT token extraction when implementing.
- */
 @Controller('corporate/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

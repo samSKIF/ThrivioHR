@@ -1,0 +1,133 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Configure password and JWT handling by adding a Passport JWT strategy and securing corporate endpoints.
+
+TOUCH ONLY
+package.json
+apps/bff/src/modules/corporate/jwt.strategy.ts
+apps/bff/src/modules/corporate/corporate.module.ts
+apps/bff/src/modules/corporate/corporate.controller.ts
+apps/bff/src/modules/corporate/auth.controller.ts
+
+CHANGES
+1. In `package.json` under `"dependencies"`, add or update these entries alphabetically (keep existing versions if present):
+   ```json
+   "@nestjs/passport": "^9.0.0",
+   "passport": "^0.6.0",
+   "passport-jwt": "^4.0.0",
+   "argon2": "^0.30.0"
+Create apps/bff/src/modules/corporate/jwt.strategy.ts with:
+
+ts
+Copy code
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET,
+    });
+  }
+
+  async validate(payload: any) {
+    // payload contains { id, type }; just return it so guards set req.user
+    return payload;
+  }
+}
+Update apps/bff/src/modules/corporate/corporate.module.ts to import PassportModule and register the JwtStrategy. Replace its contents with:
+
+ts
+Copy code
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { CorporateController } from './corporate.controller';
+import { CorporateService } from './corporate.service';
+import { JwtStrategy } from './jwt.strategy';
+
+@Module({
+  imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '8h' },
+    }),
+    PassportModule,
+  ],
+  controllers: [AuthController, CorporateController],
+  providers: [AuthService, CorporateService, JwtStrategy],
+})
+export class CorporateModule {}
+In apps/bff/src/modules/corporate/corporate.controller.ts, import UseGuards and AuthGuard from @nestjs/passport and apply the guard on each endpoint:
+
+ts
+Copy code
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { CorporateService } from './corporate.service';
+
+@Controller('corporate')
+export class CorporateController {
+  constructor(private readonly corporateService: CorporateService) {}
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('dashboard')
+  async dashboard() {
+    return this.corporateService.getDashboardMetrics();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('organizations')
+  async organizations() {
+    return this.corporateService.listOrganizations();
+  }
+}
+In apps/bff/src/modules/corporate/auth.controller.ts, import UseGuards and AuthGuard from @nestjs/passport and protect only the /me endpoint:
+
+ts
+Copy code
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+
+@Controller('corporate/auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post('login')
+  async login(
+    @Body('email') email: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.login(email, password);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  async me(@Req() req: any) {
+    return this.authService.getCurrentAdmin(req);
+  }
+}
+RUN & PRINT
+
+npm install --legacy-peer-deps 2>&1 || pnpm install 2>&1 || true
+
+npx drizzle-kit migrate 2>&1 || true
+
+grep -n "PassportStrategy" apps/bff/src/modules/corporate/jwt.strategy.ts || true
+
+grep -n "JwtStrategy" apps/bff/src/modules/corporate/corporate.module.ts || true
+
+grep -n "UseGuards" apps/bff/src/modules/corporate/corporate.controller.ts || true
+
+grep -n "UseGuards" apps/bff/src/modules/corporate/auth.controller.ts || true
+
+STOP.
