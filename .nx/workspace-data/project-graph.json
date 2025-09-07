@@ -13322,6 +13322,11 @@
       },
       {
         "source": "web",
+        "target": "npm:lucide-react",
+        "type": "static"
+      },
+      {
+        "source": "web",
         "target": "npm:@eslint/js",
         "type": "static"
       },
@@ -29275,5 +29280,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757255572811
+  "computedAt": 1757261583182
 }
