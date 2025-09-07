@@ -28,7 +28,7 @@ The system employs a monorepo structure managed by `pnpm` and orchestrated by `N
 - **Logging, Tracing, Errors**: Structured logging (pino) without PII, including `trace_id`, `tenant_id`, and `user_id`. End-to-end tracing is implemented with OpenTelemetry. Typed error classes map to GraphQL codes, never raw strings.
 - **Security**: Secrets are sourced only from environment variables or Replit Secrets. All inputs are validated (zod/DTOs), rejecting unknown fields. Data residency is respected.
 - **Performance & Pagination**: BFF uses DataLoader to prevent N+1 issues, and services provide batch endpoints. Pagination (cursor/keyset preferred) is required for lists exceeding 100 items. Response size budgets are enforced in BFF, with compression where appropriate.
-- **UI/UX Decisions**: The login interface features a modern split-screen design with a clean form and engaging illustration. A token-based theming system with reversible design tokens and utility classes is used. A persistent global header navigation for employee directory and profile links is implemented.
+- **UI/UX Decisions**: The login interface features a modern split-screen design with a clean form and engaging illustration. **Tailwind CSS with Shadcn/UI for modern, responsive design** - utility-first CSS framework with component library for consistent, maintainable styling. A persistent global header navigation for employee directory and profile links is implemented.
 - **Code Quality & Standards**: Strict file and function length limits are enforced via CI. Core services aim for 100% test coverage, while others target ≥ 90%. Conventional Commits, short-lived branches, and `CODEOWNERS` for reviews are standard. PR descriptions must include what/why, affected contracts, test evidence, and rollback plans.
 - **Monorepo Structure**: Projects are strictly confined to defined roots (`/apps`, `/services`, `/packages`). Duplicate file basenames in the same folder are prohibited.
 - **Temporary/Build Artifacts**: All build outputs and temporary files are git-ignored and automatically cleaned up after tests.
@@ -47,11 +47,19 @@ The system employs a monorepo structure managed by `pnpm` and orchestrated by `N
 - **DataLoader**: N+1 problem mitigation in GraphQL BFF.
 - **openid-client**: OIDC integration for enterprise SSO.
 - **Apollo Client**: GraphQL client for the frontend.
+- **Tailwind CSS**: Primary CSS framework with utility-first approach for rapid UI development.
+- **@tailwindcss/typography**: Advanced typography styling and rich text formatting.
+- **@tailwindcss/vite**: Vite integration for optimized Tailwind builds and faster development.
+- **tailwindcss-animate**: Animation utilities and smooth transitions for enhanced UX.
+- **tailwind-merge**: Intelligent class merging utility for dynamic styling.
+- **Shadcn/UI**: Modern component library built specifically for Tailwind CSS with accessible, customizable components.
+- **clsx**: Utility for constructing className strings conditionally.
 - **Nx**: Monorepo orchestration.
 - **pnpm**: Package manager.
 - **TypeScript**: Primary programming language.
 
 ## Recent Changes
+- **2025-09-07**: **CSS FRAMEWORK TRANSITION** - Migrated from custom utility CSS system to proper Tailwind CSS v4.1.12 + Shadcn/UI. Added proper Tailwind configuration, PostCSS setup, component library initialization with clsx and tailwind-merge utilities. Fixed Next.js 15 API compatibility issues (async cookies). Corporate management interface now uses proper Tailwind classes with component-based architecture.
 - **2025-08-21**: **ROADMAP & ARCHITECTURE UPDATED** - Added Big 3c (Local Auth & User Management) and Big X (Admin Platform & Merchant Center) to roadmap. Updated architecture.md to document email/password auth (unique per org) and expanded Thrivio Control and Merchant Center responsibilities.
 - **2025-08-21 / 2025-08-22** — **Docs & Auth Specs** - Added Local Auth & User Management spec (global email, first-login change, batch domain mismatch for CSV/API). Added org/user social URLs (URL-only + normalization). Added seed orgs (dev only) and tracking events scope. Created `docs/data_dictionary.md`.
 
