@@ -18,6 +18,12 @@ export default function CreateOrganizationPage() {
     city: '',
     zipPostalCode: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState<{
+    organization: any;
+    superuser: any;
+  } | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -29,8 +35,37 @@ export default function CreateOrganizationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission
-    console.log('Form data:', formData);
+    setLoading(true);
+    setError('');
+    setSuccess(null);
+
+    try {
+      const response = await fetch('/api/corporate/organizations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to create organization' }));
+        throw new Error(errorData.message || 'Failed to create organization');
+      }
+
+      const result = await response.json();
+      setSuccess(result);
+      
+      // Auto-redirect after 5 seconds or when user acknowledges
+      setTimeout(() => {
+        router.push('/corporate/organizations');
+      }, 5000);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to create organization');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -64,6 +99,47 @@ export default function CreateOrganizationPage() {
             </div>
           </div>
         </div>
+
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+            <div className="flex items-center mb-4">
+              <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-green-800">Organization Created Successfully!</h3>
+            </div>
+            <div className="text-green-700 space-y-2">
+              <p><strong>Organization:</strong> {success.organization.name}</p>
+              <p><strong>Superuser Email:</strong> {success.superuser.email}</p>
+              <p><strong>Temporary Password:</strong> <code className="bg-green-100 px-2 py-1 rounded font-mono">{success.superuser.tempPassword}</code></p>
+              <p className="text-sm mt-4 text-green-600">
+                📧 Please save the temporary password and share it with the superuser. They will need to change it on first login.
+                <br />
+                🔄 Redirecting to organizations list in 5 seconds...
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/corporate/organizations')}
+              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+            >
+              Go to Organizations Now
+            </button>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-red-800">Creation Failed</h3>
+            </div>
+            <p className="text-red-700 mt-2">{error}</p>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -303,12 +379,25 @@ export default function CreateOrganizationPage() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center gap-2"
+              disabled={loading || !!success}
+              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Create Organization
+              {loading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Create Organization
+                </>
+              )}
             </button>
           </div>
         </form>

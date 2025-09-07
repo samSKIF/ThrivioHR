@@ -84,7 +84,11 @@ html, body {
 .bg-blue-500 { background-color: #3b82f6; }
 .bg-blue-600 { background-color: #2563eb; }
 .bg-blue-700 { background-color: #1d4ed8; }
+.bg-green-50 { background-color: #f0fdf4; }
 .bg-green-100 { background-color: #dcfce7; }
+.bg-green-600 { background-color: #16a34a; }
+.bg-green-700 { background-color: #15803d; }
+.bg-red-50 { background-color: #fef2f2; }
 .bg-purple-100 { background-color: #f3e8ff; }
 .bg-orange-100 { background-color: #fed7aa; }
 .bg-red-100 { background-color: #fee2e2; }
@@ -101,6 +105,10 @@ html, body {
 .text-blue-600 { color: #2563eb; }
 .text-red-500 { color: #ef4444; }
 .text-green-600 { color: #16a34a; }
+.text-green-700 { color: #15803d; }
+.text-green-800 { color: #166534; }
+.text-red-700 { color: #b91c1c; }
+.text-red-800 { color: #991b1b; }
 .text-purple-600 { color: #9333ea; }
 .text-orange-600 { color: #ea580c; }
 .text-red-600 { color: #dc2626; }
@@ -132,6 +140,7 @@ html, body {
 .border-t { border-top: 1px solid #d1d5db; }
 .border-gray-200 { border-color: #e5e7eb; }
 .border-gray-300 { border-color: #d1d5db; }
+.border-green-200 { border-color: #bbf7d0; }
 .border-red-200 { border-color: #fecaca; }
 .rounded { border-radius: 0.25rem; }
 .rounded-lg { border-radius: 0.5rem; }
@@ -145,8 +154,10 @@ html, body {
 /* Interactive States */
 .hover\:bg-blue-600:hover { background-color: #2563eb; }
 .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+.hover\:bg-gray-50:hover { background-color: #f9fafb; }
 .hover\:bg-gray-300:hover { background-color: #d1d5db; }
 .hover\:bg-gray-800:hover { background-color: #1f2937; }
+.hover\:bg-green-700:hover { background-color: #15803d; }
 .hover\:text-blue-800:hover { color: #1e40af; }
 .hover\:text-gray-600:hover { color: #4b5563; }
 .hover\:text-gray-800:hover { color: #1f2937; }
@@ -154,6 +165,8 @@ html, body {
 .focus\:border-blue-500:focus { border-color: #3b82f6; }
 .disabled\:opacity-50:disabled { opacity: 0.5; }
 .disabled\:cursor-not-allowed:disabled { cursor: not-allowed; }
+.animate-spin { animation: spin 1s linear infinite; }
+.font-mono { font-family: 'Courier New', monospace; }
 
 /* Transitions */
 .transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
