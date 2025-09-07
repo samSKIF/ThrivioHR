@@ -72,9 +72,11 @@ export default function LoginPage() {
             </button>
           </form>
           <div className="text-center mt-4">
-            <button type="button" className="secondary-button mb-3">
-              Sign in with SSO
-            </button>
+            <a href="/api/bff/oidc/authorize">
+              <button type="button" className="secondary-button mb-3">
+                Sign in with SSO
+              </button>
+            </a>
             <p className="text-gray-600 mb-2">OR</p>
             <a href="/corporate-login">
               <button type="button" className="secondary-button">

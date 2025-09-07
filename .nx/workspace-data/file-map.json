@@ -24,6 +24,28 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
       "bff": [
         {
           "file": "apps/bff/.env.example",
@@ -487,48 +509,62 @@
           "hash": "5589598467114817326"
         }
       ],
-      "ledger": [
+      "contracts": [
         {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
         },
         {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
         },
         {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
         },
         {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
         },
         {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
         },
         {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
         },
         {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
         },
         {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
         },
         {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
         }
       ],
       "identity": [
@@ -744,7 +780,7 @@
         },
         {
           "file": "apps/web/app/api/bff/[...path]/route.ts",
-          "hash": "11785336552223928798"
+          "hash": "12257940678066635417"
         },
         {
           "file": "apps/web/app/api/bff/health/route.ts",
@@ -788,11 +824,11 @@
         },
         {
           "file": "apps/web/app/globals.css",
-          "hash": "12933579003653894015"
+          "hash": "632125762062944798"
         },
         {
           "file": "apps/web/app/layout.tsx",
-          "hash": "15529096491426825658"
+          "hash": "11936631586613128476"
         },
         {
           "file": "apps/web/app/loading.tsx",
@@ -800,11 +836,11 @@
         },
         {
           "file": "apps/web/app/login/layout.tsx",
-          "hash": "11383855778154612349"
+          "hash": "7475422613999299065"
         },
         {
           "file": "apps/web/app/login/page.tsx",
-          "hash": "5010410780495586272",
+          "hash": "17624819371198273482",
           "deps": [
             "npm:react"
           ]
@@ -830,7 +866,7 @@
         },
         {
           "file": "apps/web/app/page.tsx",
-          "hash": "2037965896561552583",
+          "hash": "9678172442131999999",
           "deps": [
             "npm:next"
           ]
@@ -891,7 +927,7 @@
         },
         {
           "file": "apps/web/next.config.js",
-          "hash": "10396583229330175241"
+          "hash": "9928075104544631967"
         },
         {
           "file": "apps/web/next.config.mjs",
@@ -950,62 +986,26 @@
           "hash": "15254262727132550022"
         }
       ],
-      "contracts": [
+      "recognition": [
         {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
         },
         {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
         },
         {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
         },
         {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
         },
         {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
-        },
-        {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
-        },
-        {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
-        },
-        {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
-        },
-        {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
-        },
-        {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
-        },
-        {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
-        },
-        {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
-        },
-        {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
-        },
-        {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ]
     },
@@ -208047,6 +208047,10 @@
         "hash": "1269253710431320953"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_26ecddf6bd828fb2c9de23c0e753152c29c51027.bin",
+        "hash": "6671345199290568992"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_26ef2006492f197e1225925b17eca1b759255ae2.bin",
         "hash": "13874670878944043031"
       },
@@ -208093,6 +208097,14 @@
       {
         "file": ".local/state/replit/agent/.agent_state_300feb860e4bdd4735aa07ca07cb126390349bdd.bin",
         "hash": "14670731624879217935"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_30a40c9a3de850e21c8211f91575892db890f050.bin",
+        "hash": "1627390727402481017"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_30aa7e0109b41cc9afbd403c15a7b1c60e1b1d1b.bin",
+        "hash": "11182691555749476633"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_33693a3016d52771a0e9488e339a3577ca752aa0.bin",
@@ -208159,6 +208171,10 @@
         "hash": "10520833054827243524"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_3e0c723e588323a3fe2e7c3ec98e1c3cacc43c2e.bin",
+        "hash": "7963202596386366429"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_3e5a6ab262eaaf49aea9de9f4e82397a0caa9d67.bin",
         "hash": "11676016559536084726"
       },
@@ -208213,6 +208229,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_52a00487f40f04a62faec4450b2f2b76ee295ae3.bin",
         "hash": "8057147413517064716"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_5345d56ecc1d4d2c1ec3a636e2142cd2e9f015ec.bin",
+        "hash": "13323853541835087876"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_548f8125dea8b32b5850920f8622347d135b477c.bin",
@@ -208343,6 +208363,10 @@
         "hash": "10621971379663980125"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_6490c12c26d48b9789ed848f02044e62ac56d88c.bin",
+        "hash": "10364096030189035322"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_66a6dcc74f7c8de28163fdf15378ed456f2aa9e9.bin",
         "hash": "12634380987375101743"
       },
@@ -208417,6 +208441,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_743cc4608fb6b667c706e7d1bf47f02aace31acb.bin",
         "hash": "14087623417841630186"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_7471c117de8f94a1c3a3312cc5dfb320e430cf6c.bin",
+        "hash": "3024193035133571253"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_7564dc1e83583f4e7ff43b7936c585e3bed7411a.bin",
@@ -208559,6 +208587,10 @@
         "hash": "11231376098560382127"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_8c5087252822f12c5c22a886441421be60935b8c.bin",
+        "hash": "14487887603670132180"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_8ce2209ec0d81cda200489d9e5e9d7f7817fcc08.bin",
         "hash": "368526431622581223"
       },
@@ -208649,6 +208681,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_96046e70f7a1018b9de92da73ea5882b0d81636f.bin",
         "hash": "1517473986560474687"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_963ab2b7e8161e414bb5c5bf25ba8d79b3210757.bin",
+        "hash": "13103769876746298859"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_9750a4629058cf3ac2b40d254771dad6623f79e6.bin",
@@ -208747,6 +208783,10 @@
         "hash": "13130060497762492424"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_a837344888bc217f5000b5aca45537ed9eb9bcc9.bin",
+        "hash": "7148187161352134657"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_a9e92e1fdb4f192ae6602ff0935b803ac45cdd64.bin",
         "hash": "13826320231072399432"
       },
@@ -208789,6 +208829,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_afb8b614cb143e9bd4d6cfa4557c327ed93ff2b0.bin",
         "hash": "5642639659737256517"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_b0aa448de45613187407379b9b48f81db56dd780.bin",
+        "hash": "4116335793922835407"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_b1af6958111c2cfe45eacea72fe26a351281c7e8.bin",
@@ -208857,6 +208901,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_bf16404a53569b1325bdb690eeb27c8f4678520f.bin",
         "hash": "13168546920203581792"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_c1b18cae9820ed104f0798a3bed693d07e277098.bin",
+        "hash": "14716685085418615259"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_c1f2114608580e0dc35fc66e97ba4b6ed9d4b6d4.bin",
@@ -209144,7 +209192,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "17938331796102246468"
+        "hash": "1634850365976948332"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -209164,7 +209212,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "12518344231787396549"
+        "hash": "5224261523366973844"
       },
       {
         "file": ".prettierrc",
