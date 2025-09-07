@@ -338,3 +338,21 @@ Identity & Access · Directory · Org Chart · Profiles & Media · Social Feed �
 - 3 creation paths for departments/locations: manage screen, CSV, single employee create.
 - Media: private storage, presigned URLs, EXIF strip, size/type caps.
 - Video: store originals + poster in v1; background transcode later.
+
+## Big 14 — Corporate Management **NEXT**
+
+### Sub-features
+- **Corporate admin auth** – add a dedicated login path and JWT for corporate administrators. A new role `corporate_admin` (no `org_id`) grants access to management APIs.
+- **Management dashboard** – page under `/corporate` displaying cards for total organizations, users, subscriptions, revenue and system status.
+- **Organization management** – list all client organizations with status and subscription details; allow creating, updating and deactivating organizations, including contact information and industry.
+- **Subscription & seat management** – extend the `subscriptions` model to track seats_limit, price_per_user_per_month, subscription_period, total_monthly_amount, status (trial, active, past_due, canceled, expired), start date, expiration date and last payment date.
+- **Wallet & credit management** – add `wallet_transactions` to credit or debit an organization's reward wallet.
+- **Feature toggles** – enable or disable modules (e.g., recognition, rewards) per organization via a new `organization_features` table.
+- **Corporate admin UX** – Next.js route group under `/corporate` with pages for login, dashboard, and organization management; modal tabs for organization details, admin access, subscription and wallet.
+
+### DoD
+- Corporate admins can log in and receive a JWT; `/corporate/auth/me` returns current corporate admin info.
+- Dashboard cards load accurate counts; unauthenticated users cannot access `/corporate`.
+- CRUD endpoints for organizations, subscriptions, wallet credits and feature toggles exist and are tested.
+- UI forms validate input and surface errors.
+- Updates do not affect existing tenant-facing features.

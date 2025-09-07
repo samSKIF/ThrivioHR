@@ -11,13 +11,18 @@
 | id | uuid pk | yes |  |
 | name | text | yes |  |
 | slug | text unique | yes | url-safe |
-| status | enum(active, suspended, trial, closed) | yes |  |
+| status | enum(active,suspended,trial,closed) | yes |  |
 | timezone | text | no | IANA |
-| primary_currency | char(3) | no | ISO-4217 |
+| primary_currency | char(3) | no | ISO‑4217 |
 | website_url | text | no | https://… |
 | instagram_url | text | no | instagram.com only |
 | x_url | text | no | x.com (normalize twitter.com) |
 | linkedin_url | text | no | linkedin.com/company/... |
+| industry | text | no | company industry |
+| max_users | int | no | seat limit; null means unlimited |
+| contact_name | text | no | primary contact |
+| contact_email | text | no | email for corporate admin contact |
+| contact_phone_e164 | text | no | phone in E.164 |
 | created_at | timestamptz | yes |  |
 | updated_at | timestamptz | yes |  |
 
@@ -83,17 +88,22 @@
 | committed_at | timestamptz | no |  |
 | rejected_at | timestamptz | no |  |
 
-## subscriptions (minimal, no billing yet)
+## subscriptions
 | field | type | req | notes |
 |---|---|---|---|
 | id | uuid pk | yes |  |
 | org_id | uuid fk(organizations) | yes |  |
 | plan_code | text | yes |  |
-| seats_limit | int | yes |  |
-| status | enum(trial, active, past_due, canceled, expired) | yes |  |
-| start_at | timestamptz | yes |  |
-| end_at | timestamptz | no |  |
-| created_at | timestamptz | yes |  |
+| seats_limit | int | yes | maximum seats purchased |
+| subscribed_users | int | yes | number of seats currently subscribed |
+| price_per_user_per_month | numeric(12,2) | yes | price per user per month |
+| subscription_period | enum(month,quarter,year) | yes | billing frequency |
+| total_monthly_amount | numeric(12,2) | yes | seats_limit × price_per_user_per_month |
+| status | enum(trial,active,past_due,canceled,expired) | yes | current state |
+| start_at | timestamptz | yes | subscription start date |
+| expiration_date | timestamptz | no | end date of current term |
+| last_payment_date | timestamptz | no | timestamp of most recent payment |
+| created_at | timestamptz | yes | record creation |
 
 ## sessions (existing; reference)
 | field | type | req | notes |
@@ -120,3 +130,31 @@
 - No roles m:n join yet; single role on `users` until RBAC is needed.
 - Directory tables (departments/locations/units) land with Big 4.
 - Marketplace/ledger/social feed tables wait for PRDs; not included here to avoid bloat.
+
+## corporate_admins
+| field | type | req | notes |
+|---|---|---|---|
+| id | uuid pk | yes |  |
+| email | citext unique | yes | global unique corporate admin email |
+| password_hash | text | yes | Argon2id + pepper |
+| status | enum(active,disabled) | yes | account state |
+| created_at | timestamptz | yes |  |
+| updated_at | timestamptz | yes |  |
+
+## wallet_transactions
+| field | type | req | notes |
+|---|---|---|---|
+| id | uuid pk | yes |  |
+| org_id | uuid fk(organizations) | yes | organization receiving the credit/debit |
+| amount | numeric(12,2) | yes | positive credit or negative debit |
+| description | text | yes | reason for the transaction |
+| created_at | timestamptz | yes |  |
+
+## organization_features
+| field | type | req | notes |
+|---|---|---|---|
+| id | uuid pk | yes |  |
+| org_id | uuid fk(organizations) | yes |  |
+| feature_name | text | yes | name of the feature (e.g., recognition) |
+| is_enabled | bool | yes | default false |
+| created_at | timestamptz | yes |  |

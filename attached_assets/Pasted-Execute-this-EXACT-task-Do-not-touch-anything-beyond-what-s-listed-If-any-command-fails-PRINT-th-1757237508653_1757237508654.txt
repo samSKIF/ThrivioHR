@@ -1,0 +1,116 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Introduce the Corporate Management epic by updating the roadmap and data dictionary.
+
+TOUCH ONLY
+context/ROADMAP.md
+docs/data_dictionary.md
+
+CHANGES
+1. In `context/ROADMAP.md`, append the following section at the very end of the file:
+
+## Big 14 — Corporate Management **NEXT**
+
+### Sub-features
+- **Corporate admin auth** – add a dedicated login path and JWT for corporate administrators. A new role `corporate_admin` (no `org_id`) grants access to management APIs:contentReference[oaicite:0]{index=0}.
+- **Management dashboard** – page under `/corporate` displaying cards for total organizations, users, subscriptions, revenue and system status.
+- **Organization management** – list all client organizations with status and subscription details; allow creating, updating and deactivating organizations, including contact information and industry.
+- **Subscription & seat management** – extend the `subscriptions` model to track seats_limit, price_per_user_per_month, subscription_period, total_monthly_amount, status (trial, active, past_due, canceled, expired), start date, expiration date and last payment date:contentReference[oaicite:1]{index=1}.
+- **Wallet & credit management** – add `wallet_transactions` to credit or debit an organization’s reward wallet.
+- **Feature toggles** – enable or disable modules (e.g., recognition, rewards) per organization via a new `organization_features` table.
+- **Corporate admin UX** – Next.js route group under `/corporate` with pages for login, dashboard, and organization management; modal tabs for organization details, admin access, subscription and wallet.
+
+### DoD
+- Corporate admins can log in and receive a JWT; `/corporate/auth/me` returns current corporate admin info.
+- Dashboard cards load accurate counts; unauthenticated users cannot access `/corporate`.
+- CRUD endpoints for organizations, subscriptions, wallet credits and feature toggles exist and are tested.
+- UI forms validate input and surface errors.
+- Updates do not affect existing tenant-facing features.
+
+2. In `docs/data_dictionary.md`, update the schema definitions as follows:
+
+*Replace the existing **organizations** table definition with:*
+
+organizations
+field	type	req	notes
+id	uuid pk	yes	
+name	text	yes	
+slug	text unique	yes	url-safe
+status	enum(active,suspended,trial,closed)	yes	
+timezone	text	no	IANA
+primary_currency	char(3)	no	ISO‑4217
+website_url	text	no	https://…
+instagram_url	text	no	instagram.com only
+x_url	text	no	x.com (normalize twitter.com)
+linkedin_url	text	no	linkedin.com/company/...
+industry	text	no	company industry
+max_users	int	no	seat limit; null means unlimited
+contact_name	text	no	primary contact
+contact_email	text	no	email for corporate admin contact
+contact_phone_e164	text	no	phone in E.164
+created_at	timestamptz	yes	
+updated_at	timestamptz	yes	
+
+markdown
+Copy code
+
+*Replace the existing **subscriptions** table definition with:*
+
+subscriptions
+field	type	req	notes
+id	uuid pk	yes	
+org_id	uuid fk(organizations)	yes	
+plan_code	text	yes	
+seats_limit	int	yes	maximum seats purchased
+subscribed_users	int	yes	number of seats currently subscribed
+price_per_user_per_month	numeric(12,2)	yes	price per user per month
+subscription_period	enum(month,quarter,year)	yes	billing frequency
+total_monthly_amount	numeric(12,2)	yes	seats_limit × price_per_user_per_month
+status	enum(trial,active,past_due,canceled,expired)	yes	current state
+start_at	timestamptz	yes	subscription start date
+expiration_date	timestamptz	no	end date of current term
+last_payment_date	timestamptz	no	timestamp of most recent payment
+created_at	timestamptz	yes	record creation
+
+pgsql
+Copy code
+
+*Append these new table definitions to the end of the file:*
+
+corporate_admins
+field	type	req	notes
+id	uuid pk	yes	
+email	citext unique	yes	global unique corporate admin email
+password_hash	text	yes	Argon2id + pepper
+status	enum(active,disabled)	yes	account state
+created_at	timestamptz	yes	
+updated_at	timestamptz	yes	
+
+wallet_transactions
+field	type	req	notes
+id	uuid pk	yes	
+org_id	uuid fk(organizations)	yes	organization receiving the credit/debit
+amount	numeric(12,2)	yes	positive credit or negative debit
+description	text	yes	reason for the transaction
+created_at	timestamptz	yes	
+
+organization_features
+field	type	req	notes
+id	uuid pk	yes	
+org_id	uuid fk(organizations)	yes	
+feature_name	text	yes	name of the feature (e.g., recognition)
+is_enabled	bool	yes	default false
+created_at	timestamptz	yes	
+
+bash
+Copy code
+
+RUN & PRINT
+1) grep -n "Big 14 — Corporate Management" context/ROADMAP.md || true
+2) grep -n "corporate_admins" docs/data_dictionary.md || true
+3) grep -n "wallet_transactions" docs/data_dictionary.md || true
+4) grep -n "organization_features" docs/data_dictionary.md || true
+
+STOP.
