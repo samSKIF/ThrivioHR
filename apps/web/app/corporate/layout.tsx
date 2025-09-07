@@ -2,7 +2,7 @@
 
 import "../globals.css";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 /**
  * CorporateLayout defines a professional header with Shadcn/UI-style tabs navigation
@@ -13,6 +13,22 @@ export default function CorporateLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Logout function
+  const handleLogout = async () => {
+    try {
+      // Clear the corporate_token cookie
+      document.cookie = "corporate_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      
+      // Redirect to corporate login page
+      router.push("/corporate/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force redirect even if there's an error
+      router.push("/corporate/login");
+    }
+  };
   
   const tabs = [
     { value: "overview", label: "Overview", href: "/corporate" },
@@ -46,7 +62,10 @@ export default function CorporateLayout({
             </div>
             <div className="flex items-center gap-4">
               <span className="text-gray-700">Welcome, Corporate Admin</span>
-              <button className="bg-white text-gray-700 border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-50">
+              <button 
+                onClick={handleLogout}
+                className="bg-white text-gray-700 border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors"
+              >
                 Logout
               </button>
             </div>
