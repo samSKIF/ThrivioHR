@@ -1,0 +1,194 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Introduce corporate management schema by creating migration and Drizzle table definitions.
+
+TOUCH ONLY
+services/identity/drizzle/migrations/20250907_corporate_management.sql
+services/identity/src/db/schema/organizations.ts
+services/identity/src/db/schema/corporateAdmins.ts
+services/identity/src/db/schema/subscriptions.ts
+services/identity/src/db/schema/walletTransactions.ts
+services/identity/src/db/schema/organizationFeatures.ts
+services/identity/src/db/schema/index.ts
+
+CHANGES
+1. **Create `services/identity/drizzle/migrations/20250907_corporate_management.sql`** with the following contents:
+
+-- Create corporate_admins table
+CREATE TABLE IF NOT EXISTS corporate_admins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create organization_features table
+CREATE TABLE IF NOT EXISTS organization_features (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  feature_name TEXT NOT NULL,
+  is_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create wallet_transactions table
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  amount NUMERIC(12,2) NOT NULL,
+  description TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add new fields to organizations table (if not present)
+ALTER TABLE organizations
+  ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS timezone TEXT,
+  ADD COLUMN IF NOT EXISTS primary_currency CHAR(3),
+  ADD COLUMN IF NOT EXISTS website_url TEXT,
+  ADD COLUMN IF NOT EXISTS instagram_url TEXT,
+  ADD COLUMN IF NOT EXISTS x_url TEXT,
+  ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+  ADD COLUMN IF NOT EXISTS industry TEXT,
+  ADD COLUMN IF NOT EXISTS max_users INTEGER,
+  ADD COLUMN IF NOT EXISTS contact_name TEXT,
+  ADD COLUMN IF NOT EXISTS contact_email TEXT,
+  ADD COLUMN IF NOT EXISTS contact_phone_e164 TEXT;
+
+-- Create or modify subscriptions table for corporate use
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  plan_code TEXT NOT NULL,
+  seats_limit INTEGER NOT NULL,
+  subscribed_users INTEGER NOT NULL,
+  price_per_user_per_month NUMERIC(12,2) NOT NULL,
+  subscription_period TEXT NOT NULL,
+  total_monthly_amount NUMERIC(12,2) NOT NULL,
+  status TEXT NOT NULL,
+  start_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expiration_date TIMESTAMPTZ,
+  last_payment_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE subscriptions
+  ADD COLUMN IF NOT EXISTS subscribed_users INTEGER,
+  ADD COLUMN IF NOT EXISTS price_per_user_per_month NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS subscription_period TEXT,
+  ADD COLUMN IF NOT EXISTS total_monthly_amount NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS expiration_date TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS last_payment_date TIMESTAMPTZ;
+
+2. **Update `services/identity/src/db/schema/organizations.ts`** to add new fields. Update imports to include `integer`. Then, modify the table definition to include:
+
+  slug: text('slug'),
+  status: text('status').notNull().default('active'),
+  timezone: text('timezone'),
+  primaryCurrency: text('primary_currency'),
+  websiteUrl: text('website_url'),
+  instagramUrl: text('instagram_url'),
+  xUrl: text('x_url'),
+  linkedinUrl: text('linkedin_url'),
+  industry: text('industry'),
+  maxUsers: integer('max_users'),
+  contactName: text('contact_name'),
+  contactEmail: text('contact_email'),
+  contactPhoneE164: text('contact_phone_e164'),
+
+3. **Create new file `services/identity/src/db/schema/corporateAdmins.ts`** with:
+
+import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+export const corporateAdmins = pgTable('corporate_admins', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+4. **Create (or overwrite) `services/identity/src/db/schema/subscriptions.ts`** with:
+
+import { pgTable, uuid, text, integer, numeric, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { organizations } from './organizations';
+
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: uuid('organization_id').references(() => organizations.id).notNull(),
+  planCode: text('plan_code').notNull(),
+  seatsLimit: integer('seats_limit').notNull(),
+  subscribedUsers: integer('subscribed_users').notNull(),
+  pricePerUserPerMonth: numeric('price_per_user_per_month').notNull(),
+  subscriptionPeriod: text('subscription_period').notNull(),
+  totalMonthlyAmount: numeric('total_monthly_amount').notNull(),
+  status: text('status').notNull(),
+  startAt: timestamp('start_at', { withTimezone: true }).notNull().defaultNow(),
+  expirationDate: timestamp('expiration_date', { withTimezone: true }),
+  lastPaymentDate: timestamp('last_payment_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+5. **Create new file `services/identity/src/db/schema/walletTransactions.ts`** with:
+
+import { pgTable, uuid, numeric, text, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { organizations } from './organizations';
+
+export const walletTransactions = pgTable('wallet_transactions', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: uuid('organization_id').references(() => organizations.id).notNull(),
+  amount: numeric('amount').notNull(),
+  description: text('description').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+6. **Create new file `services/identity/src/db/schema/organizationFeatures.ts`** with:
+
+import { pgTable, uuid, text, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { organizations } from './organizations';
+
+export const organizationFeatures = pgTable('organization_features', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: uuid('organization_id').references(() => organizations.id).notNull(),
+  featureName: text('feature_name').notNull(),
+  isEnabled: boolean('is_enabled').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+7. **Update `services/identity/src/db/schema/index.ts`** to import and export the new tables. Add these imports at the top:
+
+import { corporateAdmins } from './corporateAdmins';
+import { subscriptions } from './subscriptions';
+import { walletTransactions } from './walletTransactions';
+import { organizationFeatures } from './organizationFeatures';
+
+Then ensure all four tables are exported alongside the existing tables:
+
+export {
+  organizations,
+  users,
+  roles,
+  // other exports...
+  corporateAdmins,
+  subscriptions,
+  walletTransactions,
+  organizationFeatures,
+};
+
+RUN & PRINT
+1) ls services/identity/drizzle/migrations | tail -n 3
+2) ls services/identity/src/db/schema | grep corporateAdmins
+3) grep -n "corporateAdmins" services/identity/src/db/schema/index.ts || true
+4) grep -n "subscriptions" services/identity/src/db/schema/index.ts || true
+
+STOP.
