@@ -26,7 +26,7 @@ export class CorporateService {
   async listOrganizations() {
     const result = await pool.query(`
       SELECT 
-        o.id, o.name, o.is_active, o.domain, o.website_url,
+        o.id, o.name, o.is_active, o.domain, o.website_url, o.created_at,
         COALESCE(u.user_count, 0) AS user_count,
         s.id AS subscription_id,
         s.seats_limit,
@@ -58,6 +58,7 @@ export class CorporateService {
       domain: row.domain,
       websiteUrl: row.website_url,
       userCount: parseInt(row.user_count, 10) || 0,
+      createdAt: row.created_at,
       subscription: row.subscription_id
         ? {
             id: row.subscription_id,

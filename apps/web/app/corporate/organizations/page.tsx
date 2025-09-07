@@ -17,6 +17,7 @@ interface Organization {
   domain: string;
   websiteUrl: string;
   userCount: number;
+  createdAt: string;
   subscription: Subscription | null;
 }
 
@@ -128,8 +129,7 @@ export default function OrganizationsPage() {
                 <div>
                   <p className="text-gray-600 font-medium">Created</p>
                   <p className="text-gray-900 font-semibold">
-                    {/* We need to add createdAt to the API response */}
-                    N/A
+                    {formatDate(org.createdAt)}
                   </p>
                 </div>
                 
