@@ -66,13 +66,13 @@ export default function OrganizationsPage() {
     }
     
     const periodMap: Record<string, { text: string; class: string }> = {
-      'monthly': { text: 'Monthly', class: 'bg-blue-100 text-blue-800' },
-      'quarterly': { text: 'Quarterly', class: 'bg-blue-100 text-blue-800' },
-      'yearly': { text: 'Yearly', class: 'bg-blue-100 text-blue-800' }
+      'monthly': { text: 'monthly', class: 'bg-blue-100 text-blue-800' },
+      'quarterly': { text: 'quarterly', class: 'bg-blue-100 text-blue-800' },
+      'yearly': { text: 'yearly', class: 'bg-blue-100 text-blue-800' }
     };
     
     const period = periodMap[subscription.subscriptionPeriod.toLowerCase()] || 
-                  { text: subscription.subscriptionPeriod, class: 'bg-blue-100 text-blue-800' };
+                  { text: subscription.subscriptionPeriod.toLowerCase(), class: 'bg-blue-100 text-blue-800' };
     
     return (
       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${period.class}`}>
@@ -107,8 +107,8 @@ export default function OrganizationsPage() {
               <div className="flex items-center gap-3">
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                   org.status === 'active' 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-400 text-white'
                 }`}>
                   {org.status}
                 </span>
