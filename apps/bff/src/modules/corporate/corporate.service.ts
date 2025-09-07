@@ -8,17 +8,16 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export class CorporateService {
   // Aggregate dashboard metrics for corporate admins
   async getDashboardMetrics() {
-    const orgRes = await pool.query(`SELECT COUNT(*) AS count FROM organizations`);
-    const userRes = await pool.query(`SELECT COUNT(*) AS count FROM users`);
+    const orgRes = await pool.query(`SELECT COUNT(*) AS count FROM organizations WHERE is_active = true`);
+    const userRes = await pool.query(`SELECT COUNT(*) AS count FROM users WHERE is_active = true`);
     const subRes = await pool.query(`SELECT COUNT(*) AS count FROM subscriptions WHERE status = 'active'`);
-    const revenueRes = await pool.query(
-      `SELECT COALESCE(SUM(total_monthly_amount), 0) AS revenue FROM subscriptions WHERE status = 'active'`,
-    );
+    const seatsRes = await pool.query(`SELECT COALESCE(SUM(seats_limit), 0) AS total_seats FROM subscriptions WHERE status = 'active'`);
+    
     return {
       organizations: parseInt(orgRes.rows[0].count, 10) || 0,
       users: parseInt(userRes.rows[0].count, 10) || 0,
       subscriptions: parseInt(subRes.rows[0].count, 10) || 0,
-      revenue: revenueRes.rows[0].revenue || 0,
+      totalSeats: parseInt(seatsRes.rows[0].total_seats, 10) || 0,
       status: 'operational',
     };
   }
@@ -27,51 +26,46 @@ export class CorporateService {
   async listOrganizations() {
     const result = await pool.query(`
       SELECT 
-        o.id, o.name, o.status, o.industry, o.max_users, o.contact_name, o.contact_email,
+        o.id, o.name, o.is_active, o.domain, o.website_url,
         COALESCE(u.user_count, 0) AS user_count,
         s.id AS subscription_id,
         s.seats_limit,
-        s.subscribed_users,
-        s.total_monthly_amount,
+        s.plan_code,
         s.status AS subscription_status,
-        s.expiration_date,
-        s.subscription_period,
-        s.price_per_user_per_month
+        s.start_at,
+        s.end_at
       FROM organizations o
       LEFT JOIN (
         SELECT organization_id, COUNT(*) AS user_count
         FROM users
+        WHERE is_active = true
         GROUP BY organization_id
       ) u ON o.id = u.organization_id
       LEFT JOIN (
-        SELECT DISTINCT ON (organization_id)
-          id, organization_id, seats_limit, subscribed_users, total_monthly_amount,
-          price_per_user_per_month, subscription_period, expiration_date, status, created_at
+        SELECT DISTINCT ON (org_id)
+          id, org_id, seats_limit, plan_code, status, start_at, end_at, created_at
         FROM subscriptions
         WHERE status = 'active'
-        ORDER BY organization_id, created_at DESC
-      ) s ON o.id = s.organization_id
+        ORDER BY org_id, created_at DESC
+      ) s ON o.id = s.org_id
+      WHERE o.is_active = true
       ORDER BY o.created_at DESC
     `);
     return result.rows.map(row => ({
       id: row.id,
       name: row.name,
-      status: row.status || 'active',
-      industry: row.industry,
-      maxUsers: row.max_users,
-      contactName: row.contact_name,
-      contactEmail: row.contact_email,
+      status: row.is_active ? 'active' : 'inactive',
+      domain: row.domain,
+      websiteUrl: row.website_url,
       userCount: parseInt(row.user_count, 10) || 0,
       subscription: row.subscription_id
         ? {
             id: row.subscription_id,
             seatsLimit: row.seats_limit,
-            subscribedUsers: row.subscribed_users,
-            totalMonthlyAmount: row.total_monthly_amount,
+            planCode: row.plan_code,
             status: row.subscription_status,
-            expirationDate: row.expiration_date,
-            subscriptionPeriod: row.subscription_period,
-            pricePerUserPerMonth: row.price_per_user_per_month,
+            startAt: row.start_at,
+            endAt: row.end_at,
           }
         : null,
     }));
