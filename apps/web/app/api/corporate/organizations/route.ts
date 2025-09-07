@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function GET(request: NextRequest) {
-  const token = cookies().get("corporate_token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("corporate_token")?.value;
   if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = cookies().get("corporate_token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("corporate_token")?.value;
   if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
