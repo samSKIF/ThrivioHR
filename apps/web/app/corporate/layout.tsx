@@ -17,6 +17,13 @@ export default function CorporateLayout({
 
   // Logout function
   const handleLogout = async () => {
+    // Show confirmation dialog
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    
+    if (!confirmed) {
+      return; // User cancelled, do nothing
+    }
+
     try {
       // Clear the corporate_token cookie
       document.cookie = "corporate_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
