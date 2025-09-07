@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Award } from "lucide-react";
+// import { CheckCircle, Award } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -78,7 +78,7 @@ export default function LoginPage() {
               </button>
             </a>
             <p className="text-gray-600 mb-2">OR</p>
-            <a href="/corporate-login">
+            <a href="/corporate/login">
               <button type="button" className="secondary-button">
                 Login as Corporate
               </button>
@@ -87,20 +87,20 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="auth-right">
-        <Award size={64} className="mb-4" />
+        <div className="w-16 h-16 mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">🏆</div>
         <h2 className="text-3xl font-bold mb-2">Empower Your Workplace</h2>
         <p className="mb-6">
           Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
         </p>
         <ul>
           <li className="auth-feature">
-            <CheckCircle size={20} /> Peer Recognition
+            <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-2">✓</span> Peer Recognition
           </li>
           <li className="auth-feature">
-            <CheckCircle size={20} /> Rewards &amp; Redemption
+            <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-2">✓</span> Rewards &amp; Redemption
           </li>
           <li className="auth-feature">
-            <CheckCircle size={20} /> Polls &amp; Surveys
+            <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs mr-2">✓</span> Polls &amp; Surveys
           </li>
         </ul>
       </div>
