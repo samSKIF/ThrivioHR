@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Building, Users, Gift, ShoppingCart, DollarSign, LineChart } from "lucide-react";
 
 interface DashboardData {
   organizations: number;
@@ -11,13 +10,13 @@ interface DashboardData {
   status: string;
 }
 
-const cardDefinitions = [
-  { key: "organizations", label: "Organizations", Icon: Building, color: "bg-blue-100 text-blue-600" },
-  { key: "users", label: "Users", Icon: Users, color: "bg-green-100 text-green-600" },
-  { key: "subscriptions", label: "Subscriptions", Icon: Gift, color: "bg-purple-100 text-purple-600" },
-  { key: "capacity", label: "Capacity", Icon: ShoppingCart, color: "bg-orange-100 text-orange-600" },
-  { key: "revenue", label: "Revenue", Icon: DollarSign, color: "bg-red-100 text-red-600" },
-  { key: "status", label: "Status", Icon: LineChart, color: "bg-indigo-100 text-indigo-600" },
+const cardData = [
+  { key: "organizations", label: "Organizations", color: "bg-blue-500" },
+  { key: "users", label: "Users", color: "bg-green-500" },
+  { key: "subscriptions", label: "Subscriptions", color: "bg-purple-500" },
+  { key: "capacity", label: "Capacity", color: "bg-orange-500" },
+  { key: "revenue", label: "Revenue", color: "bg-red-500" },
+  { key: "status", label: "Status", color: "bg-indigo-500" },
 ];
 
 export default function DashboardPage() {
@@ -38,25 +37,35 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  if (error) {
+    return <p className="text-red-600 mb-4">{error}</p>;
+  }
+
+  if (!data) {
+    return <p className="text-gray-600">Loading dashboard…</p>;
+  }
+
   return (
-    <div>
-      <h2 className="dashboard-heading">Overview</h2>
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-      {!data ? (
-        <p>Loading dashboard…</p>
-      ) : (
-        <div className="dashboard-grid">
-          {cardDefinitions.map(({ key, label, Icon, color }) => (
-            <div key={key} className="dashboard-card">
-              <div className={`icon-badge ${color}`}>
-                <Icon size={20} />
+    <div className="space-y-8">
+      <div className="grid grid-cols-3 gap-6">
+        {cardData.map(({ key, label, color }) => {
+          const value = key === "revenue" ? `$${(data as any)[key]}` : (data as any)[key];
+          
+          return (
+            <div key={key} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">{label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{value}</p>
+                </div>
+                <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center`}>
+                  <div className="w-6 h-6 bg-white rounded-sm"></div>
+                </div>
               </div>
-              <span className="card-label">{label}</span>
-              <span className="card-value">{key === "revenue" ? `$${(data as any)[key]}` : (data as any)[key]}</span>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

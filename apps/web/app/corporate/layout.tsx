@@ -40,16 +40,16 @@ export default function CorporateLayout({
         </div>
       </header>
 
-      <div className="bg-gray-100 py-4">
-        <nav className="max-w-7xl mx-auto">
-          <ul className="flex gap-8 px-6 text-sm font-medium">
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <ul className="flex gap-8 px-6 py-3 text-sm font-medium">
             {links.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
                   className={`block px-0 py-2 ${
                     pathname === link.href
-                      ? "text-gray-900 font-semibold border-b-2 border-blue-500"
+                      ? "text-gray-900 font-semibold"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -58,8 +58,8 @@ export default function CorporateLayout({
               </li>
             ))}
           </ul>
-        </nav>
-      </div>
+        </div>
+      </nav>
 
       <main className="px-6 py-8 max-w-7xl mx-auto">{children}</main>
     </div>
