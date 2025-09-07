@@ -61,6 +61,13 @@ export default function CorporateLoginPage() {
           {loading ? "Signing in…" : "Sign In"}
         </button>
       </form>
+      <div className="text-center mt-4">
+        <a href="/login">
+          <button type="button" className="secondary-button">
+            Client Interface
+          </button>
+        </a>
+      </div>
     </div>
   );
 }
