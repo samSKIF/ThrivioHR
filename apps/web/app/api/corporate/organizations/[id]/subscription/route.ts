@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 // Create subscription for organization
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const cookieStore = await cookies();
   const token = cookieStore.get("corporate_token")?.value;
@@ -13,9 +13,10 @@ export async function POST(
   }
 
   const body = await request.json();
+  const { id } = await params;
   
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/organizations/${params.id}/subscription`,
+    `${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/organizations/${id}/subscription`,
     {
       method: 'POST',
       headers: { 
