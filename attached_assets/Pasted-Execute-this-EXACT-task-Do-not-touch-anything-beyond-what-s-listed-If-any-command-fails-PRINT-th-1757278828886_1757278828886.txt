@@ -1,0 +1,62 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Unblock the web build by fixing:
+1) Next.js route handler POST signature type error.
+2) Type mismatch in corporate organizations page (OrgListItem → Organization).
+
+TOUCH ONLY
+apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts
+apps/web/app/corporate/organizations/page.tsx
+
+CHANGES
+--- REPLACE FILE: apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts ---
+/**
+ * POST /api/corporate/organizations/[id]/wallet/credit
+ * Minimal route handler to unblock build.
+ * We deliberately relax the second argument type to `any` to satisfy Next.js worker typing across versions.
+ */
+export async function POST(req: Request, ctx: any) {
+  try {
+    // Support both sync and async params objects defensively
+    const params = (await (ctx?.params ?? {})) ?? ctx?.params ?? {};
+    const id = params?.id;
+
+    let body: unknown = {};
+    try { body = await req.json(); } catch { /* no-op */ }
+
+    return new Response(
+      JSON.stringify({ ok: true, organizationId: id ?? null, received: body }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ ok: false, error: (err as Error)?.message ?? "Unknown error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+--- PATCH FILE: apps/web/app/corporate/organizations/page.tsx ---
+1) At the top-level (near other helpers/imports), ADD this helper exactly once:
+
+function toOrganizationLike(item: any) {
+  return {
+    ...item,
+    // Ensure fields expected by Organization exist (fill with safe defaults if missing)
+    domain: item?.domain ?? "",
+    websiteUrl: item?.websiteUrl ?? "",
+  };
+}
+
+2) In the JSX where the modal is rendered (lines around 160–170), REPLACE
+   `organization={selectedOrg}`
+   WITH
+   `organization={selectedOrg ? toOrganizationLike(selectedOrg) : selectedOrg}`
+
+RUN & PRINT
+echo "=== TYPECHECK WEB (no emit) ===" && npx tsc --noEmit --project apps/web/tsconfig.json \
+&& echo "=== BUILD WEB ===" && npx nx build web
+
+STOP.

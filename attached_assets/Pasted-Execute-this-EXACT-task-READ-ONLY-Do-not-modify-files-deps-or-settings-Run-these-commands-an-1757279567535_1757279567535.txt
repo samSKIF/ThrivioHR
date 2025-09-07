@@ -1,0 +1,46 @@
+Execute this EXACT task. READ-ONLY. Do not modify files, deps, or settings.
+
+Run these commands and print outputs under headers, then STOP:
+
+1) echo "=== ENV VERSIONS ===" \
+   && node -v \
+   && npx tsc -v \
+   && node -e "const p=require('./package.json');console.log('next:',p?.dependencies?.next||p?.devDependencies?.next||'N/A');console.log('react:',p?.dependencies?.react||'N/A')"
+
+2) echo "=== ROOT TYPECHECK (no emit) ===" \
+   && npx tsc --noEmit --pretty false || true
+
+3) echo "=== NX TYPECHECK TARGETS (web/bff) ===" \
+   && npx tsc --noEmit --project apps/web/tsconfig.json --pretty false || true \
+   && echo "---" \
+   && npx tsc --noEmit --project apps/bff/tsconfig.json --pretty false || true
+
+4) echo "=== NEXT BUILD (sanity check) ===" \
+   && npx nx build web || true
+
+5) echo "=== ROUTE HANDLERS INVENTORY (Next.js app/api) ===" \
+   && rg -n --glob "apps/web/app/api/**/route.ts" "^export async function (GET|POST|PUT|PATCH|DELETE)" || true \
+   && echo "--- SHOW 1ST 30 LINES OF EACH ROUTE (for signature review) ---" \
+   && for f in $(rg -l --glob "apps/web/app/api/**/route.ts" .); do echo "----- $f -----"; sed -n '1,30p' "$f"; done || true
+
+6) echo "=== ORG TYPES CROSS-CHECK (OrgListItem vs Organization) ===" \
+   && rg -n "interface\\s+OrgListItem|type\\s+OrgListItem|interface\\s+Organization|type\\s+Organization" apps/web || true \
+   && echo "--- page.tsx snippet around modal ---" \
+   && nl -ba apps/web/app/corporate/organizations/page.tsx | sed -n '140,200p' || true
+
+7) echo "=== TEST TYPINGS & JEST PRESENCE ===" \
+   && rg -n "(describe\\(|it\\(|expect\\()" --glob "**/*.{test,spec}.{ts,tsx}" || true \
+   && node -e "try{const p=require('./package.json');console.log('has @types/jest:', !!(p.devDependencies && p.devDependencies['@types/jest']));}catch(e){console.log('package.json read error',e.message)}" \
+   && pnpm ls @types/jest || true \
+   && rg -n "ts-jest|jest.config|vitest" || true
+
+8) echo "=== SCRIPTS & NX TARGETS SNAPSHOT ===" \
+   && cat package.json \
+   && echo "--- NX projects ---" \
+   && npx nx show projects \
+   && echo "--- web targets ---" \
+   && npx nx show project web --json || true \
+   && echo "--- bff targets ---" \
+   && npx nx show project bff --json || true
+
+STOP.
