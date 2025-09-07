@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DirectoryModule } from './modules/directory/directory.module';
 import { BffGraphqlModule } from './graphql/graphql.module';
 import { OidcModule } from './modules/sso/oidc/oidc.module';
+import { CorporateModule } from './modules/corporate/corporate.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { OidcModule } from './modules/sso/oidc/oidc.module';
     AuthModule,
     DirectoryModule,
     BffGraphqlModule,
-    OidcModule
+    OidcModule,
+    CorporateModule
   ],
   controllers: [AppController, LogoutController, DebugRoutesController],
 })
