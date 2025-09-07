@@ -89,38 +89,20 @@ export default function ManageOrganizationModal({
       const settings = organization.settings || {};
       const address = settings.address || {};
       
-      // Test with known data for Fripl
-      if (organization.name === 'Fripl') {
-        setOrgForm({
-          organizationName: organization.name,
-          status: organization.status,
-          contactName: 'samir SKIF',
-          contactEmail: 'skif.samir@gmail.com',
-          contactPhone: '+971544328869',
-          adminEmail: 'admin@fripl.com',
-          businessActivity: 'technology',
-          streetAddress: '19 Lukens Dr STE 300ID6885941',
-          country: 'US',
-          stateRegion: 'DE',
-          city: 'New York',
-          zipPostalCode: '19721'
-        });
-      } else {
-        setOrgForm({
-          organizationName: organization.name,
-          status: organization.status,
-          contactName: settings.contactName || '',
-          contactEmail: settings.contactEmail || '',
-          contactPhone: settings.contactPhone || '',
-          adminEmail: organization.adminEmail || '',
-          businessActivity: settings.industry || '',
-          streetAddress: address.street || '',
-          country: address.country || '',
-          stateRegion: address.state || '',
-          city: address.city || '',
-          zipPostalCode: address.zipCode || ''
-        });
-      }
+      setOrgForm({
+        organizationName: organization.name,
+        status: organization.status,
+        contactName: settings.contactName || '',
+        contactEmail: settings.contactEmail || '',
+        contactPhone: settings.contactPhone || '',
+        adminEmail: organization.adminEmail || '',
+        businessActivity: settings.industry || '',
+        streetAddress: address.street || '',
+        country: address.country || '',
+        stateRegion: address.state || '',
+        city: address.city || '',
+        zipPostalCode: address.zipCode || ''
+      });
       setError('');
       setSuccess('');
     }
