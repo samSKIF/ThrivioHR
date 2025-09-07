@@ -40,144 +40,175 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-8">
-        <div className="w-full max-w-sm">
-          {/* Logo and Title */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">ThrivioHR</h1>
-            <p className="text-sm text-gray-500">Growth Platform</p>
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+      {/* Left side - Logo and Login Form */}
+      <div className="md:w-1/2 bg-white p-8 flex flex-col justify-center items-center">
+        <div className="max-w-md mx-auto w-full">
+          {/* Branding Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-lg bg-blue-500 text-white flex items-center justify-center text-xl font-bold">
+              T
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">
+                ThrivioHR
+              </h1>
+              <p className="text-sm text-gray-500">Growth Platform</p>
+            </div>
           </div>
 
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Welcome Back</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email or Username
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your email or username"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+          {/* Login Card */}
+          <div className="border-0 shadow-lg rounded-lg bg-white">
+            <div className="text-center pb-4 pt-6 px-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Welcome Back
+                </h2>
               </div>
+            </div>
 
-              {/* Password Field */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Password</label>
-                  <a href="#" className="text-sm text-blue-600 hover:text-blue-500">
-                    Forgot password?
-                  </a>
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4 pt-2 px-6">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm text-gray-600 block">
+                    Email or Username
+                  </label>
+                  <input
+                    id="email"
+                    type="text"
+                    placeholder="Enter your email or username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
                 </div>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <label htmlFor="password" className="text-sm text-gray-600">
+                      Password
+                    </label>
+                    <a
+                      href="#"
+                      className="text-sm text-blue-500 hover:text-blue-400"
+                    >
+                      Forgot password?
+                    </a>
+                  </div>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                {error && <p className="text-red-600 text-sm">{error}</p>}
               </div>
-
-              {error && <p className="text-red-600 text-sm">{error}</p>}
-
-              {/* Sign In Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gray-800 text-white py-2.5 px-4 rounded-md text-sm font-medium hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </button>
+              
+              <div className="flex flex-col space-y-4 pt-2 p-6">
+                <button
+                  type="submit"
+                  className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium shadow-md py-2.5 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-gray-500">Or</span>
+                  </div>
+                </div>
+                <Link href="/corporate/login">
+                  <button
+                    type="button"
+                    className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2.5 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading}
+                  >
+                    Login as Corporate
+                  </button>
+                </Link>
+              </div>
             </form>
-
-            {/* Divider */}
-            <div className="my-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">or</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Corporate Login Link */}
-            <div className="text-center">
-              <Link 
-                href="/corporate/login"
-                className="text-sm text-gray-600 hover:text-gray-900 underline"
-              >
-                Login as Corporate
-              </Link>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Right side - Hero Section */}
-      <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-8">
-        <div className="text-center max-w-md">
-          {/* Hero Illustration */}
-          <div className="mb-8">
-            <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-4xl">
-              👨‍💻
+      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-8">
+        <div className="max-w-md mx-auto h-full flex flex-col">
+          <div className="mb-8 text-center">
+            <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
+              <div className="h-64 w-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-6xl">
+                🏆
+              </div>
             </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Empower Your Workplace
+            </h2>
+            <p className="text-gray-600">
+              Connect, engage and recognize your colleagues with our
+              comprehensive employee engagement platform
+            </p>
           </div>
 
-          {/* Hero Content */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Empower Your Workplace</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
+          {/* Feature Cards */}
+          <div className="space-y-4 mt-auto">
+            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-800">Peer Recognition</h3>
+                <p className="text-sm text-gray-500">
+                  Celebrate achievements and milestones with colleagues
+                </p>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
+                  <path d="M2 7h20" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-800">
+                  Rewards & Redemption
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Earn and redeem points for real-world rewards
+                </p>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M7 10h10" />
+                  <path d="M7 14h10" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-800">Polls & Surveys</h3>
+                <p className="text-sm text-gray-500">
+                  Voice your opinion and participate in company decisions
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-sm text-gray-500 mt-8">
+            © 2025 ThrivioHR. All rights reserved.
           </p>
-
-          {/* Features List */}
-          <div className="space-y-4 text-left">
-            <div className="flex items-center space-x-3">
-              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-gray-700 font-medium">Peer Recognition</span>
-            </div>
-            <div className="text-sm text-gray-500 ml-8">Celebrate achievements and milestones with colleagues</div>
-
-            <div className="flex items-center space-x-3">
-              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-gray-700 font-medium">Rewards & Redemption</span>
-            </div>
-            <div className="text-sm text-gray-500 ml-8">Earn and redeem points for real world rewards</div>
-
-            <div className="flex items-center space-x-3">
-              <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-gray-700 font-medium">Polls & Surveys</span>
-            </div>
-            <div className="text-sm text-gray-500 ml-8">Share your opinions and participate in company decisions</div>
-          </div>
-
-          {/* Copyright */}
-          <div className="mt-12 text-xs text-gray-400">
-            © 2024 ThrivioHR. All rights reserved.
-          </div>
         </div>
       </div>
     </div>
