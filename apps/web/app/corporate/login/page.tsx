@@ -1,15 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BadgeCheck, Gift, CircleUser } from "lucide-react";
 
 export default function CorporateLoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -20,67 +21,49 @@ export default function CorporateLoginPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const msg = (await res.json()).message || "Login failed";
+        const msg = (await res.json()).message || "Invalid email or password";
         throw new Error(msg);
       }
-      // Redirect to dashboard
       router.push("/corporate");
     } catch (err: any) {
-      setError(err.message || "Login error");
+      setError(err.message ?? "Login failed");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    // Full-screen container that completely overrides any parent layout
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh', 
-      backgroundColor: '#f9fafb',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999
-    }}>
-      <div className="corporate-login-page">
-        <h2 className="text-xl font-semibold mb-4">Corporate Admin Login</h2>
-        <form onSubmit={handleSubmit} className="corporate-login-form">
-          <div className="mb-4">
-            <label className="block mb-2 text-gray-700">Email</label>
-            <input
-              type="email"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="login-wrapper">
+      <div className="login-left">
+        <h1 className="text-2xl font-bold mb-2">ThrivioHR Management</h1>
+        <h2 className="text-lg font-semibold mb-6">Corporate Login</h2>
+        <form onSubmit={handleLogin}>
+          <div className="field mb-4">
+            <label>Email</label>
+            <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:border-blue-500"
+                   value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <div className="mb-6">
-            <label className="block mb-2 text-gray-700">Password</label>
-            <input
-              type="password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <div className="field mb-4">
+            <label>Password</label>
+            <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:border-blue-500"
+                   value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           {error && <p className="text-red-600 mb-4">{error}</p>}
-          <button type="submit" className="sign-in-button" disabled={loading}>
+          <button type="submit" className="primary-button w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
-        <div className="text-center mt-4">
-          <a href="/login">
-            <button type="button" className="secondary-button">
-              Client Interface
-            </button>
-          </a>
-        </div>
+      </div>
+      <div className="login-right">
+        <h2 className="text-3xl font-bold mb-4">Empower Your Workplace</h2>
+        <p className="mb-6">
+          Connect, engage and recognize your colleagues with our comprehensive employee engagement platform
+        </p>
+        <ul className="login-features">
+          <li><BadgeCheck size={20} /> Peer Recognition</li>
+          <li><Gift size={20} /> Rewards &amp; Redemption</li>
+          <li><CircleUser size={20} /> Polls &amp; Surveys</li>
+        </ul>
       </div>
     </div>
   );

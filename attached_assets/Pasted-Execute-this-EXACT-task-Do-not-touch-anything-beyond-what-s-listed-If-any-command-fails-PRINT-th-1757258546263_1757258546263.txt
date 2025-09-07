@@ -1,0 +1,472 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Align ThrivioHR’s corporate UI with the EmployeeRewards management portal: overview, organizations, create organization, and login.
+
+TOUCH ONLY
+apps/web/app/corporate/layout.tsx
+apps/web/app/corporate/page.tsx
+apps/web/app/corporate/login/page.tsx
+apps/web/app/corporate/organizations/page.tsx
+apps/web/app/corporate/organizations/create/page.tsx
+apps/web/app/globals.css
+
+CHANGES
+1. **Update `apps/web/app/corporate/layout.tsx`** to match the management navbar style. Highlight the active tab with a pill background, reduce spacing, and ensure consistent typography:
+
+```tsx
+import "../globals.css";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+export const metadata = {
+  title: "ThrivioHR Management",
+  description: "Corporate admin panel",
+};
+
+export default function CorporateLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const links = [
+    { href: "/corporate", label: "Overview" },
+    { href: "/corporate/organizations", label: "Organizations" },
+    { href: "#", label: "Merchants" },
+    { href: "#", label: "Products" },
+    { href: "#", label: "Orders" },
+  ];
+
+  return (
+    <div className="corporate-wrapper">
+      <header className="corporate-header">
+        <div className="corporate-title">
+          <h1>ThrivioHR Management</h1>
+          <p>SaaS Platform Administration</p>
+        </div>
+        <div className="corporate-user">
+          <span>Welcome, Corporate Admin</span>
+          <button className="logout-button">Logout</button>
+        </div>
+      </header>
+      <nav className="corporate-nav">
+        <ul>
+          {links.map(link => (
+            <li key={link.href}>
+              <Link href={link.href} className={pathname === link.href ? "active-nav-link" : ""}>
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <main className="corporate-content">{children}</main>
+    </div>
+  );
+}
+Re‑style the overview page (apps/web/app/corporate/page.tsx) to use cards with icons and color‑coded accents like in EmployeeRewards
+
+. Replace its contents with:
+
+tsx
+Copy code
+"use client";
+import React, { useEffect, useState } from "react";
+import { Building, Users, Gift, ShoppingCart, DollarSign, LineChart } from "lucide-react";
+
+interface DashboardData {
+  organizations: number;
+  users: number;
+  subscriptions: number;
+  revenue: number;
+  capacity: number;
+  status: string;
+}
+
+const cardDefinitions = [
+  { key: "organizations", label: "Organizations", Icon: Building, color: "bg-blue-100 text-blue-600" },
+  { key: "users", label: "Users", Icon: Users, color: "bg-green-100 text-green-600" },
+  { key: "subscriptions", label: "Subscriptions", Icon: Gift, color: "bg-purple-100 text-purple-600" },
+  { key: "capacity", label: "Capacity", Icon: ShoppingCart, color: "bg-orange-100 text-orange-600" },
+  { key: "revenue", label: "Revenue", Icon: DollarSign, color: "bg-red-100 text-red-600" },
+  { key: "status", label: "Status", Icon: LineChart, color: "bg-indigo-100 text-indigo-600" },
+];
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/corporate/dashboard");
+        if (!res.ok) throw new Error("Failed to load dashboard");
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message ?? "Error loading dashboard");
+      }
+    }
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <h2 className="dashboard-heading">Overview</h2>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {!data ? (
+        <p>Loading dashboard…</p>
+      ) : (
+        <div className="dashboard-grid">
+          {cardDefinitions.map(({ key, label, Icon, color }) => (
+            <div key={key} className="dashboard-card">
+              <div className={`icon-badge ${color}`}>
+                <Icon size={20} />
+              </div>
+              <span className="card-label">{label}</span>
+              <span className="card-value">{key === "revenue" ? `$${(data as any)[key]}` : (data as any)[key]}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+Re‑create the organizations listing (apps/web/app/corporate/organizations/page.tsx) to mirror the EmployeeRewards table style
+
+. Replace its contents with:
+
+tsx
+Copy code
+"use client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface OrgListItem {
+  id: string;
+  name: string;
+  status: string;
+  userCount: number;
+  maxUsers?: number;
+  createdAt: string;
+  subscription?: {
+    status: string;
+    subscriptionPeriod: string;
+    expirationDate?: string;
+    lastPaymentDate?: string;
+  };
+}
+
+export default function OrganizationsPage() {
+  const [organizations, setOrganizations] = useState<OrgListItem[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/corporate/organizations");
+        if (!res.ok) throw new Error("Failed to load organizations");
+        const json = await res.json();
+        setOrganizations(json);
+      } catch (err: any) {
+        setError(err.message ?? "Error loading organizations");
+      }
+    }
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <div className="orgs-header">
+        <h2>Organizations</h2>
+        <Link href="/corporate/organizations/create">
+          <button className="primary-button">Add Organization</button>
+        </Link>
+      </div>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+      <div className="orgs-list">
+        {organizations.map(org => (
+          <div key={org.id} className="org-card">
+            <div className="org-card-row">
+              <span className="org-name">{org.name}</span>
+              <span className={`status-badge ${org.status}`}>{org.status}</span>
+              <button className="manage-button">Manage Organization</button>
+            </div>
+            <div className="org-card-details">
+              <div><strong>User Count</strong><br />{org.userCount}</div>
+              <div><strong>Max Employees</strong><br />{org.maxUsers ?? "N/A"}</div>
+              <div><strong>Created</strong><br />{new Date(org.createdAt).toLocaleDateString()}</div>
+              <div>
+                <strong>Subscription</strong><br />
+                {org.subscription ? (
+                  <span className={`sub-badge ${org.subscription.status}`}>
+                    {org.subscription.subscriptionPeriod}
+                  </span>
+                ) : (
+                  "No subscription"
+                )}
+              </div>
+              <div><strong>Last Payment</strong><br />{org.subscription?.lastPaymentDate ?? "N/A"}</div>
+              <div><strong>Expiration</strong><br />{org.subscription?.expirationDate ?? "N/A"}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+Add the create organization page (apps/web/app/corporate/organizations/create/page.tsx) with sections and form fields similar to the EmployeeRewards “Create New Organization” view
+
+:
+
+tsx
+Copy code
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function CreateOrganizationPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: "",
+    industry: "",
+    contactName: "",
+    contactEmail: "",
+    contactPhone: "",
+    superuserEmail: "",
+    streetAddress: "",
+    country: "",
+    state: "",
+    city: "",
+    postalCode: "",
+  });
+  const [error, setError] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/corporate/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("Failed to create organization");
+      router.push("/corporate/organizations");
+    } catch (err: any) {
+      setError(err.message ?? "Error creating organization");
+    }
+  }
+
+  return (
+    <div className="create-page">
+      <h2>Create New Organization</h2>
+      <p className="subheading">Set up a new tenant organization with initial admin user</p>
+      <form onSubmit={handleSubmit} className="create-form">
+        <section className="form-section">
+          <h3>Organization Details</h3>
+          <div className="field">
+            <label>Organization Name *</label>
+            <input name="name" value={form.name} onChange={handleChange} required />
+          </div>
+          <div className="field">
+            <label>Industry *</label>
+            <input name="industry" value={form.industry} onChange={handleChange} required />
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h3>Contact Information</h3>
+          <div className="field">
+            <label>Contact Name *</label>
+            <input name="contactName" value={form.contactName} onChange={handleChange} required />
+          </div>
+          <div className="field">
+            <label>Contact Email *</label>
+            <input name="contactEmail" type="email" value={form.contactEmail} onChange={handleChange} required />
+          </div>
+          <div className="field">
+            <label>Contact Phone</label>
+            <input name="contactPhone" value={form.contactPhone} onChange={handleChange} />
+          </div>
+          <div className="field">
+            <label>Superuser Email *</label>
+            <input name="superuserEmail" type="email" value={form.superuserEmail} onChange={handleChange} required />
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h3>Organization Address</h3>
+          <div className="field">
+            <label>Street Address *</label>
+            <input name="streetAddress" value={form.streetAddress} onChange={handleChange} required />
+          </div>
+          <div className="field-group">
+            <div className="field">
+              <label>Country *</label>
+              <input name="country" value={form.country} onChange={handleChange} required />
+            </div>
+            <div className="field">
+              <label>State/Province *</label>
+              <input name="state" value={form.state} onChange={handleChange} required />
+            </div>
+            <div className="field">
+              <label>City *</label>
+              <input name="city" value={form.city} onChange={handleChange} required />
+            </div>
+            <div className="field">
+              <label>ZIP/Postal Code *</label>
+              <input name="postalCode" value={form.postalCode} onChange={handleChange} required />
+            </div>
+          </div>
+        </section>
+
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+        <div className="actions">
+          <button type="button" className="secondary-button" onClick={() => router.push("/corporate/organizations")}>Cancel</button>
+          <button type="submit" className="primary-button">Create Organization</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+Overhaul the corporate login page (apps/web/app/corporate/login/page.tsx) to match the EmployeeRewards management login layout
+
+. Replace its contents with:
+
+tsx
+Copy code
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { BadgeCheck, Gift, Mail, CircleUser } from "lucide-react";
+
+export default function CorporateLoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/corporate/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const msg = (await res.json()).message || "Invalid email or password";
+        throw new Error(msg);
+      }
+      router.push("/corporate");
+    } catch (err: any) {
+      setError(err.message ?? "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="login-wrapper">
+      <div className="login-left">
+        <h1 className="text-2xl font-bold mb-2">ThrivioHR Management</h1>
+        <h2 className="text-lg font-semibold mb-6">Corporate Login</h2>
+        <form onSubmit={handleLogin}>
+          <div className="field mb-4">
+            <label>Email</label>
+            <input type="email" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:border-blue-500" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="field mb-4">
+            <label>Password</label>
+            <input type="password" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:border-blue-500" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          {error && <p className="text-red-600 mb-4">{error}</p>}
+          <button type="submit" className="primary-button w-full" disabled={loading}>
+            {loading ? "Signing in…" : "Sign In"}
+          </button>
+        </form>
+      </div>
+      <div className="login-right">
+        <h2 className="text-3xl font-bold mb-4">Empower Your Workplace</h2>
+        <p className="mb-6">Connect, engage and recognize your colleagues with our comprehensive employee engagement platform</p>
+        <ul className="login-features">
+          <li><BadgeCheck size={20} /> Peer Recognition</li>
+          <li><Gift size={20} /> Rewards &amp; Redemption</li>
+          <li><CircleUser size={20} /> Polls &amp; Surveys</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+Append new styles to the end of apps/web/app/globals.css to reflect the management UI:
+
+css
+Copy code
+/* Corporate wrapper */
+.corporate-wrapper { min-height: 100vh; background: #f8fafc; }
+.corporate-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; border-bottom: 1px solid #e5e7eb; }
+.corporate-title h1 { margin: 0; font-size: 1.5rem; }
+.corporate-title p { margin: 0; font-size: 0.875rem; color: #6b7280; }
+.corporate-nav ul { display: flex; list-style: none; gap: 1.5rem; padding: 0.75rem 2rem; margin: 0; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.corporate-nav a { text-decoration: none; color: #374151; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+.corporate-nav a.active-nav-link { background: #e0e7ff; color: #4f46e5; }
+.corporate-content { padding: 2rem; }
+
+/* Dashboard cards */
+.dashboard-heading { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+.dashboard-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.dashboard-card { position: relative; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.dashboard-card .icon-badge { position: absolute; top: 0.75rem; right: 0.75rem; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 0.375rem; }
+.card-label { font-size: 0.875rem; color: #6b7280; }
+.card-value { font-size: 1.5rem; font-weight: 700; }
+
+/* Organizations listing */
+.orgs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.primary-button { background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; }
+.secondary-button { background: white; color: #374151; border: 1px solid #d1d5db; padding: 0.5rem 1rem; border-radius: 0.375rem; margin-right: 0.5rem; }
+.orgs-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.org-card { background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.org-card-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+.org-name { font-weight: 600; flex: 1; }
+.status-badge { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; }
+.status-badge.active { background: #d1fae5; color: #065f46; }
+.status-badge.inactive { background: #fef3c7; color: #92400e; }
+.sub-badge { padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; background: #e0f2fe; color: #0369a1; }
+.manage-button { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem 0.75rem; font-size: 0.875rem; }
+
+/* Create organization form */
+.create-page { max-width: 840px; margin: 0 auto; }
+.subheading { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; }
+.create-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.form-section { background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.5rem; }
+.form-section h3 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+.field { margin-bottom: 1rem; }
+.field-group { display: flex; flex-wrap: wrap; gap: 1rem; }
+.field-group .field { flex: 1; min-width: 160px; }
+.field label { display: block; font-size: 0.875rem; color: #374151; margin-bottom: 0.25rem; }
+.field input { width: 100%; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem; }
+.actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+/* Login layout */
+.login-wrapper { display: flex; min-height: 100vh; }
+.login-left, .login-right { flex: 1; padding: 3rem; }
+.login-left { background: white; display: flex; flex-direction: column; justify-content: center; }
+.login-right { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; flex-direction: column; justify-content: center; }
+.login-features { list-style: none; padding: 0; margin: 0; }
+.login-features li { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+RUN & PRINT
+
+ls -R apps/web/app/corporate | sed 's/\./&/' || true
+
+grep -n "dashboard-heading" apps/web/app/globals.css || true
+
+grep -n "Create New Organization" apps/web/app/corporate/organizations/create/page.tsx || true
+
+grep -n "CorporateLoginPage" apps/web/app/corporate/login/page.tsx || true
+
+STOP.

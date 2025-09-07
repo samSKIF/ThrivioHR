@@ -1,36 +1,41 @@
+'use client';
+
 import "../globals.css";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export const metadata = {
-  title: "ThrivioHR Management",
-  description: "Corporate admin panel",
-};
-
-/**
- * CorporateLayout defines header and navigation for corporate pages.
- * It no longer includes <html> or <body> tags, which are handled by Next.js.
- */
 export default function CorporateLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const links = [
+    { href: "/corporate", label: "Overview" },
+    { href: "/corporate/organizations", label: "Organizations" },
+    { href: "#", label: "Merchants" },
+    { href: "#", label: "Products" },
+    { href: "#", label: "Orders" },
+  ];
+
   return (
-    <div>
+    <div className="corporate-wrapper">
       <header className="corporate-header">
-        <div className="corporate-header-left">
-          <h1 className="text-xl font-bold">ThrivioHR Management</h1>
-          <p className="text-sm text-gray-500">SaaS Platform Administration</p>
+        <div className="corporate-title">
+          <h1>ThrivioHR Management</h1>
+          <p>SaaS Platform Administration</p>
         </div>
-        <div className="corporate-header-right">
+        <div className="corporate-user">
           <span>Welcome, Corporate Admin</span>
-          {/* TODO: Logout handler */}
           <button className="logout-button">Logout</button>
         </div>
       </header>
       <nav className="corporate-nav">
-        <ul>
-          <li><a href="/corporate">Overview</a></li>
-          <li><a href="/corporate/organizations">Organizations</a></li>
-          <li><a href="#">Merchants</a></li>
-          <li><a href="#">Products</a></li>
-          <li><a href="#">Orders</a></li>
-        </ul>
+      <ul>
+        {links.map(link => (
+          <li key={link.href}>
+            <Link href={link.href} className={pathname === link.href ? "active-nav-link" : ""}>
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
       </nav>
       <main className="corporate-content">{children}</main>
     </div>
