@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 // Update organization
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const cookieStore = await cookies();
   const token = cookieStore.get("corporate_token")?.value;
@@ -14,8 +14,9 @@ export async function PUT(
 
   const body = await request.json();
   
+  const { id } = await params;
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/organizations/${params.id}`,
+    `${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/organizations/${id}`,
     {
       method: 'PUT',
       headers: { 
