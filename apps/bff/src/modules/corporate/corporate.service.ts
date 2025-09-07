@@ -96,18 +96,29 @@ export class CorporateService {
       const tempPassword = this.generateTempPassword();
       const passwordHash = await hashPassword(tempPassword);
 
-      // Create organization
+      // Create organization (store additional info in settings JSON)
+      const orgSettings = {
+        industry: orgData.industry,
+        contactName: orgData.contactName,
+        contactEmail: orgData.contactEmail,
+        contactPhone: orgData.contactPhone,
+        address: {
+          street: orgData.streetAddress,
+          country: orgData.country,
+          state: orgData.stateProvince,
+          city: orgData.city,
+          zipCode: orgData.zipPostalCode
+        }
+      };
+
       const orgResult = await client.query(`
         INSERT INTO organizations (
-          name, industry, contact_name, contact_email, contact_phone_e164
-        ) VALUES ($1, $2, $3, $4, $5)
+          name, settings
+        ) VALUES ($1, $2)
         RETURNING id, name, created_at
       `, [
         orgData.organizationName,
-        orgData.industry,
-        orgData.contactName,
-        orgData.contactEmail,
-        orgData.contactPhone || null
+        JSON.stringify(orgSettings)
       ]);
 
       const organization = orgResult.rows[0];
