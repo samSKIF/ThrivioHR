@@ -46,6 +46,64 @@
           "hash": "2543962308852854802"
         }
       ],
+      "contracts": [
+        {
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
+        },
+        {
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
+        },
+        {
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
+        },
+        {
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
+        },
+        {
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
+        },
+        {
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
+        }
+      ],
       "identity": [
         {
           "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
@@ -243,28 +301,6 @@
         {
           "file": "services/identity/tsconfig.json",
           "hash": "63426151987760438"
-        }
-      ],
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
         }
       ],
       "bff": [
@@ -1074,62 +1110,26 @@
           "hash": "15254262727132550022"
         }
       ],
-      "contracts": [
+      "ledger": [
         {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
         },
         {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
         },
         {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
         },
         {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
         },
         {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
-        },
-        {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
-        },
-        {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
-        },
-        {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
-        },
-        {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
-        },
-        {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
-        },
-        {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
-        },
-        {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
-        },
-        {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
-        },
-        {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ]
     },
@@ -209227,6 +209227,10 @@
         "hash": "3448849879710942575"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_e48792125f89ff66cfb02562f402e5172bb8c59d.bin",
+        "hash": "440857021887285835"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_e69f2656378389e6d85166bc86dacf5d1df2dd89.bin",
         "hash": "505238686130917267"
       },
@@ -209376,7 +209380,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "9558295072705099044"
+        "hash": "1527447795097389458"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -209396,7 +209400,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "1518290998664778709"
+        "hash": "16718864682525736079"
       },
       {
         "file": ".prettierrc",
