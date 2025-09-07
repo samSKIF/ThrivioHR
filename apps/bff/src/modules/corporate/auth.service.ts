@@ -8,9 +8,9 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {
-    console.log('AuthService constructor called - jwtService:', this.jwtService);
-    console.log('AuthService constructor - this:', this);
+  // Temporarily remove JwtService dependency to test basic injection
+  constructor() {
+    console.log('AuthService constructor called - simple version');
   }
 
   async login(email: string, password: string) {
@@ -26,7 +26,8 @@ export class AuthService {
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const token = this.jwtService.sign({ id: admin.id, type: 'corporate_admin' });
+    // Temporarily return a simple token without JWT
+    const token = 'temp-token-' + admin.id;
     return { token, user: { id: admin.id, email: admin.email } };
   }
 

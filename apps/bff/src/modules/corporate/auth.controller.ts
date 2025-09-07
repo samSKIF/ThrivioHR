@@ -13,6 +13,10 @@ export class AuthController {
     @Body('email') email: string,
     @Body('password') password: string,
   ) {
+    console.log('Login method called, authService:', this.authService);
+    if (!this.authService) {
+      return { error: 'AuthService is undefined' };
+    }
     return this.authService.login(email, password);
   }
 
