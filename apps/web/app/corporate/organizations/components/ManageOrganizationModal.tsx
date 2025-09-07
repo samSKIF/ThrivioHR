@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 
 interface Organization {
   id: string;
@@ -31,6 +30,7 @@ export default function ManageOrganizationModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
   // Organization Details Form State
   const [orgForm, setOrgForm] = useState({
@@ -62,6 +62,11 @@ export default function ManageOrganizationModal({
     amount: 100,
     description: 'Monthly credit allocation'
   });
+
+  // Ensure client-side only rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load organization data when modal opens
   useEffect(() => {
@@ -222,11 +227,35 @@ export default function ManageOrganizationModal({
     }
   };
 
-  if (!isOpen || !organization) return null;
+  // Don't render on server or if not mounted
+  if (!isMounted || !isOpen || !organization) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
-      <div className="bg-white rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div 
+      className="fixed inset-0"
+      style={{ 
+        zIndex: 999999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl"
+        style={{ 
+          width: '90%',
+          maxWidth: '1024px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          margin: '0 auto'
+        }}
+      >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <div>
@@ -645,7 +674,5 @@ export default function ManageOrganizationModal({
     </div>
   );
 
-  return typeof document !== 'undefined' 
-    ? createPortal(modalContent, document.body)
-    : null;
+  return modalContent;
 }
