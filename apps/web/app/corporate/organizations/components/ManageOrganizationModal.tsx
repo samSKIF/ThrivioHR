@@ -11,6 +11,20 @@ interface Organization {
   userCount: number;
   createdAt: string;
   subscription: any;
+  settings?: {
+    industry?: string;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    address?: {
+      street?: string;
+      country?: string;
+      state?: string;
+      city?: string;
+      zipCode?: string;
+    };
+  };
+  adminEmail?: string;
 }
 
 interface ManageOrganizationModalProps {
@@ -71,19 +85,23 @@ export default function ManageOrganizationModal({
   // Load organization data when modal opens
   useEffect(() => {
     if (organization && isOpen) {
+      // Extract settings data if available
+      const settings = organization.settings || {};
+      const address = settings.address || {};
+      
       setOrgForm({
         organizationName: organization.name,
         status: organization.status,
-        contactName: '',
-        contactEmail: '',
-        contactPhone: '',
-        adminEmail: '',
-        businessActivity: '',
-        streetAddress: '',
-        country: '',
-        stateRegion: '',
-        city: '',
-        zipPostalCode: ''
+        contactName: settings.contactName || '',
+        contactEmail: settings.contactEmail || '',
+        contactPhone: settings.contactPhone || '',
+        adminEmail: organization.adminEmail || '',
+        businessActivity: settings.industry || '',
+        streetAddress: address.street || '',
+        country: address.country || '',
+        stateRegion: address.state || '',
+        city: address.city || '',
+        zipPostalCode: address.zipCode || ''
       });
       setError('');
       setSuccess('');
