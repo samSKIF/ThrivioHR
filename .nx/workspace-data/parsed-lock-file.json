@@ -1,5 +1,14 @@
 {
   "externalNodes": {
+    "npm:@alloc/quick-lru": {
+      "type": "npm",
+      "name": "npm:@alloc/quick-lru",
+      "data": {
+        "version": "5.2.0",
+        "packageName": "@alloc/quick-lru",
+        "hash": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="
+      }
+    },
     "npm:@ampproject/remapping": {
       "type": "npm",
       "name": "npm:@ampproject/remapping",
@@ -3049,6 +3058,15 @@
         "version": "4.1.13",
         "packageName": "@tailwindcss/oxide",
         "hash": "sha512-CPgsM1IpGRa880sMbYmG1s4xhAy3xEt1QULgTJGQmZUeNgXFR7s1YxYygmJyBGtou4SyEosGAGEeYqY7R53bIA=="
+      }
+    },
+    "npm:@tailwindcss/postcss": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/postcss",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/postcss",
+        "hash": "sha512-HLgx6YSFKJT7rJqh9oJs/TkBFhxuMOfUKSBEPYwV+t78POOBsdQ7crhZLzwcH3T0UyUuOzU/GK5pk5eKr3wCiQ=="
       }
     },
     "npm:@tailwindcss/typography": {
@@ -19465,6 +19483,31 @@
       "type": "static"
     },
     {
+      "source": "npm:@tailwindcss/postcss",
+      "target": "npm:@alloc/quick-lru",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/postcss",
+      "target": "npm:@tailwindcss/node",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/postcss",
+      "target": "npm:@tailwindcss/oxide",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/postcss",
+      "target": "npm:postcss",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/postcss",
+      "target": "npm:tailwindcss",
+      "type": "static"
+    },
+    {
       "source": "npm:@tailwindcss/typography",
       "target": "npm:lodash.castarray",
       "type": "static"
@@ -28587,6 +28630,21 @@
     {
       "source": "npm:postcss-unique-selectors",
       "target": "npm:postcss-selector-parser",
+      "type": "static"
+    },
+    {
+      "source": "npm:postcss",
+      "target": "npm:nanoid",
+      "type": "static"
+    },
+    {
+      "source": "npm:postcss",
+      "target": "npm:picocolors",
+      "type": "static"
+    },
+    {
+      "source": "npm:postcss",
+      "target": "npm:source-map-js",
       "type": "static"
     },
     {
