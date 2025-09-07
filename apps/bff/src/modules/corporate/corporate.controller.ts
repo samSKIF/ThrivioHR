@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Inject } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CorporateService } from './corporate.service';
 
@@ -16,5 +16,23 @@ export class CorporateController {
   @Get('organizations')
   async organizations() {
     return this.corporateService.listOrganizations();
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('organizations')
+  async createOrganization(@Body() createOrgDto: {
+    organizationName: string;
+    industry: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone?: string;
+    superuserEmail: string;
+    streetAddress: string;
+    country: string;
+    stateProvince: string;
+    city: string;
+    zipPostalCode: string;
+  }) {
+    return this.corporateService.createOrganization(createOrgDto);
   }
 }
