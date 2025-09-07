@@ -1647,6 +1647,15 @@
         "hash": "sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA=="
       }
     },
+    "npm:@isaacs/fs-minipass": {
+      "type": "npm",
+      "name": "npm:@isaacs/fs-minipass",
+      "data": {
+        "version": "4.0.1",
+        "packageName": "@isaacs/fs-minipass",
+        "hash": "sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w=="
+      }
+    },
     "npm:@istanbuljs/load-nyc-config": {
       "type": "npm",
       "name": "npm:@istanbuljs/load-nyc-config",
@@ -1863,6 +1872,15 @@
         "hash": "sha512-OuLGC46TjB5BbN1dH8JULVVZY4WTdkF7tV9Ys6wLL1rubZnCMstOhNHueU5bLCrnRuDhKPDM4g6sw4Bel5Gzqg=="
       }
     },
+    "npm:@jridgewell/remapping": {
+      "type": "npm",
+      "name": "npm:@jridgewell/remapping",
+      "data": {
+        "version": "2.3.5",
+        "packageName": "@jridgewell/remapping",
+        "hash": "sha512-LI9u/+laYG4Ds1TDKSJW2YPrIlcVYOwi2fUC6xB43lueCjgxV4lffOCZCtYFiH6TNOX+tQKXx97T4IKHbhyHEQ=="
+      }
+    },
     "npm:@jridgewell/resolve-uri": {
       "type": "npm",
       "name": "npm:@jridgewell/resolve-uri",
@@ -1885,9 +1903,9 @@
       "type": "npm",
       "name": "npm:@jridgewell/sourcemap-codec",
       "data": {
-        "version": "1.5.4",
+        "version": "1.5.5",
         "packageName": "@jridgewell/sourcemap-codec",
-        "hash": "sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw=="
+        "hash": "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="
       }
     },
     "npm:@jridgewell/trace-mapping": {
@@ -2995,6 +3013,60 @@
         "version": "0.5.15",
         "packageName": "@swc/helpers",
         "hash": "sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g=="
+      }
+    },
+    "npm:@tailwindcss/node": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/node",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/node",
+        "hash": "sha512-eq3ouolC1oEFOAvOMOBAmfCIqZBJuvWvvYWh5h5iOYfe1HFC6+GZ6EIL0JdM3/niGRJmnrOc+8gl9/HGUaaptw=="
+      }
+    },
+    "npm:@tailwindcss/oxide-linux-x64-gnu": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/oxide-linux-x64-gnu",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/oxide-linux-x64-gnu",
+        "hash": "sha512-uaZTYWxSXyMWDJZNY1Ul7XkJTCBRFZ5Fo6wtjrgBKzZLoJNrG+WderJwAjPzuNZOnmdrVg260DKwXCFtJ/hWRQ=="
+      }
+    },
+    "npm:@tailwindcss/oxide-linux-x64-musl": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/oxide-linux-x64-musl",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/oxide-linux-x64-musl",
+        "hash": "sha512-oXiPj5mi4Hdn50v5RdnuuIms0PVPI/EG4fxAfFiIKQh5TgQgX7oSuDWntHW7WNIi/yVLAiS+CRGW4RkoGSSgVQ=="
+      }
+    },
+    "npm:@tailwindcss/oxide": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/oxide",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/oxide",
+        "hash": "sha512-CPgsM1IpGRa880sMbYmG1s4xhAy3xEt1QULgTJGQmZUeNgXFR7s1YxYygmJyBGtou4SyEosGAGEeYqY7R53bIA=="
+      }
+    },
+    "npm:@tailwindcss/typography": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/typography",
+      "data": {
+        "version": "0.5.16",
+        "packageName": "@tailwindcss/typography",
+        "hash": "sha512-0wDLwCVF5V3x3b1SGXPCDcdsbDHMBe+lkFzBRaHeLvNi+nrrnZ1lA18u+OTWO8iSWU2GxUOCvlXtDuqftc1oiA=="
+      }
+    },
+    "npm:@tailwindcss/vite": {
+      "type": "npm",
+      "name": "npm:@tailwindcss/vite",
+      "data": {
+        "version": "4.1.13",
+        "packageName": "@tailwindcss/vite",
+        "hash": "sha512-0PmqLQ010N58SbMTJ7BVJ4I2xopiQn/5i6nlb4JmxzQf8zcS5+m2Cv6tqh+sfDwtIdjoEnOvwsGQ1hkUi8QEHQ=="
       }
     },
     "npm:@tokenizer/inflate": {
@@ -4761,6 +4833,15 @@
         "hash": "sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ=="
       }
     },
+    "npm:chownr@3.0.0": {
+      "type": "npm",
+      "name": "npm:chownr@3.0.0",
+      "data": {
+        "version": "3.0.0",
+        "packageName": "chownr",
+        "hash": "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="
+      }
+    },
     "npm:chrome-trace-event": {
       "type": "npm",
       "name": "npm:chrome-trace-event",
@@ -4867,6 +4948,15 @@
         "version": "1.0.4",
         "packageName": "clone",
         "hash": "sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg=="
+      }
+    },
+    "npm:clsx": {
+      "type": "npm",
+      "name": "npm:clsx",
+      "data": {
+        "version": "2.1.1",
+        "packageName": "clsx",
+        "hash": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="
       }
     },
     "npm:co": {
@@ -8091,6 +8181,15 @@
         "hash": "sha512-y2mfcJywuTUkvLm2Lp1/pFX8kTgMO5yyQGq/Sk/n2mN7XWYp4JsCZ/QXW34M8YScgk8bPZlREH04f6blPnoHnQ=="
       }
     },
+    "npm:jiti": {
+      "type": "npm",
+      "name": "npm:jiti",
+      "data": {
+        "version": "2.5.1",
+        "packageName": "jiti",
+        "hash": "sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w=="
+      }
+    },
     "npm:jose": {
       "type": "npm",
       "name": "npm:jose",
@@ -8406,6 +8505,33 @@
         "hash": "sha512-771TFWFD70G1wLTC4oU2Cw4qvtmNrIw+wRvBtn+okgHl7slJVi7zfNcdmqDL72BojM30VNJ2UHylr1o77U37Jw=="
       }
     },
+    "npm:lightningcss-linux-x64-gnu": {
+      "type": "npm",
+      "name": "npm:lightningcss-linux-x64-gnu",
+      "data": {
+        "version": "1.30.1",
+        "packageName": "lightningcss-linux-x64-gnu",
+        "hash": "sha512-piWx3z4wN8J8z3+O5kO74+yr6ze/dKmPnI7vLqfSqI8bccaTGY5xiSGVIJBDd5K5BHlvVLpUB3S2YCfelyJ1bw=="
+      }
+    },
+    "npm:lightningcss-linux-x64-musl": {
+      "type": "npm",
+      "name": "npm:lightningcss-linux-x64-musl",
+      "data": {
+        "version": "1.30.1",
+        "packageName": "lightningcss-linux-x64-musl",
+        "hash": "sha512-rRomAK7eIkL+tHY0YPxbc5Dra2gXlI63HL+v1Pdi1a3sC+tJTcFrHX+E86sulgAXeI7rSzDYhPSeHHjqFhqfeQ=="
+      }
+    },
+    "npm:lightningcss": {
+      "type": "npm",
+      "name": "npm:lightningcss",
+      "data": {
+        "version": "1.30.1",
+        "packageName": "lightningcss",
+        "hash": "sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg=="
+      }
+    },
     "npm:lilconfig": {
       "type": "npm",
       "name": "npm:lilconfig",
@@ -8485,6 +8611,15 @@
         "version": "7.2.0",
         "packageName": "locate-path",
         "hash": "sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA=="
+      }
+    },
+    "npm:lodash.castarray": {
+      "type": "npm",
+      "name": "npm:lodash.castarray",
+      "data": {
+        "version": "4.4.0",
+        "packageName": "lodash.castarray",
+        "hash": "sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q=="
       }
     },
     "npm:lodash.clonedeepwith": {
@@ -8728,6 +8863,15 @@
         "version": "3.7.1",
         "packageName": "luxon",
         "hash": "sha512-RkRWjA926cTvz5rAb1BqyWkKbbjzCGchDUIKMCUvNi17j6f6j8uHGDV82Aqcqtzd+icoYpELmG3ksgGiFNNcNg=="
+      }
+    },
+    "npm:magic-string": {
+      "type": "npm",
+      "name": "npm:magic-string",
+      "data": {
+        "version": "0.30.18",
+        "packageName": "magic-string",
+        "hash": "sha512-yi8swmWbO17qHhwIBNeeZxTceJMeBvWJaId6dyvTSOwTipqeHhMhOrz6513r1sOKnpvQ7zkhlG8tPrpilwTxHQ=="
       }
     },
     "npm:make-dir@2.1.0": {
@@ -9054,6 +9198,15 @@
         "hash": "sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg=="
       }
     },
+    "npm:minizlib@3.0.2": {
+      "type": "npm",
+      "name": "npm:minizlib@3.0.2",
+      "data": {
+        "version": "3.0.2",
+        "packageName": "minizlib",
+        "hash": "sha512-oG62iEk+CYt5Xj2YqI5Xi9xWUeZhDI8jjQmC5oThVH5JGCTgIjr7ciJDzC7MBzYd//WvR1OTmP5Q38Q8ShQtVA=="
+      }
+    },
     "npm:mkdirp": {
       "type": "npm",
       "name": "npm:mkdirp",
@@ -9070,6 +9223,15 @@
         "version": "1.0.4",
         "packageName": "mkdirp",
         "hash": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="
+      }
+    },
+    "npm:mkdirp@3.0.1": {
+      "type": "npm",
+      "name": "npm:mkdirp@3.0.1",
+      "data": {
+        "version": "3.0.1",
+        "packageName": "mkdirp",
+        "hash": "sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg=="
       }
     },
     "npm:ms": {
@@ -10231,6 +10393,15 @@
         "version": "7.1.0",
         "packageName": "postcss-selector-parser",
         "hash": "sha512-8sLjZwK0R+JlxlYcTuVnyT2v+htpdrjDOKuMcOVdYjt52Lh8hWRYpxBPoKx/Zg+bcjc3wx6fmQevMmUztS/ccA=="
+      }
+    },
+    "npm:postcss-selector-parser@6.0.10": {
+      "type": "npm",
+      "name": "npm:postcss-selector-parser@6.0.10",
+      "data": {
+        "version": "6.0.10",
+        "packageName": "postcss-selector-parser",
+        "hash": "sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w=="
       }
     },
     "npm:postcss-svgo": {
@@ -11691,13 +11862,31 @@
         "hash": "sha512-MeQTA1r0litLUf0Rp/iisCaL8761lKAZHaimlbGK4j0HysC4PLfqygQj9srcs0m2RdtDYnF8UuYyKpbjHYp7Jw=="
       }
     },
+    "npm:tailwind-merge": {
+      "type": "npm",
+      "name": "npm:tailwind-merge",
+      "data": {
+        "version": "3.3.1",
+        "packageName": "tailwind-merge",
+        "hash": "sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g=="
+      }
+    },
+    "npm:tailwindcss-animate": {
+      "type": "npm",
+      "name": "npm:tailwindcss-animate",
+      "data": {
+        "version": "1.0.7",
+        "packageName": "tailwindcss-animate",
+        "hash": "sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA=="
+      }
+    },
     "npm:tailwindcss": {
       "type": "npm",
       "name": "npm:tailwindcss",
       "data": {
-        "version": "4.1.12",
+        "version": "4.1.13",
         "packageName": "tailwindcss",
-        "hash": "sha512-DzFtxOi+7NsFf7DBtI3BJsynR+0Yp6etH+nRPTbpWnS2pZBaSksv/JGctNwSWzbFjp0vxSqknaUylseZqMDGrA=="
+        "hash": "sha512-i+zidfmTqtwquj4hMEwdjshYYgMbOrPzb9a0M3ZgNa0JMoZeFC6bxZvO8yr8ozS6ix2SDz0+mvryPeBs2TFE+w=="
       }
     },
     "npm:tapable": {
@@ -11725,6 +11914,15 @@
         "version": "6.2.1",
         "packageName": "tar",
         "hash": "sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A=="
+      }
+    },
+    "npm:tar@7.4.3": {
+      "type": "npm",
+      "name": "npm:tar@7.4.3",
+      "data": {
+        "version": "7.4.3",
+        "packageName": "tar",
+        "hash": "sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw=="
       }
     },
     "npm:terser-webpack-plugin": {
@@ -12769,6 +12967,15 @@
         "version": "4.0.0",
         "packageName": "yallist",
         "hash": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
+      }
+    },
+    "npm:yallist@5.0.0": {
+      "type": "npm",
+      "name": "npm:yallist@5.0.0",
+      "data": {
+        "version": "5.0.0",
+        "packageName": "yallist",
+        "hash": "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="
       }
     },
     "npm:yaml@1.10.2": {
@@ -16118,6 +16325,11 @@
       "type": "static"
     },
     {
+      "source": "npm:@isaacs/fs-minipass",
+      "target": "npm:minipass",
+      "type": "static"
+    },
+    {
       "source": "npm:@istanbuljs/load-nyc-config",
       "target": "npm:camelcase",
       "type": "static"
@@ -16934,6 +17146,16 @@
     },
     {
       "source": "npm:@jridgewell/gen-mapping",
+      "target": "npm:@jridgewell/trace-mapping",
+      "type": "static"
+    },
+    {
+      "source": "npm:@jridgewell/remapping",
+      "target": "npm:@jridgewell/gen-mapping",
+      "type": "static"
+    },
+    {
+      "source": "npm:@jridgewell/remapping",
       "target": "npm:@jridgewell/trace-mapping",
       "type": "static"
     },
@@ -19185,6 +19407,96 @@
     {
       "source": "npm:@swc/helpers",
       "target": "npm:tslib",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:@jridgewell/remapping",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:enhanced-resolve",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:jiti",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:lightningcss",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:magic-string",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:source-map-js",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/node",
+      "target": "npm:tailwindcss",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/oxide",
+      "target": "npm:detect-libc",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/oxide",
+      "target": "npm:tar@7.4.3",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/oxide",
+      "target": "npm:@tailwindcss/oxide-linux-x64-gnu",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/oxide",
+      "target": "npm:@tailwindcss/oxide-linux-x64-musl",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/typography",
+      "target": "npm:lodash.castarray",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/typography",
+      "target": "npm:lodash.isplainobject",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/typography",
+      "target": "npm:lodash.merge",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/typography",
+      "target": "npm:postcss-selector-parser@6.0.10",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/vite",
+      "target": "npm:@tailwindcss/node",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/vite",
+      "target": "npm:@tailwindcss/oxide",
+      "type": "static"
+    },
+    {
+      "source": "npm:@tailwindcss/vite",
+      "target": "npm:tailwindcss",
       "type": "static"
     },
     {
@@ -22180,6 +22492,16 @@
     {
       "source": "npm:end-of-stream",
       "target": "npm:once",
+      "type": "static"
+    },
+    {
+      "source": "npm:enhanced-resolve",
+      "target": "npm:graceful-fs",
+      "type": "static"
+    },
+    {
+      "source": "npm:enhanced-resolve",
+      "target": "npm:tapable",
       "type": "static"
     },
     {
@@ -26693,6 +27015,21 @@
       "type": "static"
     },
     {
+      "source": "npm:lightningcss",
+      "target": "npm:detect-libc",
+      "type": "static"
+    },
+    {
+      "source": "npm:lightningcss",
+      "target": "npm:lightningcss-linux-x64-gnu",
+      "type": "static"
+    },
+    {
+      "source": "npm:lightningcss",
+      "target": "npm:lightningcss-linux-x64-musl",
+      "type": "static"
+    },
+    {
       "source": "npm:loader-utils",
       "target": "npm:big.js",
       "type": "static"
@@ -26790,6 +27127,11 @@
     {
       "source": "npm:lru-cache",
       "target": "npm:yallist",
+      "type": "static"
+    },
+    {
+      "source": "npm:magic-string",
+      "target": "npm:@jridgewell/sourcemap-codec",
       "type": "static"
     },
     {
@@ -26975,6 +27317,11 @@
     {
       "source": "npm:minizlib",
       "target": "npm:yallist@4.0.0",
+      "type": "static"
+    },
+    {
+      "source": "npm:minizlib@3.0.2",
+      "target": "npm:minipass",
       "type": "static"
     },
     {
@@ -28214,6 +28561,16 @@
     },
     {
       "source": "npm:postcss-selector-parser@7.1.0",
+      "target": "npm:util-deprecate",
+      "type": "static"
+    },
+    {
+      "source": "npm:postcss-selector-parser@6.0.10",
+      "target": "npm:cssesc",
+      "type": "static"
+    },
+    {
+      "source": "npm:postcss-selector-parser@6.0.10",
       "target": "npm:util-deprecate",
       "type": "static"
     },
@@ -29995,6 +30352,36 @@
     {
       "source": "npm:tar",
       "target": "npm:yallist@4.0.0",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:@isaacs/fs-minipass",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:chownr@3.0.0",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:minipass",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:minizlib@3.0.2",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:mkdirp@3.0.1",
+      "type": "static"
+    },
+    {
+      "source": "npm:tar@7.4.3",
+      "target": "npm:yallist@5.0.0",
       "type": "static"
     },
     {
