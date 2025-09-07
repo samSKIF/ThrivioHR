@@ -37,6 +37,7 @@ export default function OrganizationsPage() {
     fetchOrganizations();
   }, []);
 
+
   async function fetchOrganizations() {
     try {
       const res = await fetch("/api/corporate/organizations");
