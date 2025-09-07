@@ -28,7 +28,8 @@ export class CorporateService {
     const result = await pool.query(`
       SELECT 
         o.id, o.name, o.is_active, o.domain, o.website_url, o.created_at, o.settings,
-        COALESCE(u.user_count, 0) AS user_count,
+        COALESCE(uc.user_count, 0) AS user_count,
+        su.email AS superuser_email,
         s.id AS subscription_id,
         s.seats_limit,
         s.plan_code,
@@ -41,7 +42,13 @@ export class CorporateService {
         FROM users
         WHERE is_active = true
         GROUP BY organization_id
-      ) u ON o.id = u.organization_id
+      ) uc ON o.id = uc.organization_id
+      LEFT JOIN (
+        SELECT DISTINCT ON (organization_id) organization_id, email
+        FROM users
+        WHERE is_active = true
+        ORDER BY organization_id, created_at ASC
+      ) su ON o.id = su.organization_id
       LEFT JOIN (
         SELECT DISTINCT ON (org_id)
           id, org_id, seats_limit, plan_code, status, start_at, end_at, created_at
@@ -61,6 +68,7 @@ export class CorporateService {
       userCount: parseInt(row.user_count, 10) || 0,
       createdAt: row.created_at,
       settings: row.settings ? JSON.parse(row.settings) : null,
+      superuserEmail: row.superuser_email,
       subscription: row.subscription_id
         ? {
             id: row.subscription_id,

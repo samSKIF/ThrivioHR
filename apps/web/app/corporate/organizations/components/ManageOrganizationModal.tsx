@@ -24,7 +24,7 @@ interface Organization {
       zipCode?: string;
     };
   };
-  adminEmail?: string;
+  superuserEmail?: string;
 }
 
 interface ManageOrganizationModalProps {
@@ -53,7 +53,7 @@ export default function ManageOrganizationModal({
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    adminEmail: '',
+    superuserEmail: '',
     businessActivity: '',
     streetAddress: '',
     country: '',
@@ -95,7 +95,7 @@ export default function ManageOrganizationModal({
         contactName: settings.contactName || '',
         contactEmail: settings.contactEmail || '',
         contactPhone: settings.contactPhone || '',
-        adminEmail: organization.adminEmail || '',
+        superuserEmail: organization.superuserEmail || '',
         businessActivity: settings.industry || '',
         streetAddress: address.street || '',
         country: address.country || '',
@@ -408,11 +408,11 @@ export default function ManageOrganizationModal({
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Admin Email <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Superuser Email <span className="text-red-500">*</span></label>
                   <input
                     type="email"
-                    name="adminEmail"
-                    value={orgForm.adminEmail}
+                    name="superuserEmail"
+                    value={orgForm.superuserEmail}
                     onChange={handleOrgFormChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
