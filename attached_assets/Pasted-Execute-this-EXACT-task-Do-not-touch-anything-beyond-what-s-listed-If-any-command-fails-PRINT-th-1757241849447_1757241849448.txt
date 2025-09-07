@@ -1,0 +1,141 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Finalize corporate backend by switching to Argon2, removing fallback JWT secret, adding JWT guards, and running the migration.
+
+TOUCH ONLY
+apps/bff/src/modules/corporate/auth.service.ts
+apps/bff/src/modules/corporate/corporate.module.ts
+apps/bff/src/modules/corporate/corporate.controller.ts
+apps/bff/src/modules/corporate/auth.controller.ts
+
+CHANGES
+1. **Update `apps/bff/src/modules/corporate/auth.service.ts`** to use Argon2 for password verification (and remove bcrypt import):
+
+```ts
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Pool } from 'pg';
+import * as argon2 from 'argon2';
+
+// Use a shared PG pool; DATABASE_URL should be defined in env.
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+@Injectable()
+export class AuthService {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async login(email: string, password: string) {
+    const result = await pool.query(
+      `SELECT id, email, password_hash, status FROM corporate_admins WHERE email = $1 LIMIT 1`,
+      [email],
+    );
+    if (result.rows.length === 0 || result.rows[0].status !== 'active') {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const admin = result.rows[0];
+    const valid = await argon2.verify(admin.password_hash, password);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const token = this.jwtService.sign({ id: admin.id, type: 'corporate_admin' });
+    return { token, user: { id: admin.id, email: admin.email } };
+  }
+
+  async getCurrentAdmin(req: any) {
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    const result = await pool.query(
+      `SELECT id, email, status FROM corporate_admins WHERE id = $1 LIMIT 1`,
+      [user.id],
+    );
+    if (result.rows.length === 0) {
+      throw new UnauthorizedException();
+    }
+    const admin = result.rows[0];
+    return { id: admin.id, email: admin.email, status: admin.status };
+  }
+}
+Modify apps/bff/src/modules/corporate/corporate.module.ts to remove the fallback secret and rely solely on the environment variable:
+
+ts
+Copy code
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { CorporateController } from './corporate.controller';
+import { CorporateService } from './corporate.service';
+
+@Module({
+  imports: [
+    // Only use JWT_SECRET from environment; no fallback
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '8h' },
+    }),
+  ],
+  controllers: [AuthController, CorporateController],
+  providers: [AuthService, CorporateService],
+})
+export class CorporateModule {}
+Protect corporate endpoints with JWT guards. Update apps/bff/src/modules/corporate/corporate.controller.ts and apps/bff/src/modules/corporate/auth.controller.ts:
+
+In corporate.controller.ts, import UseGuards and AuthGuard:
+
+ts
+Copy code
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { CorporateService } from './corporate.service';
+Then apply guards to each method:
+
+ts
+Copy code
+@UseGuards(AuthGuard('jwt'))
+@Get('dashboard')
+async dashboard() {
+  return this.corporateService.getDashboardMetrics();
+}
+
+@UseGuards(AuthGuard('jwt'))
+@Get('organizations')
+async organizations() {
+  return this.corporateService.listOrganizations();
+}
+In auth.controller.ts, import UseGuards and AuthGuard and protect the me endpoint:
+
+ts
+Copy code
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
+
+// ...
+
+@UseGuards(AuthGuard('jwt'))
+@Get('me')
+async me(@Req() req: any) {
+  return this.authService.getCurrentAdmin(req);
+}
+(Do not apply a guard to the login endpoint.)
+
+Run the migration to ensure corporate_admins and related tables exist. This step will apply the SQL changes from the earlier migration file:
+
+sh
+Copy code
+npx drizzle-kit migrate 2>&1 || true
+RUN & PRINT
+
+npx drizzle-kit migrate 2>&1 || true
+
+grep -n "argon2" apps/bff/src/modules/corporate/auth.service.ts || true
+
+grep -n "AuthGuard('jwt')" apps/bff/src/modules/corporate/corporate.controller.ts || true
+
+grep -n "AuthGuard('jwt')" apps/bff/src/modules/corporate/auth.controller.ts || true
+
+STOP.

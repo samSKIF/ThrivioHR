@@ -1,0 +1,208 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Implement corporate admin login and dashboard/listing endpoints in the BFF.
+
+TOUCH ONLY
+apps/bff/src/modules/corporate/auth.service.ts
+apps/bff/src/modules/corporate/corporate.service.ts
+apps/bff/src/modules/corporate/corporate.controller.ts
+apps/bff/src/modules/corporate/corporate.module.ts
+
+CHANGES
+1. **Replace `apps/bff/src/modules/corporate/auth.service.ts`** with the following implementation:
+
+```ts
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
+
+// Use a shared PG pool; DATABASE_URL should be defined in env.
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+@Injectable()
+export class AuthService {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async login(email: string, password: string) {
+    // Look up corporate admin by email
+    const result = await pool.query(
+      `SELECT id, email, password_hash, status FROM corporate_admins WHERE email = $1 LIMIT 1`,
+      [email],
+    );
+    if (result.rows.length === 0 || result.rows[0].status !== 'active') {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const admin = result.rows[0];
+    const valid = await bcrypt.compare(password, admin.password_hash);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const token = this.jwtService.sign({ id: admin.id, type: 'corporate_admin' });
+    return { token, user: { id: admin.id, email: admin.email } };
+  }
+
+  async getCurrentAdmin(req: any) {
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    const result = await pool.query(
+      `SELECT id, email, status FROM corporate_admins WHERE id = $1 LIMIT 1`,
+      [user.id],
+    );
+    if (result.rows.length === 0) {
+      throw new UnauthorizedException();
+    }
+    const admin = result.rows[0];
+    return { id: admin.id, email: admin.email, status: admin.status };
+  }
+}
+Create apps/bff/src/modules/corporate/corporate.service.ts with:
+
+ts
+Copy code
+import { Injectable } from '@nestjs/common';
+import { Pool } from 'pg';
+
+// Shared PG pool; reuse DATABASE_URL from env.
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+@Injectable()
+export class CorporateService {
+  // Aggregate dashboard metrics for corporate admins
+  async getDashboardMetrics() {
+    const orgRes = await pool.query(`SELECT COUNT(*) AS count FROM organizations`);
+    const userRes = await pool.query(`SELECT COUNT(*) AS count FROM users`);
+    const subRes = await pool.query(`SELECT COUNT(*) AS count FROM subscriptions WHERE status = 'active'`);
+    const revenueRes = await pool.query(
+      `SELECT COALESCE(SUM(total_monthly_amount), 0) AS revenue FROM subscriptions WHERE status = 'active'`,
+    );
+    return {
+      organizations: parseInt(orgRes.rows[0].count, 10) || 0,
+      users: parseInt(userRes.rows[0].count, 10) || 0,
+      subscriptions: parseInt(subRes.rows[0].count, 10) || 0,
+      revenue: revenueRes.rows[0].revenue || 0,
+      status: 'operational',
+    };
+  }
+
+  // List organizations with user counts and subscription info
+  async listOrganizations() {
+    const result = await pool.query(`
+      SELECT 
+        o.id, o.name, o.status, o.industry, o.max_users, o.contact_name, o.contact_email,
+        COALESCE(u.user_count, 0) AS user_count,
+        s.id AS subscription_id,
+        s.seats_limit,
+        s.subscribed_users,
+        s.total_monthly_amount,
+        s.status AS subscription_status,
+        s.expiration_date,
+        s.subscription_period,
+        s.price_per_user_per_month
+      FROM organizations o
+      LEFT JOIN (
+        SELECT organization_id, COUNT(*) AS user_count
+        FROM users
+        GROUP BY organization_id
+      ) u ON o.id = u.organization_id
+      LEFT JOIN (
+        SELECT DISTINCT ON (organization_id)
+          id, organization_id, seats_limit, subscribed_users, total_monthly_amount,
+          price_per_user_per_month, subscription_period, expiration_date, status, created_at
+        FROM subscriptions
+        WHERE status = 'active'
+        ORDER BY organization_id, created_at DESC
+      ) s ON o.id = s.organization_id
+      ORDER BY o.created_at DESC
+    `);
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      status: row.status || 'active',
+      industry: row.industry,
+      maxUsers: row.max_users,
+      contactName: row.contact_name,
+      contactEmail: row.contact_email,
+      userCount: parseInt(row.user_count, 10) || 0,
+      subscription: row.subscription_id
+        ? {
+            id: row.subscription_id,
+            seatsLimit: row.seats_limit,
+            subscribedUsers: row.subscribed_users,
+            totalMonthlyAmount: row.total_monthly_amount,
+            status: row.subscription_status,
+            expirationDate: row.expiration_date,
+            subscriptionPeriod: row.subscription_period,
+            pricePerUserPerMonth: row.price_per_user_per_month,
+          }
+        : null,
+    }));
+  }
+}
+Create apps/bff/src/modules/corporate/corporate.controller.ts with:
+
+ts
+Copy code
+import { Controller, Get } from '@nestjs/common';
+import { CorporateService } from './corporate.service';
+
+/**
+ * Handles corporate admin endpoints for dashboard and organization listing.
+ * TODO: Add guards to restrict access to corporate admins once JWT guard is wired.
+ */
+@Controller('corporate')
+export class CorporateController {
+  constructor(private readonly corporateService: CorporateService) {}
+
+  @Get('dashboard')
+  async dashboard() {
+    return this.corporateService.getDashboardMetrics();
+  }
+
+  @Get('organizations')
+  async organizations() {
+    return this.corporateService.listOrganizations();
+  }
+}
+Replace the contents of apps/bff/src/modules/corporate/corporate.module.ts so it imports JwtModule and registers both controllers and services:
+
+ts
+Copy code
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { CorporateController } from './corporate.controller';
+import { CorporateService } from './corporate.service';
+
+/**
+ * CorporateModule sets up corporate admin APIs under /corporate.
+ * It includes authentication and dashboard/organization routes.
+ */
+@Module({
+  imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'changeme',
+      signOptions: { expiresIn: '8h' },
+    }),
+  ],
+  controllers: [AuthController, CorporateController],
+  providers: [AuthService, CorporateService],
+})
+export class CorporateModule {}
+RUN & PRINT
+
+ls apps/bff/src/modules/corporate
+
+grep -n "getDashboardMetrics" apps/bff/src/modules/corporate/corporate.service.ts || true
+
+grep -n "dashboard" apps/bff/src/modules/corporate/corporate.controller.ts || true
+
+STOP.
+
+pgsql
+Copy code

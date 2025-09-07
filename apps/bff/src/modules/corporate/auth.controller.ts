@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
 /**
@@ -17,6 +18,7 @@ export class AuthController {
     return this.authService.login(email, password);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
   async me(@Req() req: any) {
     return this.authService.getCurrentAdmin(req);
