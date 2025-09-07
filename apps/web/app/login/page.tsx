@@ -144,9 +144,11 @@ export default function LoginPage() {
         <div className="max-w-md mx-auto h-full flex flex-col">
           <div className="mb-8 text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
-              <div className="h-64 w-64 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-6xl">
-                🏆
-              </div>
+              <img
+                src="https://img.freepik.com/free-vector/employee-recognition-rewards-appreciation-concept-people-team-around-mobile-app-interface-showing-achievements-stars-gifts-handshake-celebration-flat-illustration_1150-55123.jpg"
+                alt="Employee Recognition and Rewards Platform"
+                className="h-64 w-auto rounded-xl"
+              />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-3">
               Empower Your Workplace
