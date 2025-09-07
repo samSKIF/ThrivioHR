@@ -7,15 +7,8 @@ export const metadata = {
 };
 
 /**
- * Complete standalone layout to bypass the corporate header/navigation completely.
- * This creates a full HTML structure that ignores the parent corporate layout.
+ * Simple layout - the corporate layout will handle bypassing header/nav for login page.
  */
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
-    </html>
-  );
+  return <>{children}</>;
 }

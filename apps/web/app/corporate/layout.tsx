@@ -15,6 +15,11 @@ export default function CorporateLayout({
   const pathname = usePathname();
   const router = useRouter();
 
+  // If we're on the login page, just return the children without header/nav
+  if (pathname === "/corporate/login") {
+    return <>{children}</>;
+  }
+
   // Logout function
   const handleLogout = async () => {
     // Show confirmation dialog
