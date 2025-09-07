@@ -145,7 +145,7 @@ export default function LoginPage() {
           <div className="mb-8 text-center">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
               <img
-                src="https://img.freepik.com/free-vector/employee-recognition-rewards-appreciation-concept-people-team-around-mobile-app-interface-showing-achievements-stars-gifts-handshake-celebration-flat-illustration_1150-55123.jpg"
+                src="/hero-illustration.png"
                 alt="Employee Recognition and Rewards Platform"
                 className="h-64 w-auto rounded-xl"
               />
