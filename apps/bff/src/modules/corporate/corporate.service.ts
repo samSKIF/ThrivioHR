@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
+import { hashPassword } from '../auth/password.util';
 
 // Shared PG pool; reuse DATABASE_URL from env.
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -70,5 +71,103 @@ export class CorporateService {
           }
         : null,
     }));
+  }
+
+  // Create organization with superuser account
+  async createOrganization(orgData: {
+    organizationName: string;
+    industry: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone?: string;
+    superuserEmail: string;
+    streetAddress: string;
+    country: string;
+    stateProvince: string;
+    city: string;
+    zipPostalCode: string;
+  }) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Generate temporary password for superuser (they'll change on first login)
+      const tempPassword = this.generateTempPassword();
+      const passwordHash = await hashPassword(tempPassword);
+
+      // Create organization
+      const orgResult = await client.query(`
+        INSERT INTO organizations (
+          name, industry, contact_name, contact_email, contact_phone_e164
+        ) VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, name, created_at
+      `, [
+        orgData.organizationName,
+        orgData.industry,
+        orgData.contactName,
+        orgData.contactEmail,
+        orgData.contactPhone || null
+      ]);
+
+      const organization = orgResult.rows[0];
+
+      // Extract first and last name from superuser email (basic approach)
+      const emailLocalPart = orgData.superuserEmail.split('@')[0];
+      const nameParts = emailLocalPart.split('.');
+      const firstName = nameParts[0]?.charAt(0).toUpperCase() + (nameParts[0]?.slice(1) || '');
+      const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : 'Admin';
+
+      // Create superuser account
+      const userResult = await client.query(`
+        INSERT INTO users (
+          organization_id, email, password_hash, first_name, last_name, display_name
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, email, first_name, last_name
+      `, [
+        organization.id,
+        orgData.superuserEmail,
+        passwordHash,
+        firstName,
+        lastName,
+        `${firstName} ${lastName}`
+      ]);
+
+      const superuser = userResult.rows[0];
+
+      await client.query('COMMIT');
+
+      // Return organization info and temp password (for initial setup)
+      return {
+        organization: {
+          id: organization.id,
+          name: organization.name,
+          createdAt: organization.created_at
+        },
+        superuser: {
+          id: superuser.id,
+          email: superuser.email,
+          firstName: superuser.first_name,
+          lastName: superuser.last_name,
+          tempPassword: tempPassword // Include temp password for setup
+        }
+      };
+
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new Error(`Failed to create organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Generate a secure temporary password
+  private generateTempPassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   }
 }
