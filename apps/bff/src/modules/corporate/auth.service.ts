@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Pool } from 'pg';
 import * as argon2 from 'argon2';
@@ -8,10 +8,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 @Injectable()
 export class AuthService {
-  // Temporarily remove JwtService dependency to test basic injection
-  constructor() {
-    console.log('AuthService constructor called - simple version');
-  }
+  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
   async login(email: string, password: string) {
     const result = await pool.query(
@@ -26,8 +23,7 @@ export class AuthService {
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    // Temporarily return a simple token without JWT
-    const token = 'temp-token-' + admin.id;
+    const token = this.jwtService.sign({ id: admin.id, type: 'corporate_admin' });
     return { token, user: { id: admin.id, email: admin.email } };
   }
 
