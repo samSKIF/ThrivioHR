@@ -10,7 +10,11 @@
     "test:identity": "jest --config services/identity/jest.config.ts --runInBand",
     "db:check": "drizzle-kit check",
     "typecheck:web": "tsc --noEmit -p apps/web/tsconfig.json",
-    "typecheck:web:test": "tsc --noEmit -p apps/web/tsconfig.test.json"
+    "typecheck:web:test": "tsc --noEmit -p apps/web/tsconfig.test.json",
+    "dev": "nx run-many --target=serve --projects=bff,web --parallel",
+    "lint": "nx run-many --target=lint --projects=bff,web",
+    "typecheck": "pnpm -s typecheck:web && tsc --noEmit -p apps/bff/tsconfig.json",
+    "build:all": "nx run-many --target=build --projects=bff,web"
   },
   "keywords": [],
   "author": "",
