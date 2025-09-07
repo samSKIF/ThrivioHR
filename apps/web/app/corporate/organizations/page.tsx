@@ -86,70 +86,76 @@ export default function OrganizationsPage() {
           <p className="text-gray-500">No organizations found</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {organizations.map((org) => (
-            <div key={org.id} className="bg-white rounded-lg border p-6 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
+            <div key={org.id} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+              {/* Organization Header */}
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{org.name}</h2>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(org.status)} mt-1`}>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">{org.name}</h2>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(org.status)}`}>
                     {org.status}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
                   {org.subscription && (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSubscriptionColor(org.subscription.planCode)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSubscriptionColor(org.subscription.planCode)}`}>
                       {org.subscription.planCode}
                     </span>
                   )}
-                  <button className="text-gray-600 hover:text-gray-800 p-1">
+                  <button className="text-gray-400 hover:text-gray-600 p-1">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                     </svg>
                   </button>
-                  <span className="text-blue-600 text-sm font-medium cursor-pointer hover:text-blue-800">
+                  <button className="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                     Manage Organization
-                  </span>
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-sm">
-                <div>
-                  <p className="text-gray-600 font-medium">User Count</p>
-                  <p className="text-gray-900 font-semibold">{org.userCount}</p>
+              {/* Organization Details Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">User Count</p>
+                  <p className="text-lg font-semibold text-gray-900">{org.userCount}</p>
                 </div>
                 
-                <div>
-                  <p className="text-gray-600 font-medium">Max Employees</p>
-                  <p className="text-gray-900 font-semibold">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Max Employees</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {org.subscription?.seatsLimit || "N/A"}
                   </p>
                 </div>
                 
-                <div>
-                  <p className="text-gray-600 font-medium">Created</p>
-                  <p className="text-gray-900 font-semibold">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Created</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {formatDate(org.createdAt)}
                   </p>
                 </div>
                 
-                <div>
-                  <p className="text-gray-600 font-medium">Subscription</p>
-                  <p className="text-gray-900 font-semibold">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Subscription</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {org.subscription ? org.subscription.planCode : "No subscription"}
                   </p>
                 </div>
                 
-                <div>
-                  <p className="text-gray-600 font-medium">Last Payment</p>
-                  <p className="text-gray-900 font-semibold">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Last Payment</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {org.subscription ? formatDate(org.subscription.startAt) : "N/A"}
                   </p>
                 </div>
                 
-                <div>
-                  <p className="text-gray-600 font-medium">Expiration</p>
-                  <p className="text-gray-900 font-semibold">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Expiration</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {org.subscription ? formatDate(org.subscription.endAt) : "N/A"}
                   </p>
                 </div>
