@@ -4,6 +4,14 @@ import Link from "next/link";
 import { Settings } from "lucide-react";
 import ManageOrganizationModal from "./components/ManageOrganizationModal";
 
+function toOrganizationLike(item: any) {
+  return {
+    ...item,
+    domain: item?.domain ?? "",
+    websiteUrl: item?.websiteUrl ?? "",
+  };
+}
+
 interface OrgListItem {
   id: string;
   name: string;
@@ -161,7 +169,7 @@ export default function OrganizationsPage() {
       
       {selectedOrg && (
         <ManageOrganizationModal
-          organization={selectedOrg}
+          organization={selectedOrg ? toOrganizationLike(selectedOrg) : selectedOrg}
           isOpen={isModalOpen}
           onClose={closeModal}
           onUpdate={reloadOrganizations}

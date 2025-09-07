@@ -1,0 +1,80 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Unblock the Next.js web build by:
+1) Fixing the Next.js 15 route handler POST signature (async params).
+2) Adapting OrgListItem → Organization at the modal call site.
+
+TOUCH ONLY
+apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts
+apps/web/app/corporate/organizations/page.tsx
+
+CHANGES
+--- REPLACE FILE: apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts ---
+/**
+ * POST /api/corporate/organizations/[id]/wallet/credit
+ * Next.js 15 route handler using async params (Promise<{ id: string }>)
+ */
+type Params = { id: string };
+
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<Params> }
+) {
+  try {
+    const { id } = await params;
+
+    let body: unknown = {};
+    try { body = await req.json(); } catch { /* no-op */ }
+
+    // TODO: wire to BFF/GraphQL mutation later
+    return new Response(JSON.stringify({ ok: true, organizationId: id, received: body }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ ok: false, error: (err as Error)?.message ?? "Unknown error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+--- PATCH FILE: apps/web/app/corporate/organizations/page.tsx ---
+1) ADD this helper near the top-level imports/utilities (only once):
+
+function toOrganizationLike(item: any) {
+  return {
+    ...item,
+    domain: item?.domain ?? "",
+    websiteUrl: item?.websiteUrl ?? "",
+  };
+}
+
+2) In the JSX where ManageOrganizationModal is rendered (around lines 160–170),
+   REPLACE this prop:
+     organization={selectedOrg}
+   WITH:
+     organization={selectedOrg ? toOrganizationLike(selectedOrg) : selectedOrg}
+
+RUN & PRINT
+echo "=== SHOW ROUTE SIGNATURE HEAD ===" && sed -n '1,40p' apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts \
+&& echo "=== BUILD WEB ===" && npx nx build web
+
+STOP.
+
+# Replit: after running, please confirm (briefly):
+# 1) Are we now green on web build per Big 3a DoD’s “pnpm build green” prerequisite?
+# 2) Any regressions detected in previously working routes/pages?
+# 3) If typecheck still flags tests in apps/web/__tests__, should we (a) add jest types to web tsconfig, or (b) exclude tests from web tsconfig and keep them in a separate tsconfig.test?
+
+
+
+
+
+Ask ChatGPT
+
+
+
+
