@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards, Inject } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 
 @Controller('corporate/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {
+  constructor(@Inject(AuthService) private readonly authService: AuthService) {
     console.log('AuthController constructor - authService:', this.authService);
   }
 
