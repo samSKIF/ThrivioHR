@@ -1,38 +1,31 @@
-/**
- * POST /api/corporate/organizations/[id]/wallet/credit
- * Next.js 15 route handler with async params
- */
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-type Params = { id: string };
-
+// Credit organization wallet
 export async function POST(
-  req: Request,
-  context: { params: Promise<Params> } // <-- async params in Next.js 15
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = await context.params;
-
-    // Parse JSON body if present
-    let body: unknown = {};
-    try {
-      body = await req.json();
-    } catch {
-      body = {};
-    }
-
-    // TODO: wire to BFF/GraphQL mutation to actually credit the wallet
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        organizationId: id,
-        received: body,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ ok: false, error: (err as Error)?.message ?? "Unknown error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+  const cookieStore = await cookies();
+  const token = cookieStore.get("corporate_token")?.value;
+  if (!token) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+
+  const body = await request.json();
+  
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/organizations/${params.id}/wallet/credit`,
+    {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
 }
