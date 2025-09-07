@@ -2,6 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import ManageOrganizationModal from './components/ManageOrganizationModal';
+import ProgressiveEnhancement from '../../../components/ProgressiveEnhancement';
+import ExtensionSafeWrapper from '../../../components/ExtensionSafeWrapper';
+import OrganizationListSkeleton from '../../../components/skeletons/OrganizationListSkeleton';
+
+// SEO metadata is handled by layout.tsx or metadata.ts for this route
 
 interface Subscription {
   id: string;
@@ -89,7 +94,26 @@ export default function OrganizationsPage() {
     }
   };
 
-  return (
+  // Create skeleton that matches the actual content structure
+  const skeleton = (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
+        <button 
+          className="bg-blue-500 text-white px-4 py-2 rounded font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Organization
+        </button>
+      </div>
+      <OrganizationListSkeleton />
+    </div>
+  );
+
+  // Enhanced content with full functionality
+  const enhancedContent = (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
@@ -107,9 +131,7 @@ export default function OrganizationsPage() {
       {error && <p className="text-red-600 mb-4">{error}</p>}
       
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Loading organizations...</p>
-        </div>
+        <OrganizationListSkeleton />
       ) : organizations.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">No organizations found</p>
@@ -205,5 +227,16 @@ export default function OrganizationsPage() {
         onUpdate={handleUpdateComplete}
       />
     </div>
+  );
+
+  return (
+    <ExtensionSafeWrapper>
+      <ProgressiveEnhancement 
+        skeleton={skeleton} 
+        delay={100}
+      >
+        {enhancedContent}
+      </ProgressiveEnhancement>
+    </ExtensionSafeWrapper>
   );
 }

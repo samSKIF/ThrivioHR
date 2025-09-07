@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import DynamicNoSSR from '../../../../components/DynamicNoSSR';
+import ModalSkeleton from '../../../../components/skeletons/ModalSkeleton';
 
 interface Organization {
   id: string;
@@ -44,7 +46,6 @@ export default function ManageOrganizationModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
 
   // Organization Details Form State
   const [orgForm, setOrgForm] = useState({
@@ -77,10 +78,7 @@ export default function ManageOrganizationModal({
     description: 'Monthly credit allocation'
   });
 
-  // Ensure client-side only rendering
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // Remove the isMounted pattern - using DynamicNoSSR instead
 
   // Load organization data when modal opens
   useEffect(() => {
@@ -245,8 +243,8 @@ export default function ManageOrganizationModal({
     }
   };
 
-  // Don't render on server or if not mounted
-  if (!isMounted || !isOpen || !organization) return null;
+  // Don't render if modal is not open or no organization selected
+  if (!isOpen || !organization) return null;
 
   const modalContent = (
     <div 
@@ -692,5 +690,9 @@ export default function ManageOrganizationModal({
     </div>
   );
 
-  return modalContent;
+  return (
+    <DynamicNoSSR fallback={<ModalSkeleton isOpen={isOpen} />}>
+      {modalContent}
+    </DynamicNoSSR>
+  );
 }
