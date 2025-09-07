@@ -1,0 +1,279 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Fix the corporate layout, add a corporate login page, and implement API routes for authenticated dashboard data.
+
+TOUCH ONLY
+apps/web/app/corporate/layout.tsx
+apps/web/app/corporate/page.tsx
+apps/web/app/corporate/login/page.tsx
+apps/web/app/globals.css
+apps/web/app/api/corporate/auth/login/route.ts
+apps/web/app/api/corporate/dashboard/route.ts
+
+CHANGES
+1. **Update `apps/web/app/corporate/layout.tsx`** to remove `<html>` and `<body>` tags and use proper Next.js layout patterns:
+
+```tsx
+import "../globals.css";
+
+export const metadata = {
+  title: "ThrivioHR Management",
+  description: "Corporate admin panel",
+};
+
+/**
+ * CorporateLayout defines header and navigation for corporate pages.
+ * It no longer includes <html> or <body> tags, which are handled by Next.js.
+ */
+export default function CorporateLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div>
+      <header className="corporate-header">
+        <div className="corporate-header-left">
+          <h1 className="text-xl font-bold">ThrivioHR Management</h1>
+          <p className="text-sm text-gray-500">SaaS Platform Administration</p>
+        </div>
+        <div className="corporate-header-right">
+          <span>Welcome, Corporate Admin</span>
+          {/* TODO: Logout handler */}
+          <button className="logout-button">Logout</button>
+        </div>
+      </header>
+      <nav className="corporate-nav">
+        <ul>
+          <li><a href="/corporate">Overview</a></li>
+          <li><a href="/corporate/organizations">Organizations</a></li>
+          <li><a href="#">Merchants</a></li>
+          <li><a href="#">Products</a></li>
+          <li><a href="#">Orders</a></li>
+        </ul>
+      </nav>
+      <main className="corporate-content">{children}</main>
+    </div>
+  );
+}
+Create apps/web/app/corporate/login/page.tsx with a corporate admin login form. It posts to the internal API route which handles authentication and token storage:
+
+tsx
+Copy code
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function CorporateLoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/corporate/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const msg = (await res.json()).message || "Login failed";
+        throw new Error(msg);
+      }
+      // Redirect to dashboard
+      router.push("/corporate");
+    } catch (err: any) {
+      setError(err.message || "Login error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="corporate-login-page">
+      <h2 className="text-xl font-semibold mb-4">Corporate Admin Login</h2>
+      <form onSubmit={handleSubmit} className="corporate-login-form">
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700">Email</label>
+          <input
+            type="email"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block mb-2 text-gray-700">Password</label>
+          <input
+            type="password"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+        <button type="submit" className="sign-in-button" disabled={loading}>
+          {loading ? "Signing in…" : "Sign In"}
+        </button>
+      </form>
+    </div>
+  );
+}
+Add login page styles to the end of apps/web/app/globals.css:
+
+css
+Copy code
+/* Corporate login page */
+.corporate-login-page {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.corporate-login-form .sign-in-button {
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  width: 100%;
+  transition: background 0.15s;
+}
+.corporate-login-form .sign-in-button:hover {
+  background: #111827;
+}
+Create API route for corporate admin login: apps/web/app/api/corporate/auth/login/route.ts
+
+ts
+Copy code
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  const { email, password } = await request.json();
+  // Forward the login request to the BFF
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    return NextResponse.json({ message: data?.message || "Login failed" }, { status: res.status });
+  }
+  // Set token as httpOnly cookie
+  const response = NextResponse.json({ user: data.user });
+  response.cookies.set("corporate_token", data.token, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    // Optionally set secure: true when running under HTTPS
+  });
+  return response;
+}
+Create API route for the corporate dashboard: apps/web/app/api/corporate/dashboard/route.ts
+
+ts
+Copy code
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+export async function GET(request: NextRequest) {
+  const token = cookies().get("corporate_token")?.value;
+  if (!token) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BFF_BASE_URL}/corporate/dashboard`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}
+Update the corporate dashboard page (apps/web/app/corporate/page.tsx) to fetch via the internal API route (adjusting only the fetch call):
+
+tsx
+Copy code
+"use client";
+import React, { useEffect, useState } from "react";
+
+interface DashboardData {
+  organizations: number;
+  users: number;
+  subscriptions: number;
+  revenue: number;
+  status: string;
+}
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/corporate/dashboard");
+        if (!res.ok) {
+          throw new Error("Failed to load dashboard");
+        }
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message ?? "Error loading dashboard");
+      }
+    }
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Overview</h2>
+      {error && <p className="text-red-600">{error}</p>}
+      {!data ? (
+        <p>Loading dashboard...</p>
+      ) : (
+        <div className="dashboard-grid">
+          <div className="dashboard-card">
+            <div className="card-title">Organizations</div>
+            <div className="card-value">{data.organizations}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Users</div>
+            <div className="card-value">{data.users}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Subscriptions</div>
+            <div className="card-value">{data.subscriptions}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Revenue</div>
+            <div className="card-value">${data.revenue}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Status</div>
+            <div className="card-value">{data.status}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+RUN & PRINT
+
+ls -R apps/web/app/corporate | sed 's/\./&/' || true
+
+grep -n "CorporateLoginPage" apps/web/app/corporate/login/page.tsx || true
+
+grep -n "corporate_token" apps/web/app/api/corporate/auth/login/route.ts || true
+
+grep -n "Overview" apps/web/app/corporate/page.tsx || true
+
+STOP.
+
+pgsql
+Copy code

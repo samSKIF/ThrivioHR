@@ -1,0 +1,216 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Create a corporate layout and initial dashboard page in the web app, styled to match the employeeRewards management UI.
+
+TOUCH ONLY
+apps/web/app/corporate/layout.tsx
+apps/web/app/corporate/page.tsx
+apps/web/app/globals.css
+
+CHANGES
+1. **Create `apps/web/app/corporate/layout.tsx`** with this content:
+
+   ```tsx
+   import React from "react";
+   import "../globals.css";
+
+   export const metadata = {
+     title: "ThrivioHR Management",
+     description: "Corporate admin panel",
+   };
+
+   /**
+    * CorporateLayout defines a header and navigation bar for all corporate pages.
+    * It mirrors the design of the employeeRewards management UI.
+    */
+   export default function CorporateLayout({ children }: { children: React.ReactNode }) {
+     return (
+       <html lang="en">
+         <body>
+           <header className="corporate-header">
+             <div className="corporate-header-left">
+               <h1 className="text-xl font-bold">ThrivioHR Management</h1>
+               <p className="text-sm text-gray-500">SaaS Platform Administration</p>
+             </div>
+             <div className="corporate-header-right">
+               <span>Welcome, Corporate Admin</span>
+               {/* TODO: add a real logout link */}
+               <button className="logout-button">Logout</button>
+             </div>
+           </header>
+           <nav className="corporate-nav">
+             <ul>
+               <li><a href="/corporate">Overview</a></li>
+               <li><a href="/corporate/organizations">Organizations</a></li>
+               <li><a href="#">Merchants</a></li>
+               <li><a href="#">Products</a></li>
+               <li><a href="#">Orders</a></li>
+             </ul>
+           </nav>
+           <main className="corporate-content">
+             {children}
+           </main>
+         </body>
+       </html>
+     );
+   }
+Append the following styles to the bottom of apps/web/app/globals.css:
+
+css
+Copy code
+/* Corporate management styles */
+.corporate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+.corporate-header-left h1 {
+  margin: 0;
+}
+.corporate-header-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.logout-button {
+  background: #e11d48;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+}
+.corporate-nav {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.corporate-nav ul {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 2rem;
+  margin: 0;
+  list-style: none;
+}
+.corporate-nav a {
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+}
+.corporate-nav a:hover {
+  color: #1f2937;
+}
+.corporate-content {
+  padding: 2rem;
+}
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.dashboard-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.dashboard-card .card-title {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+.dashboard-card .card-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+Create apps/web/app/corporate/page.tsx (this will be the Overview/Dashboard page) with:
+
+tsx
+Copy code
+"use client";
+import React, { useEffect, useState } from "react";
+
+interface DashboardData {
+  organizations: number;
+  users: number;
+  subscriptions: number;
+  revenue: number;
+  status: string;
+}
+
+/**
+ * DashboardPage shows high-level metrics for corporate administrators.
+ * It fetches data from the BFF’s corporate dashboard endpoint.
+ */
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/corporate/dashboard");
+        if (!res.ok) {
+          throw new Error("Failed to load dashboard");
+        }
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message ?? "Error loading dashboard");
+      }
+    }
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Overview</h2>
+      {error && <p className="text-red-600">{error}</p>}
+      {!data ? (
+        <p>Loading dashboard...</p>
+      ) : (
+        <div className="dashboard-grid">
+          <div className="dashboard-card">
+            <div className="card-title">Organizations</div>
+            <div className="card-value">{data.organizations}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Users</div>
+            <div className="card-value">{data.users}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Subscriptions</div>
+            <div className="card-value">{data.subscriptions}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Revenue</div>
+            <div className="card-value">${data.revenue}</div>
+          </div>
+          <div className="dashboard-card">
+            <div className="card-title">Status</div>
+            <div className="card-value">{data.status}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+Note: The /api/corporate/dashboard endpoint is assumed here. If your Next.js API proxy isn’t set up yet, you can temporarily change the fetch URL to http://localhost:5000/corporate/dashboard for local testing.
+
+RUN & PRINT
+
+ls -R apps/web/app/corporate | sed 's/\./&/' || true
+
+grep -n "corporate-header" apps/web/app/globals.css | head -n 3 || true
+
+grep -n "dashboard-grid" apps/web/app/globals.css | head -n 3 || true
+
+grep -n "fetch" apps/web/app/corporate/page.tsx | head -n 5 || true
+
+STOP.
+
+pgsql
+Copy code

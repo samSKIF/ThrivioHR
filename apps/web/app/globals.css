@@ -249,3 +249,92 @@ html, body {
   margin-top: 1rem;
   width: 100%;
 }
+
+/* Corporate management styles */
+.corporate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+.corporate-header-left h1 {
+  margin: 0;
+}
+.corporate-header-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.logout-button {
+  background: #e11d48;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+}
+.corporate-nav {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.corporate-nav ul {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 2rem;
+  margin: 0;
+  list-style: none;
+}
+.corporate-nav a {
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+}
+.corporate-nav a:hover {
+  color: #1f2937;
+}
+.corporate-content {
+  padding: 2rem;
+}
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.dashboard-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.dashboard-card .card-title {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+.dashboard-card .card-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Corporate login page */
+.corporate-login-page {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.corporate-login-form .sign-in-button {
+  background: #1f2937;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  width: 100%;
+  transition: background 0.15s;
+}
+.corporate-login-form .sign-in-button:hover {
+  background: #111827;
+}
