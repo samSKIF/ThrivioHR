@@ -141,42 +141,42 @@ export default function LoginPage() {
 
       {/* Right side - Hero Section */}
       <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-color/5 to-primary-color/10 p-8">
-        <div className="max-w-md mx-auto h-full flex flex-col">
-          <div className="mb-8 text-center">
-            <div className="inline-block p-4 bg-white rounded-2xl shadow-md mb-4">
+        <div className="max-w-md mx-auto h-full flex flex-col justify-center">
+          <div className="mb-12 text-center mt-16">
+            <div className="inline-block p-6 bg-white rounded-3xl shadow-lg mb-6">
               <img
                 src="/hero-illustration.png"
                 alt="Employee Recognition and Rewards Platform"
-                className="h-64 w-auto rounded-xl"
+                className="h-72 w-auto rounded-2xl"
               />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4 leading-tight">
               Empower Your Workplace
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-lg leading-relaxed px-4">
               Connect, engage and recognize your colleagues with our
               comprehensive employee engagement platform
             </p>
           </div>
 
           {/* Feature Cards */}
-          <div className="space-y-4 mt-auto">
-            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="space-y-5">
+            <div className="bg-white p-5 rounded-2xl shadow-md flex items-start hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-4 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800">Peer Recognition</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">Peer Recognition</h3>
                 <p className="text-sm text-gray-500">
                   Celebrate achievements and milestones with colleagues
                 </p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="bg-white p-5 rounded-2xl shadow-md flex items-start hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-500 mr-4 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                   <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
@@ -184,7 +184,7 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800">
+                <h3 className="font-semibold text-gray-800 mb-1">
                   Rewards & Redemption
                 </h3>
                 <p className="text-sm text-gray-500">
@@ -192,23 +192,23 @@ export default function LoginPage() {
                 </p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm flex items-start">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-500 mr-3 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="bg-white p-5 rounded-2xl shadow-md flex items-start hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-500 mr-4 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="18" height="18" x="3" y="3" rx="2" />
                   <path d="M7 10h10" />
                   <path d="M7 14h10" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-800">Polls & Surveys</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">Polls & Surveys</h3>
                 <p className="text-sm text-gray-500">
                   Voice your opinion and participate in company decisions
                 </p>
               </div>
             </div>
           </div>
-          <p className="text-center text-sm text-gray-500 mt-8">
+          <p className="text-center text-sm text-gray-500 mt-12">
             © 2025 ThrivioHR. All rights reserved.
           </p>
         </div>
