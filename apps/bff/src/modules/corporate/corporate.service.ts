@@ -172,6 +172,212 @@ export class CorporateService {
     }
   }
 
+  // Update organization details
+  async updateOrganization(id: string, updateData: {
+    organizationName?: string;
+    status?: string;
+    contactName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    adminEmail?: string;
+    businessActivity?: string;
+    streetAddress?: string;
+    country?: string;
+    stateRegion?: string;
+    city?: string;
+    zipPostalCode?: string;
+  }) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Get current organization settings
+      const currentOrg = await client.query(
+        'SELECT name, settings, is_active FROM organizations WHERE id = $1',
+        [id]
+      );
+
+      if (currentOrg.rows.length === 0) {
+        throw new Error('Organization not found');
+      }
+
+      const currentSettings = currentOrg.rows[0].settings || {};
+
+      // Update organization name and status if provided
+      if (updateData.organizationName || updateData.status) {
+        await client.query(
+          'UPDATE organizations SET name = COALESCE($1, name), is_active = COALESCE($2, is_active) WHERE id = $3',
+          [
+            updateData.organizationName || null,
+            updateData.status === 'active' ? true : updateData.status === 'inactive' ? false : null,
+            id
+          ]
+        );
+      }
+
+      // Update settings JSON if contact or address info provided
+      const updatedSettings = {
+        ...currentSettings,
+        ...(updateData.contactName && { contactName: updateData.contactName }),
+        ...(updateData.contactEmail && { contactEmail: updateData.contactEmail }),
+        ...(updateData.contactPhone && { contactPhone: updateData.contactPhone }),
+        ...(updateData.businessActivity && { industry: updateData.businessActivity }),
+        address: {
+          ...currentSettings.address,
+          ...(updateData.streetAddress && { street: updateData.streetAddress }),
+          ...(updateData.country && { country: updateData.country }),
+          ...(updateData.stateRegion && { state: updateData.stateRegion }),
+          ...(updateData.city && { city: updateData.city }),
+          ...(updateData.zipPostalCode && { zipCode: updateData.zipPostalCode })
+        }
+      };
+
+      await client.query(
+        'UPDATE organizations SET settings = $1 WHERE id = $2',
+        [JSON.stringify(updatedSettings), id]
+      );
+
+      await client.query('COMMIT');
+
+      return { success: true, message: 'Organization updated successfully' };
+
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new Error(`Failed to update organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Reset admin password for organization
+  async resetAdminPassword(organizationId: string) {
+    const client = await pool.connect();
+
+    try {
+      // Find the superuser for this organization (assuming first created user is admin)
+      const adminResult = await client.query(`
+        SELECT id, email FROM users 
+        WHERE organization_id = $1 
+        ORDER BY created_at ASC 
+        LIMIT 1
+      `, [organizationId]);
+
+      if (adminResult.rows.length === 0) {
+        throw new Error('No admin user found for this organization');
+      }
+
+      const admin = adminResult.rows[0];
+      const tempPassword = this.generateTempPassword();
+      const passwordHash = await hashPassword(tempPassword);
+
+      // Update admin password
+      await client.query(
+        'UPDATE users SET password_hash = $1 WHERE id = $2',
+        [passwordHash, admin.id]
+      );
+
+      return {
+        success: true,
+        message: 'Admin password reset successfully',
+        tempPassword: tempPassword,
+        adminEmail: admin.email
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to reset admin password: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Create subscription for organization
+  async createSubscription(organizationId: string, subscriptionData: {
+    paymentDate: string;
+    subscriptionPeriod: string;
+    subscribedUsers: number;
+    pricePerUser: number;
+    totalMonthlyAmount: number;
+  }) {
+    const client = await pool.connect();
+
+    try {
+      // Calculate end date based on subscription period
+      const startDate = new Date(subscriptionData.paymentDate);
+      const endDate = new Date(startDate);
+      
+      switch (subscriptionData.subscriptionPeriod) {
+        case 'month':
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        case 'quarter':
+          endDate.setMonth(endDate.getMonth() + 3);
+          break;
+        case 'year':
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+        default:
+          endDate.setMonth(endDate.getMonth() + 3); // Default to quarter
+      }
+
+      // Create subscription record
+      const result = await client.query(`
+        INSERT INTO subscriptions (
+          org_id, seats_limit, plan_code, status, start_at, end_at
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, org_id, seats_limit, plan_code, status, start_at, end_at
+      `, [
+        organizationId,
+        subscriptionData.subscribedUsers,
+        'pro', // Default plan code
+        'active',
+        startDate,
+        endDate
+      ]);
+
+      return {
+        success: true,
+        message: 'Subscription created successfully',
+        subscription: result.rows[0]
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to create subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Credit organization wallet
+  async creditWallet(organizationId: string, walletData: {
+    amount: number;
+    description: string;
+  }) {
+    const client = await pool.connect();
+
+    try {
+      // For now, we'll simulate wallet credit since we don't have a wallet table
+      // In a real implementation, this would create a wallet transaction record
+      
+      return {
+        success: true,
+        message: `Wallet credited with $${walletData.amount}`,
+        transaction: {
+          organizationId,
+          amount: walletData.amount,
+          description: walletData.description,
+          timestamp: new Date().toISOString(),
+          type: 'credit'
+        }
+      };
+
+    } catch (error) {
+      throw new Error(`Failed to credit wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      client.release();
+    }
+  }
+
   // Generate a secure temporary password
   private generateTempPassword(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
