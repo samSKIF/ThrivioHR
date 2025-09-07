@@ -329,7 +329,7 @@ export class CorporateService {
           endDate.setMonth(endDate.getMonth() + 3); // Default to quarter
       }
 
-      // Create subscription record  
+      // Create subscription record
       const result = await client.query(`
         INSERT INTO subscriptions (
           org_id, seats_limit, plan_code, status, start_at, end_at
