@@ -1,3 +1,4 @@
+// This layout intentionally doesn't import the parent corporate layout styles
 import "../../globals.css";
 
 export const metadata = {
@@ -6,13 +7,10 @@ export const metadata = {
 };
 
 /**
- * Login layout that excludes the corporate header/navigation.
- * Shows only the login form without management interface elements.
+ * Empty layout to bypass the corporate header/navigation completely.
+ * We'll handle the full page styling in the page component itself.
  */
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      {children}
-    </div>
-  );
+  // Return just the children without any wrapper - this bypasses the corporate layout
+  return <>{children}</>;
 }
