@@ -1,0 +1,50 @@
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+react-dom-client.development.js:4508 Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload assetPrefix="" globalError={[...]}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/corporate..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head headCacheNode={{lazyData:null, ...}}>
+                    <__next_viewport_boundary__>
+                    <MetadataTree>
+                      <__next_metadata_boundary__>
+                        <__next_metadata_boundary__>
+                          <div
++                           hidden={true}
+-                           hidden={null}
+-                           className="myus-shopping"
+                          >
++                           <Suspense fallback={null}>
+-                           <div
+-                             className="my-core-extension"
+-                             id="myus-mall-extension-is-installed"
+-                             style={{display:"none"}}
+-                           >
+                  ...
+
+    at throwOnHydrationMismatch (react-dom-client.development.js:4508:11)
+    at updateSuspenseComponent (react-dom-client.development.js:9770:15)
+    at beginWork (react-dom-client.development.js:10995:18)
+    at runWithFiberInDEV (react-dom-client.development.js:873:30)
+    at performUnitOfWork (react-dom-client.development.js:15678:22)
+    at workLoopConcurrentByScheduler (react-dom-client.development.js:15672:9)
+    at renderRootConcurrent (react-dom-client.development.js:15647:15)
+    at performWorkOnRoot (react-dom-client.development.js:14941:13)
+    at performWorkOnRootViaSchedulerTask (react-dom-client.development.js:16767:7)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:45:48)

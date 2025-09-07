@@ -32,10 +32,17 @@ export default function OrganizationsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    fetchOrganizations();
+    setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      fetchOrganizations();
+    }
+  }, [isMounted]);
 
 
   async function fetchOrganizations() {
@@ -89,8 +96,19 @@ export default function OrganizationsPage() {
     }
   };
 
+  // Don't render until client-side mounting is complete
+  if (!isMounted) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Loading organizations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
+    <div className="p-6" suppressHydrationWarning={true}>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
         <button 
