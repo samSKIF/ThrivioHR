@@ -329,22 +329,16 @@ export class CorporateService {
           endDate.setMonth(endDate.getMonth() + 3); // Default to quarter
       }
 
-      // Create subscription record
+      // Create subscription record  
       const result = await client.query(`
         INSERT INTO subscriptions (
-          organization_id, seats_limit, subscribed_users, price_per_user_per_month, 
-          subscription_period, total_monthly_amount, plan_code, status, start_at, expiration_date
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING id, organization_id, seats_limit, subscribed_users, price_per_user_per_month, 
-                  subscription_period, total_monthly_amount, plan_code, status, start_at, expiration_date
+          org_id, seats_limit, plan_code, status, start_at, end_at
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, org_id, seats_limit, plan_code, status, start_at, end_at
       `, [
         organizationId,
         subscriptionData.subscribedUsers,
-        subscriptionData.subscribedUsers,
-        subscriptionData.pricePerUser,
-        subscriptionData.subscriptionPeriod,
-        subscriptionData.totalMonthlyAmount,
-        'pro', // Default plan code
+        subscriptionData.subscriptionPeriod, // Use subscription period as plan code
         'active',
         startDate,
         endDate
