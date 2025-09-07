@@ -9,13 +9,14 @@ interface OrgListItem {
   name: string;
   status: string;
   userCount: number;
-  maxUsers?: number;
   createdAt: string;
   subscription?: {
+    id: string;
+    seatsLimit: number;
+    planCode: string;
     status: string;
-    subscriptionPeriod: string;
-    lastPaymentDate?: string;
-    expirationDate?: string;
+    startAt: string;
+    endAt: string;
   };
 }
 
@@ -61,22 +62,13 @@ export default function OrganizationsPage() {
   }
 
   function getSubscriptionBadge(subscription?: OrgListItem['subscription']) {
-    if (!subscription || !subscription.subscriptionPeriod || subscription.subscriptionPeriod === 'none') {
+    if (!subscription || !subscription.planCode) {
       return <span className="text-gray-600">No subscription</span>;
     }
     
-    const periodMap: Record<string, { text: string; class: string }> = {
-      'monthly': { text: 'monthly', class: 'bg-blue-100 text-blue-800' },
-      'quarterly': { text: 'quarterly', class: 'bg-blue-100 text-blue-800' },
-      'yearly': { text: 'yearly', class: 'bg-blue-100 text-blue-800' }
-    };
-    
-    const period = periodMap[subscription.subscriptionPeriod.toLowerCase()] || 
-                  { text: subscription.subscriptionPeriod.toLowerCase(), class: 'bg-blue-100 text-blue-800' };
-    
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${period.class}`}>
-        {period.text}
+      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+        {subscription.planCode}
       </span>
     );
   }
@@ -130,7 +122,7 @@ export default function OrganizationsPage() {
               </div>
               <div>
                 <p className="text-gray-500 font-medium">Max Employees</p>
-                <p className="text-gray-900 font-semibold">{org.maxUsers ?? "N/A"}</p>
+                <p className="text-gray-900 font-semibold">{org.subscription?.seatsLimit ?? "N/A"}</p>
               </div>
               <div>
                 <p className="text-gray-500 font-medium">Created</p>
@@ -147,8 +139,8 @@ export default function OrganizationsPage() {
               <div>
                 <p className="text-gray-500 font-medium">Last Payment</p>
                 <p className="text-gray-900 font-semibold">
-                  {org.subscription?.lastPaymentDate 
-                    ? new Date(org.subscription.lastPaymentDate).toLocaleDateString()
+                  {org.subscription?.startAt 
+                    ? new Date(org.subscription.startAt).toLocaleDateString()
                     : "N/A"
                   }
                 </p>
@@ -156,8 +148,8 @@ export default function OrganizationsPage() {
               <div>
                 <p className="text-gray-500 font-medium">Expiration</p>
                 <p className="text-gray-900 font-semibold">
-                  {org.subscription?.expirationDate 
-                    ? new Date(org.subscription.expirationDate).toLocaleDateString()
+                  {org.subscription?.endAt 
+                    ? new Date(org.subscription.endAt).toLocaleDateString()
                     : "N/A"
                   }
                 </p>
