@@ -13768,6 +13768,16 @@
         "source": "web",
         "target": "npm:@apollo/client",
         "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:@tailwindcss/typography",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:tailwindcss-animate",
+        "type": "static"
       }
     ],
     "npm:@ampproject/remapping": [
@@ -30163,5 +30173,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757267541093
+  "computedAt": 1757267910227
 }

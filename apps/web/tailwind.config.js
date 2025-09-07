@@ -1,16 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './apps/web/app/**/*.{js,ts,jsx,tsx,mdx}',
-    './apps/web/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './apps/web/src/**/*.{js,ts,jsx,tsx,mdx}',
-    './apps/web/lib/**/*.{js,ts,jsx,tsx,mdx}',
-    './packages/ui/**/*.{js,ts,jsx,tsx,mdx}',
-    // Add relative paths in case Next.js looks from apps/web directory
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    '../../packages/ui/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
