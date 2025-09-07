@@ -42,6 +42,7 @@ export default function OrganizationsPage() {
         throw new Error("Failed to load organizations");
       }
       const data = await res.json();
+      console.log('Organizations loaded:', data.length, 'organizations');
       setOrganizations(data);
     } catch (err: any) {
       setError(err.message ?? "Error loading organizations");
@@ -51,8 +52,10 @@ export default function OrganizationsPage() {
   }
 
   const handleManageOrganization = (org: Organization) => {
+    console.log('Button clicked for org:', org.name);
     setSelectedOrganization(org);
     setIsModalOpen(true);
+    console.log('Modal should now be open:', true);
   };
 
   const handleCloseModal = () => {

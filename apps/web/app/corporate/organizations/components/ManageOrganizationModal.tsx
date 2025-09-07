@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Organization {
   id: string;
@@ -223,9 +224,9 @@ export default function ManageOrganizationModal({
 
   if (!isOpen || !organization) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+  const modalContent = (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
+      <div className="bg-white rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <div>
@@ -643,4 +644,8 @@ export default function ManageOrganizationModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' 
+    ? createPortal(modalContent, document.body)
+    : null;
 }
