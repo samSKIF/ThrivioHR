@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Pool } from 'pg';
-import * as argon2 from 'argon2';
+import { verify } from '@node-rs/argon2';
 
 // Use a shared PG pool; DATABASE_URL should be defined in env.
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -19,7 +19,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const admin = result.rows[0];
-    const valid = await argon2.verify(admin.password_hash, password);
+    const valid = await verify(admin.password_hash, password);
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials');
     }
