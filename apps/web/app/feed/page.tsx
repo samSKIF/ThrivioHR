@@ -290,11 +290,11 @@ export default function FeedPage() {
         </div>
       </header>
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
-          {/* Left Sidebar - Points & Priorities */}
-          <div className="lg:col-span-1 space-y-6">
+      {/* Main layout with improved responsive grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-4 max-w-[2200px] mx-auto justify-center px-4">
+        {/* Left sidebar - optimized width */}
+        <div className="hidden lg:block lg:col-span-3 w-full max-w-[300px]">
+          <div className="space-y-6">
             {/* ThrivioHR Points */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-lg font-semibold mb-4">ThrivioHR Points</h2>
@@ -323,9 +323,10 @@ export default function FeedPage() {
               <p className="text-xs text-gray-500">You have not added new priority</p>
             </div>
           </div>
+        </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Main content - wider and centered */}
+        <div className="lg:col-span-6 w-full max-w-[800px] space-y-6">
             {/* Composer */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
@@ -411,10 +412,11 @@ export default function FeedPage() {
                 </>
               )}
             </div>
-          </div>
+        </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+        {/* Right sidebar - optimized width */}
+        <div className="hidden lg:block lg:col-span-3 w-full max-w-[300px]">
+          <div className="space-y-6">
             {/* My Active Spaces */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
