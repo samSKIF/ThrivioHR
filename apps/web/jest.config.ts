@@ -1,7 +1,7 @@
 import nextJest from 'next/jest';
 import type { Config } from 'jest';
 
-const createJestConfig = nextJest({ dir: './' });
+const createJestConfig = nextJest({ dir: __dirname });
 
 const config: Config = {
   testEnvironment: 'jsdom',
