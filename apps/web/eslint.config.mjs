@@ -1,9 +1,11 @@
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
+import jsxa11y from 'eslint-plugin-jsx-a11y';
 
 export default [
   js.configs.recommended,
+  jsxa11y.flatConfigs.recommended,
   {
     files: ['app/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}', 'middleware.ts'],
     languageOptions: {
@@ -19,9 +21,11 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
+      'jsx-a11y': jsxa11y,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
+      ...jsxa11y.flatConfigs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-unused-vars': 'off',
       'no-undef': 'off'
