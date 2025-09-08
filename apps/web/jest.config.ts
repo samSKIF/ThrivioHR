@@ -20,6 +20,22 @@ const config: Config = {
   testTimeout: 30000,
   // Note: verbose can be removed later for cleaner CI output
   verbose: true,
+  collectCoverage: process.env.CI === 'true',
+  collectCoverageFrom: [
+    '<rootDir>/**/*.{ts,tsx}',
+    '!<rootDir>/**/?(*.)+(spec|test).{ts,tsx}',
+    '!<rootDir>/**/__mocks__/**',
+    '!<rootDir>/**/types/**'
+  ],
+  coverageReporters: ['text', 'lcov'],
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 70,
+      lines: 70,
+      statements: 70
+    }
+  },
 };
 
 export default createJestConfig(config);

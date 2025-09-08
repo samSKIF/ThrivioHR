@@ -18,7 +18,9 @@
     "build:all": "nx run-many --target=build --projects=bff,web",
     "workflows:health": "echo '--- BFF (wf@8000) ---' && curl -sf http://localhost:8000/health && echo '\\n--- Web (wf@5000, root) ---' && curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:5000",
     "dev:alt": "PORT=8001 nx serve bff & PORT=3001 nx serve web",
-    "health:alt": "echo '--- BFF (alt@8001) ---' && curl -sf http://localhost:8001/health && echo '\\n--- Web (alt@3001, /) ---' && curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:3001"
+    "health:alt": "echo '--- BFF (alt@8001) ---' && curl -sf http://localhost:8001/health && echo '\\n--- Web (alt@3001, /) ---' && curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:3001",
+    "build": "nx run-many -t build --all",
+    "test:ci": "pnpm -s typecheck && pnpm -s lint && pnpm -s test:web -- --coverage"
   },
   "keywords": [],
   "author": "",

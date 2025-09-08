@@ -1,0 +1,69 @@
+Love the direction—this one’s close. Here’s the punch-list so it’s rock-solid:
+
+What’s great
+
+Preserves Nx when present and only falls back to direct Jest when needed.
+
+Word-boundary Jest detection (avoids hitting ts-jest, etc.).
+
+Coverage injection via brace-counting (handles nested objects).
+
+JSON-first ESLint edits with a safer JS fallback.
+
+applyImportSession measurement handles function + arrow forms.
+
+End-to-end verification steps are thoughtful.
+
+Must-fix before you run it
+
+Nx --config correctness
+
+In the Nx branch you check only for --config (any), not the exact --config apps/web/jest.config.ts. That can leave an old/wrong config in place.
+
+Fix: if a --config exists, replace it with your path; otherwise append the right one.
+
+Double-dash logic with Nx
+
+You always append -- --config .... If the script already has a passthrough --, adding another -- inside the Jest args can break parsing (Jest treats a second -- as “end of options”).
+
+Fix: detect whether the script already contains --; only insert one Nx passthrough, then append Jest flags without another --.
+
+Jest config variable targeting
+
+You inject into the first const X = { ... } you find. If the file defines other objects first (e.g., moduleNameMapper), you’ll inject in the wrong place.
+
+Fix: read the identifier passed to export default createJestConfig(<id>) and inject into that object.
+
+Verification block missing fs require
+
+The “Jest config integrity” Node snippet uses fs.readFileSync but never require('fs'). It will always log a validation error.
+
+Escaped command substitution in shell
+
+schema_files=\$(rg …) and similar lines will literally assign the string "$(rg …)" instead of executing it.
+
+Fix: remove the backslash: schema_files=$(rg …) (same for the find | xargs grep branch).
+
+Build script assumes projects
+
+nx run-many -t build --projects=bff,web will fail if either project doesn’t exist.
+
+Consider: discover projects (nx show projects / pnpm -s nx show projects) and include only those present, or fall back to --all.
+
+Nice-to-have refinements
+
+Nx detection: also catch pnpm nx test web and nx run web:test (you’re likely fine, but a regex check would be bulletproof).
+
+ESLint .js surgery: you already guard for arrays, good—still brittle if config is a function/multi-config. If parse errors occur, print a clear “manual edit required” line and skip.
+
+Coverage injection validation: you could reuse your brace-counter to assert coverage position is inside the chosen object (not just present).
+
+Quick self-checks to run after fixes
+
+Print test:web and verify exactly one passthrough -- if Nx, and that it contains --config apps/web/jest.config.ts --runInBand once.
+
+pnpm -s test:web -- --listTests --passWithNoTests | head -5 shows only the intended suites.
+
+Open apps/web/jest.config.ts and confirm the coverage block sits inside the object passed to createJestConfig(...).
+
+pnpm -s lint runs without parse errors and jsx-a11y/next/core-web-vitals are active.

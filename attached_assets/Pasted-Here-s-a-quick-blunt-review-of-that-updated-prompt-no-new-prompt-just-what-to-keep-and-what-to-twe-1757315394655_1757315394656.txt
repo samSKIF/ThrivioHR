@@ -1,0 +1,74 @@
+Here’s a quick, blunt review of that updated prompt—no new prompt, just what to keep and what to tweak so it doesn’t bite you later:
+
+What’s solid
+
+Environment prechecks (node, pnpm) and fail-fast set -euo pipefail ✅
+
+“Install only if missing” pattern for ESLint plugins ✅
+
+Scripts patched via Node (not brittle sed) ✅
+
+Test listing at the end to prove targeting ✅
+
+Risks / fixes to consider
+
+Jest coverage injection likely won’t run
+
+Your patch assumes export default createJestConfig({ ... }). Your repo uses the two-step form:
+
+const createJestConfig = nextJest(...);
+const config = { ... };
+export default createJestConfig(config);
+
+
+Result: coverage block won’t be injected; you’ll get the “manual intervention” warning and still print “Jest config updated successfully”.
+
+Fix: Parse for const config = { … }; and insert coverage props before that closing };, not by matching the export line.
+
+A11y linting is only installed, not enabled
+
+Installing eslint-plugin-jsx-a11y and @next/eslint-plugin-next doesn’t flip your audit from FAIL—rules aren’t wired.
+
+Fix: minimally ensure extends includes "plugin:jsx-a11y/recommended" and "next/core-web-vitals" in the web ESLint config (json/js/flat). No need to rewrite the whole file; just append if missing.
+
+test:web mutation can silently drop important flags
+
+Logic replaces the first jest with jest --runInBand, but doesn’t ensure --config apps/web/jest.config.ts exists if the prior script was nx test web (no jest token).
+
+Fix: if the script doesn’t include jest, set it explicitly to NODE_ENV=test pnpm exec jest --config apps/web/jest.config.ts --runInBand (don’t depend on npx), else append --runInBand only if it isn’t present.
+
+Build script assumes Nx + specific project names
+
+nx run-many -t build --projects=bff,web will break if your names differ or Nx isn’t present.
+
+Fix: prefer --all when you can; or guard on Nx presence and skip adding build if missing (print a warning instead of a brittle script).
+
+Drizzle scan can false-positive via fallback grep
+
+The ripgrep branch is fine; the grep fallback walks node_modules.
+
+Fix: exclude node_modules in fallback (find . -path ./node_modules -prune -o -name '*.ts' -print | xargs grep -l ...).
+
+applyImportSession measurement doesn’t measure the method
+
+It prints file line counts, not the function body length—won’t answer the audit’s question.
+
+Fix: do a small brace-counter around the applyImportSession(...) { match and count those lines only.
+
+Workspace vs app-scope detection for ESLint plugins
+
+pnpm ls <pkg> at root won’t see app-scoped installs; you’ll then add duplicates at root.
+
+Fix: either install at workspace root intentionally (use -w), or check apps/web too and prefer root-level install for shared tooling.
+
+Jest path resolution
+
+Using bare jest relies on script PATH; safer is pnpm exec jest (you already do that in the verification tail—make it consistent in test:web).
+
+Coverage configuration duplication
+
+You set collectCoverage in config (CI) and pass --coverage in test:ci. That’s fine, but if one changes, results can diverge.
+
+Suggestion: rely on the flag in test:ci; keep config’s collectCoverage: process.env.CI === 'true' as a guard, but it’s redundant.
+
+If you address items 1–3 and 6 (the most impactful), your prompt should reliably flip the audit’s FAILs to PASS without unexpected side effects.

@@ -1,0 +1,99 @@
+Great iteration. This version is much safer and more deliberate. Here’s the quick, no-fluff review—what looks solid, and where it could still bite you, plus how to sanity-check each spot fast.
+
+👍 Solid improvements
+
+Brace-counting inject for Jest coverage (way better than regex; handles nested objects).
+
+Deterministic test:web: ensures --config apps/web/jest.config.ts and --runInBand.
+
+ESLint multi-insert fix: batches plugin/extends inserts so both land.
+
+Broadened search for applyImportSession (content-based, not filename-based).
+
+Integrity checks at the end (scripts, ESLint presence, Jest listTests, lint parse).
+
+⚠️ Still fragile / edge cases
+
+Jest config variable name assumption
+
+You look for const config = {. Many Next/Jest templates use const customJestConfig = { ... }.
+
+🔍 Check: after running, open apps/web/jest.config.ts and confirm the coverage block is inside the actual top-level config object (not missing because the variable name differed).
+
+test:web detection may match the wrong “jest”
+
+You use includes('jest'). This can hit ts-jest, @testing-library/jest-dom, etc.
+
+Impact: might incorrectly treat the script as a Jest command or add flags in the wrong place.
+
+🔍 Check: print the final test:web and ensure it literally resolves to a Jest invocation (e.g., pnpm exec jest ...) and contains --config apps/web/jest.config.ts --runInBand exactly once.
+
+Replacing an Nx script with bare Jest
+
+If test:web is nx test web ..., your logic replaces it with a direct jest command (since includes('jest') is false). That’s a behavior change that bypasses Nx caching/executors.
+
+🔍 Check: if you rely on Nx, prefer to keep nx test web -- --config ... --runInBand instead of replacing. Make sure you’re okay with the switch.
+
+.eslintrc.js text surgery remains brittle
+
+Works for common shapes, but breaks if:
+
+there’s no plugins: [] / extends: [] key,
+
+the file is multi-config (module.exports = [ ... ]),
+
+spacing/comments differ from your patterns.
+
+🔍 Check: after run, open apps/web/.eslintrc.js and confirm both plugins contain jsx-a11y and @next/next, and both extends contain plugin:jsx-a11y/recommended and next/core-web-vitals. Then run pnpm -s lint to ensure no parse errors.
+
+applyImportSession arrow function form not measured
+
+Your method regex won’t match applyImportSession = (...) => { ... }.
+
+🔍 Check: if you expect a line count and it prints “not found,” the method may be an arrow; then this check will under-report.
+
+Drizzle scan can false-negative
+
+If you wrap pgTable (e.g., myPgTable) or re-export builders, the search won’t find schemas.
+
+🔍 Check: if you actually have schemas, expect this to be a benign false alarm.
+
+Jest “coverage inside config” integrity check is approximate
+
+It only compares positions (start of config vs start of coverage), not whether coverage is before the closing brace.
+
+🔍 Check: quick eyeball or compute the closing brace position (like you do for insertion) if you want a stricter validation.
+
+moduleNameMapping → moduleNameMapper naive replace
+
+Rare, but if moduleNameMapping appears in a comment/identifier, you’ll still replace it.
+
+🔍 Check: search diff to ensure only the property key changed.
+
+ESLint flavors not covered
+
+No handling for eslint.config.js (flat config) or .eslintrc.cjs. If you use those, this won’t enable rules.
+
+🔍 Check: if lint doesn’t pick up rules, confirm which ESLint format your repo uses.
+
+Build script breadth
+
+nx run-many -t build --all may target more projects than you intend.
+
+🔍 Check: nx show projects (or pnpm -s build --dry-run) to confirm the set is acceptable.
+
+🧪 Quick post-run smoke checks
+
+Deterministic test usage
+node -e "console.log(require('./package.json').scripts['test:web'])" → confirms single jest and --config apps/web/jest.config.ts --runInBand.
+
+Only the intended tests are listed
+pnpm -s test:web -- --listTests --passWithNoTests | head -10 → verify it aligns with your desired targeting (e.g., includes authLink if that’s the goal).
+
+ESLint actually active
+pnpm -s lint → should parse and enforce; introduce a trivial a11y issue locally to see it fail if needed.
+
+Jest config content
+Open apps/web/jest.config.ts → coverage block is inside the top-level config object and not duplicated.
+
+Overall: this is a strong, pragmatic prompt. If you shore up the three biggest risk areas (config var name flexibility, jest detection with word boundaries, and leaving Nx scripts intact when present), you’ll be in excellent shape.

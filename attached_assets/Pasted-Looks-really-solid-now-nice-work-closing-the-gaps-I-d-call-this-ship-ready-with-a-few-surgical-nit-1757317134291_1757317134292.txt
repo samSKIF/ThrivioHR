@@ -1,0 +1,55 @@
+Looks really solid now—nice work closing the gaps. I’d call this “ship-ready with a few surgical nits.” Here are my last tweaks to make it fully bulletproof:
+
+High-impact nits to fix
+
+Split Nx passthrough only once
+Right now you split(' -- '), which will rejoin any extra -- in Jest args. Use a single split at the first passthrough:
+
+const cut = currentTestWeb.indexOf(' -- ');
+const nxPart = currentTestWeb.slice(0, cut);
+let jestArgs = currentTestWeb.slice(cut + 4);
+
+
+This avoids duplicating/reshuffling when Jest args themselves contain --.
+
+Support let/var config objects
+Your coverage injector only matches const. Allow all:
+
+const configMatches = [...content.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*\{/g)];
+
+
+Drizzle scan should include .tsx
+Ripgrep path only looks at --type ts. Include tsx too:
+
+With rg: rg -l "pgTable|mysqlTable|sqliteTable" -t ts -t tsx .
+
+Fallback find: include -name "*.tsx" in the expression.
+
+Safer Nx --config replacement
+If an existing --config is quoted or has an equals form, your regex may miss it. Make it more forgiving:
+
+jestArgs = jestArgs.replace(/--config(?:=|\s+)(["']?)[^\s"']+\1/, '--config apps/web/jest.config.ts');
+
+
+Verify coverage injected into the right object
+You already print positions; also explicitly assert:
+
+const ok = targetVar && content.indexOf('collectCoverage') > content.indexOf(`const ${targetVar} = {`);
+console.log('Coverage in correct object:', !!ok);
+
+Nice-to-have polish
+
+When you append --runInBand in Nx mode, add it only if not already present in jestArgs (you do this—keep it).
+
+If test:web is empty/missing, set it directly rather than diffing an empty string (your code covers this—👍).
+
+Consider warning (not failing) if pnpm -s nx show projects isn’t available; you already fall back to --all—👍.
+
+Overall
+
+✅ Preserves Nx flows and guarantees correct Jest flags
+✅ Injects coverage into the exact config variable passed to createJestConfig()
+✅ JSON-first ESLint edits with clear fallbacks and verification
+✅ Clean verification section with real integrity checks
+
+Apply those tiny regex/splitting/tsx adjustments and you’re truly done.

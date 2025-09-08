@@ -1,0 +1,461 @@
+Execute this EXACT task. If any command fails, PRINT the error and STOP.
+GOAL
+Fix audit failures: add missing scripts, enforce Jest coverage, enable a11y linting, 
+and make test targeting deterministic. Production-ready with all edge cases handled.
+TOUCH ONLY
+package.json
+apps/web/jest.config.ts
+apps/web/.eslintrc.json (if exists)
+apps/web/.eslintrc.js (if exists)
+CHANGES
+--- SAFE PATCH: package.json scripts ---
+Add missing scripts, preserve Nx workflows, robust passthrough handling.
+--- SAFE PATCH: apps/web/jest.config.ts ---
+Target exact config variable, support let/var/const patterns.
+--- SAFE PATCH: ESLint configuration ---
+JSON-first approach with comprehensive verification.
+RUN & PRINT
+#!/bin/bash
+set -euo pipefail
+echo "=== VERIFY ENVIRONMENT ==="
+command -v node >/dev/null || { echo "ERROR: node required"; exit 1; }
+command -v pnpm >/dev/null || { echo "ERROR: pnpm required"; exit 1; }
+[ -f package.json ] || { echo "ERROR: no package.json"; exit 1; }
+[ -f apps/web/jest.config.ts ] || { echo "ERROR: missing jest config"; exit 1; }
+echo "=== INSTALL ESLINT PLUGINS SAFELY ==="
+missing_plugins=()
+(pnpm ls eslint-plugin-jsx-a11y &>/dev/null || pnpm ls eslint-plugin-jsx-a11y -r &>/dev/null) || missing_plugins+=("eslint-plugin-jsx-a11y")
+(pnpm ls @next/eslint-plugin-next &>/dev/null || pnpm ls @next/eslint-plugin-next -r &>/dev/null) || missing_plugins+=("@next/eslint-plugin-next")
+if [ ${#missing_plugins[@]} -gt 0 ]; then
+    echo "Installing missing plugins at workspace level: ${missing_plugins[*]}"
+    pnpm add -D -w "${missing_plugins[@]}"
+else
+    echo "✓ ESLint plugins already installed"
+fi
+echo "=== PATCH PACKAGE.JSON SCRIPTS SAFELY ==="
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+pkg.scripts = pkg.scripts || {};
+// Add build script with project discovery
+if (!pkg.scripts.build) {
+    if (fs.existsSync('nx.json')) {
+        try {
+            const { execSync } = require('child_process');
+            const projects = execSync('pnpm -s nx show projects', { encoding: 'utf8' }).trim().split('\\n');
+            const targetProjects = ['bff', 'web'].filter(p => projects.includes(p));
+            
+            if (targetProjects.length > 0) {
+                pkg.scripts.build = \`nx run-many -t build --projects=\${targetProjects.join(',')}\`;
+                console.log(\`✓ Added build script for projects: \${targetProjects.join(', ')}\`);
+            } else {
+                pkg.scripts.build = 'nx run-many -t build --all';
+                console.log('✓ Added build script with --all (specific projects not found)');
+            }
+        } catch (e) {
+            console.log('⚠ Nx project discovery failed, falling back to --all');
+            pkg.scripts.build = 'nx run-many -t build --all';
+        }
+    } else {
+        console.log('⚠ Nx not found - skipping build script addition');
+    }
+}
+// Add test:ci script
+if (!pkg.scripts['test:ci']) {
+    pkg.scripts['test:ci'] = 'pnpm -s typecheck && pnpm -s lint && pnpm -s test:web -- --coverage';
+    console.log('✓ Added test:ci script');
+}
+// Fix test:web with robust Nx passthrough handling
+const currentTestWeb = pkg.scripts['test:web'] || '';
+let newScript = currentTestWeb;
+let needsUpdate = false;
+// Handle empty/missing script
+if (!currentTestWeb) {
+    newScript = 'NODE_ENV=test pnpm exec jest --config apps/web/jest.config.ts --runInBand';
+    needsUpdate = true;
+    console.log('✓ Set default test:web script');
+} else {
+    // Detect Nx commands (including pnpm nx variants)
+    const isNxCommand = /\\b(nx|pnpm\\s+nx)\\s+(test|run)/.test(currentTestWeb);
+    
+    if (isNxCommand) {
+        console.log('✓ Detected Nx test command - preserving Nx workflow');
+        
+        // Handle Nx passthrough correctly - split only at first occurrence
+        const passthroughIndex = currentTestWeb.indexOf(' -- ');
+        const targetConfig = '--config apps/web/jest.config.ts';
+        const targetRunInBand = '--runInBand';
+        
+        if (passthroughIndex !== -1) {
+            // Already has passthrough, ensure our flags are in the Jest part
+            const nxPart = currentTestWeb.slice(0, passthroughIndex);
+            let jestArgs = currentTestWeb.slice(passthroughIndex + 4);
+            
+            // Replace existing config with safer regex (handles quoted/equals forms)
+            if (/--config(?:=|\\s+)/.test(jestArgs)) {
+                jestArgs = jestArgs.replace(/--config(?:=|\\s+)([\"']?)[^\\s\"']+\\1/, targetConfig);
+                console.log('✓ Replaced existing config flag');
+            } else {
+                jestArgs = targetConfig + ' ' + jestArgs;
+                console.log('✓ Added config flag');
+            }
+            
+            // Add runInBand if missing
+            if (!jestArgs.includes('--runInBand')) {
+                jestArgs = jestArgs + ' ' + targetRunInBand;
+                console.log('✓ Added runInBand flag');
+            }
+            
+            newScript = nxPart + ' -- ' + jestArgs.trim();
+            needsUpdate = true;
+        } else {
+            // No passthrough yet, add it with our flags
+            newScript = currentTestWeb + \` -- \${targetConfig} \${targetRunInBand}\`;
+            needsUpdate = true;
+            console.log('✓ Added Nx passthrough with Jest flags');
+        }
+    } else {
+        // Handle direct jest commands - use word boundaries for precision
+        const hasJestCommand = /\\bjest\\b/.test(currentTestWeb);
+        
+        if (!hasJestCommand) {
+            newScript = 'NODE_ENV=test pnpm exec jest --config apps/web/jest.config.ts --runInBand';
+            needsUpdate = true;
+            console.log('✓ Set explicit jest command with config');
+        } else {
+            // Has jest command - ensure config and runInBand flags
+            if (!/--config\\s+apps\\/web\\/jest\\.config\\.ts/.test(currentTestWeb)) {
+                // Replace existing config or add new one
+                if (/--config(?:=|\\s+)/.test(currentTestWeb)) {
+                    newScript = newScript.replace(/--config(?:=|\\s+)([\"']?)[^\\s\"']+\\1/, '--config apps/web/jest.config.ts');
+                    console.log('✓ Replaced existing config flag');
+                } else {
+                    newScript = newScript.replace(/\\bjest\\b/, 'jest --config apps/web/jest.config.ts');
+                    console.log('✓ Added config flag');
+                }
+                needsUpdate = true;
+            }
+            
+            if (!currentTestWeb.includes('--runInBand')) {
+                newScript = newScript.replace(/\\bjest\\b/, 'jest --runInBand');
+                needsUpdate = true;
+                console.log('✓ Added runInBand flag');
+            }
+        }
+    }
+}
+if (needsUpdate) {
+    pkg.scripts['test:web'] = newScript;
+    console.log('Final test:web script:', newScript);
+}
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+"
+echo "=== PATCH JEST CONFIG (SUPPORT LET/VAR/CONST) ==="
+node -e "
+const fs = require('fs');
+const jestPath = 'apps/web/jest.config.ts';
+let content = fs.readFileSync(jestPath, 'utf8');
+// Fix typo if present - only in property context
+content = content.replace(/moduleNameMapping(\\s*:)/g, 'moduleNameMapper\$1');
+// Add coverage config if not present - support let/var/const
+if (!content.includes('collectCoverage')) {
+    // Find what variable is passed to createJestConfig
+    const exportMatch = content.match(/export\\s+default\\s+createJestConfig\\s*\\(\\s*(\\w+)\\s*\\)/);
+    let targetVar = null;
+    
+    if (exportMatch) {
+        targetVar = exportMatch[1];
+        console.log(\`Found target config variable: \${targetVar}\`);
+    } else {
+        console.log('Could not find createJestConfig call, using first config object');
+    }
+    
+    // Find all variable assignments (const/let/var)
+    const configMatches = [...content.matchAll(/(?:const|let|var)\\s+(\\w+)\\s*=\\s*\\{/g)];
+    let insertSuccess = false;
+    
+    for (const match of configMatches) {
+        const varName = match[1];
+        
+        // Skip if this is not our target (when we have one) or obvious false matches
+        if (targetVar && varName !== targetVar) continue;
+        if (!targetVar && (varName === 'require' || varName === 'import')) continue;
+        
+        const startPos = match.index + match[0].length;
+        
+        // Find the closing brace for this object
+        let pos = startPos;
+        let braceCount = 1;
+        let insertPos = null;
+        
+        while (pos < content.length && braceCount > 0) {
+            const char = content[pos];
+            if (char === '{') braceCount++;
+            else if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    insertPos = pos;
+                    break;
+                }
+            }
+            pos++;
+        }
+        
+        if (insertPos !== null) {
+            const coverageConfig = \`
+  collectCoverage: process.env.CI === 'true',
+  collectCoverageFrom: [
+    '<rootDir>/**/*.{ts,tsx}',
+    '!<rootDir>/**/?(*.)+(spec|test).{ts,tsx}',
+    '!<rootDir>/**/__mocks__/**',
+    '!<rootDir>/**/types/**'
+  ],
+  coverageReporters: ['text', 'lcov'],
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 70,
+      lines: 70,
+      statements: 70
+    }
+  },\`;
+            
+            content = content.slice(0, insertPos) + coverageConfig + content.slice(insertPos);
+            console.log(\`✓ Added coverage configuration to variable '\${varName}'\`);
+            insertSuccess = true;
+            break;
+        }
+    }
+    
+    if (!insertSuccess) {
+        console.log('⚠ Could not find appropriate config object for coverage injection');
+    }
+}
+fs.writeFileSync(jestPath, content);
+"
+echo "=== ENABLE A11Y AND NEXT ESLINT RULES (ROBUST HANDLING) ==="
+# Handle .eslintrc.json (most reliable)
+if [ -f apps/web/.eslintrc.json ]; then
+    node -e "
+    const fs = require('fs');
+    const f = 'apps/web/.eslintrc.json';
+    try {
+        const config = JSON.parse(fs.readFileSync(f, 'utf8'));
+        
+        config.plugins = config.plugins || [];
+        const pluginsToAdd = ['jsx-a11y', '@next/next'];
+        pluginsToAdd.forEach(plugin => {
+            if (!config.plugins.includes(plugin)) {
+                config.plugins.push(plugin);
+            }
+        });
+        
+        config.extends = config.extends || [];
+        const extendsToAdd = ['plugin:jsx-a11y/recommended', 'next/core-web-vitals'];
+        extendsToAdd.forEach(ext => {
+            if (!config.extends.includes(ext)) {
+                config.extends.push(ext);
+            }
+        });
+        
+        fs.writeFileSync(f, JSON.stringify(config, null, 2));
+        console.log('✓ Enabled a11y and Next rules in .eslintrc.json');
+    } catch (e) {
+        console.log('⚠ Failed to parse .eslintrc.json:', e.message);
+        console.log('⚠ Manual edit required for ESLint configuration');
+    }
+    "
+# Handle .eslintrc.js with robust error handling
+elif [ -f apps/web/.eslintrc.js ]; then
+    node -e "
+    const fs = require('fs');
+    const f = 'apps/web/.eslintrc.js';
+    let content = fs.readFileSync(f, 'utf8');
+    
+    try {
+        // Check if this is a simple object config (not function/array)
+        if (content.includes('module.exports = {') || content.includes('export default {')) {
+            const hasPluginsArray = /plugins\\s*:\\s*\\[/.test(content);
+            const hasExtendsArray = /extends\\s*:\\s*\\[/.test(content);
+            
+            if (hasPluginsArray) {
+                const pluginsNeeded = [];
+                if (!/['\\\"]jsx-a11y['\\\"]/.test(content)) pluginsNeeded.push('jsx-a11y');
+                if (!/['\\\"]@next\\/next['\\\"]/.test(content)) pluginsNeeded.push('@next/next');
+                
+                if (pluginsNeeded.length > 0) {
+                    const pluginInserts = pluginsNeeded.map(p => \`'\${p}'\`).join(', ');
+                    content = content.replace(/plugins\\s*:\\s*\\[/, \`plugins: [\${pluginInserts}, \`);
+                }
+            }
+            
+            if (hasExtendsArray) {
+                const extendsNeeded = [];
+                if (!/['\\\"]plugin:jsx-a11y\\/recommended['\\\"]/.test(content)) extendsNeeded.push('plugin:jsx-a11y/recommended');
+                if (!/['\\\"]next\\/core-web-vitals['\\\"]/.test(content)) extendsNeeded.push('next/core-web-vitals');
+                
+                if (extendsNeeded.length > 0) {
+                    const extendsInserts = extendsNeeded.map(e => \`'\${e}'\`).join(', ');
+                    content = content.replace(/extends\\s*:\\s*\\[/, \`extends: [\${extendsInserts}, \`);
+                }
+            }
+            
+            fs.writeFileSync(f, content);
+            console.log('✓ Enabled a11y and Next rules in .eslintrc.js');
+        } else {
+            console.log('⚠ .eslintrc.js uses complex config (function/array) - manual edit required');
+        }
+    } catch (e) {
+        console.log('⚠ Failed to modify .eslintrc.js safely:', e.message);
+        console.log('⚠ Manual edit required for ESLint configuration');
+    }
+    "
+else
+    echo "⚠ No ESLint config found in apps/web - manual setup required"
+fi
+echo "=== VERIFY DRIZZLE SCHEMAS (INCLUDE TSX FILES) ==="
+echo "Checking for Drizzle schema definitions..."
+if command -v rg >/dev/null 2>&1; then
+    schema_files=$(rg -l "pgTable|mysqlTable|sqliteTable" -t ts -t tsx . 2>/dev/null || true)
+else
+    schema_files=$(find . -path ./node_modules -prune -o \( -name "*.ts" -o -name "*.tsx" \) -print | xargs grep -l "pgTable\\|mysqlTable\\|sqliteTable" 2>/dev/null || true)
+fi
+if [ -n "$schema_files" ]; then
+    echo "✓ Found Drizzle schemas in:"
+    echo "$schema_files"
+else
+    echo "⚠ No Drizzle table definitions found (may use custom wrappers)"
+fi
+echo "=== MEASURE APPLYIMPORTSESSION (FUNCTION + ARROW FORMS) ==="
+node -e "
+const fs = require('fs');
+const path = require('path');
+function measureMethod(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        
+        const patterns = [
+            /applyImportSession\\s*\\([^)]*\\)\\s*\\{/,
+            /applyImportSession\\s*=\\s*\\([^)]*\\)\\s*=>\\s*\\{/
+        ];
+        
+        for (const pattern of patterns) {
+            const match = content.match(pattern);
+            if (!match) continue;
+            
+            let pos = match.index + match[0].length;
+            let braceCount = 1;
+            let startLine = content.substring(0, match.index).split('\\n').length;
+            
+            while (pos < content.length && braceCount > 0) {
+                const char = content[pos++];
+                if (char === '{') braceCount++;
+                else if (char === '}') braceCount--;
+            }
+            
+            const methodContent = content.substring(match.index, pos);
+            const lineCount = methodContent.split('\\n').length;
+            
+            return { startLine, lineCount, form: pattern === patterns[0] ? 'function' : 'arrow' };
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+function* walkDirectory(dir) {
+    try {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            if (entry.name === 'node_modules') continue;
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                yield* walkDirectory(fullPath);
+            } else if (/\\.(ts|tsx)$/.test(entry.name)) {
+                yield fullPath;
+            }
+        }
+    } catch (e) {
+        // Skip directories we can't read
+    }
+}
+let found = false;
+for (const file of walkDirectory('apps')) {
+    const content = fs.readFileSync(file, 'utf8');
+    if (content.includes('applyImportSession')) {
+        const result = measureMethod(file);
+        if (result) {
+            console.log(\`✓ \${file}: applyImportSession (\${result.form}) is \${result.lineCount} lines (starts line \${result.startLine})\`);
+            if (result.lineCount > 70) {
+                console.log(\`⚠ Method exceeds 70 line limit\`);
+            }
+            found = true;
+        }
+    }
+}
+if (!found) {
+    console.log('⚠ No applyImportSession method found in apps/');
+}
+"
+echo "=== VERIFICATION & INTEGRITY CHECKS ==="
+echo "1. Package scripts analysis:"
+node -e "
+const pkg = require('./package.json');
+const testWeb = pkg.scripts['test:web'] || 'missing';
+console.log('build:', pkg.scripts.build || 'missing');
+console.log('test:ci:', pkg.scripts['test:ci'] || 'missing');
+console.log('test:web:', testWeb);
+// Analyze test:web script structure
+const isNx = /\\b(nx|pnpm\\s+nx)\\s+(test|run)/.test(testWeb);
+const hasPassthrough = testWeb.includes(' -- ');
+const hasCorrectConfig = testWeb.includes('--config apps/web/jest.config.ts');
+const hasRunInBand = testWeb.includes('--runInBand');
+console.log('Uses Nx:', isNx);
+console.log('Has passthrough:', hasPassthrough);
+console.log('Has correct config flag:', hasCorrectConfig);
+console.log('Has runInBand:', hasRunInBand);
+if (isNx && hasPassthrough) {
+    const passthroughCount = (testWeb.match(/--/g) || []).length;
+    console.log('Passthrough count:', passthroughCount, passthroughCount === 1 ? '(correct)' : '(may cause parsing issues)');
+}
+"
+echo "2. ESLint plugins verification:"
+pnpm ls eslint-plugin-jsx-a11y @next/eslint-plugin-next 2>/dev/null || echo "Some plugins missing"
+echo "3. Jest config integrity with explicit verification:"
+node -e "
+const fs = require('fs');
+try {
+    const content = fs.readFileSync('apps/web/jest.config.ts', 'utf8');
+    const exportMatch = content.match(/export\\s+default\\s+createJestConfig\\s*\\(\\s*(\\w+)\\s*\\)/);
+    const configVars = [...content.matchAll(/(?:const|let|var)\\s+(\\w+)\\s*=\\s*\\{/g)];
+    const hasCoverage = content.includes('collectCoverage');
+    
+    console.log('Target variable from export:', exportMatch ? exportMatch[1] : 'not found');
+    console.log('Config variables found:', configVars.map(m => m[1]).join(', '));
+    console.log('Coverage configuration present:', hasCoverage);
+    
+    // Verify coverage injected into the right object
+    if (hasCoverage && exportMatch) {
+        const targetVar = exportMatch[1];
+        const targetVarMatch = content.match(new RegExp(\`(?:const|let|var)\\\\s+\${targetVar}\\\\s*=\\\\s*\\\\{\`));
+        if (targetVarMatch) {
+            const coveragePos = content.indexOf('collectCoverage');
+            const targetVarPos = targetVarMatch.index;
+            const ok = targetVar && coveragePos > targetVarPos;
+            console.log('Coverage in correct object:', !!ok);
+        } else {
+            console.log('Coverage in correct object: false (target variable not found)');
+        }
+    }
+} catch (e) {
+    console.log('⚠ Jest config validation failed:', e.message);
+}
+"
+echo "4. Test targeting verification:"
+pnpm -s test:web -- --listTests --passWithNoTests 2>/dev/null | head -3 || echo "Test listing failed"
+echo "5. ESLint parse validation:"
+if pnpm -s lint --max-warnings=999 >/dev/null 2>&1; then
+    echo "✓ ESLint config parses without errors"
+else
+    echo "⚠ ESLint config has parse errors - check configuration manually"
+fi
+echo "✓ AUDIT FIXES COMPLETE - BULLETPROOF IMPLEMENTATION"

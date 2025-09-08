@@ -1,0 +1,178 @@
+Execute this EXACT task. If any command fails, PRINT the error and STOP.
+GOAL
+Fix the FAIL/INFO items from the audit: add root scripts, enforce Jest coverage, wire a11y linting, make test:web deterministic, re-check Drizzle presence, and measure applyImportSession length. Show evidence.
+
+TOUCH ONLY
+package.json
+apps/web/jest.config.ts
+apps/web/.eslintrc.json
+apps/web/.eslintrc.js
+eslint.config.js
+
+CHANGES
+--- PATCH: package.json ---
+Add/merge:
+  "scripts": {
+    "build": "nx run-many -t build --all --parallel",
+    "test:ci": "pnpm -s typecheck && pnpm -s lint && pnpm -s test:web -- --coverage"
+  }
+(Do not remove existing scripts. If Nx is unavailable, leave the build script as-is; it will be verified in RUN.)
+
+--- PATCH: apps/web/jest.config.ts ---
+Ensure:
+  - export via next/jest stays
+  - add:
+      collectCoverage: true,
+      collectCoverageFrom: ["<rootDir>/**/*.{ts,tsx}", "!<rootDir>/**/?(*.)+(spec|test).{ts,tsx}", "!<rootDir>/**/__mocks__/**", "!<rootDir>/**/types/**"],
+      coverageReporters: ["text", "lcov"],
+      coverageThreshold: { "global": { "branches": 60, "functions": 70, "lines": 70, "statements": 70 } }
+  - fix typo if present: `moduleNameMapping` -> `moduleNameMapper`
+  - keep testMatch targeting authLink as-is
+
+--- PATCH: apps/web/.eslintrc.json OR apps/web/.eslintrc.js OR eslint.config.js ---
+If apps/web/.eslintrc.json exists:
+  - ensure "plugins" includes "jsx-a11y", "@next/next"
+  - ensure "extends" includes "plugin:jsx-a11y/recommended", "next/core-web-vitals"
+If apps/web/.eslintrc.js exists, do analogous JS changes.
+If using flat config (eslint.config.js), push a config block enabling @next/eslint-plugin-next and eslint-plugin-jsx-a11y with recommended rules for files under apps/web/**.js,**.ts,**.tsx.
+
+RUN & PRINT
+set -euo pipefail
+
+echo "=== VERIFY BASELINE FILES ==="
+[ -f package.json ] || { echo "ERROR: no package.json"; exit 1; }
+[ -f apps/web/jest.config.ts ] || { echo "ERROR: missing apps/web/jest.config.ts"; exit 1; }
+
+echo "=== INSTALL A11Y/NEXT ESLINT PLUGINS IF MISSING ==="
+need=()
+pnpm ls -D eslint-plugin-jsx-a11y >/dev/null 2>&1 || need+=("eslint-plugin-jsx-a11y@^6")
+pnpm ls -D @next/eslint-plugin-next >/dev/null 2>&1 || need+=("@next/eslint-plugin-next@latest")
+if [ ${#need[@]} -gt 0 ]; then pnpm add -D "${need[@]}"; else echo "Plugins already present"; fi
+
+echo "=== SAFELY PATCH package.json SCRIPTS ==="
+node -e '
+const fs=require("fs");
+const p=JSON.parse(fs.readFileSync("package.json","utf8"));
+p.scripts=p.scripts||{};
+p.scripts.build = p.scripts.build || "nx run-many -t build --all --parallel";
+p.scripts["test:ci"] = p.scripts["test:ci"] || "pnpm -s typecheck && pnpm -s lint && pnpm -s test:web -- --coverage";
+fs.writeFileSync("package.json", JSON.stringify(p,null,2));
+console.log("scripts now:", p.scripts);
+'
+
+echo "=== HARDEN apps/web/jest.config.ts (coverage + mapper typo fix) ==="
+node -e '
+const fs=require("fs"), f="apps/web/jest.config.ts";
+let s=fs.readFileSync(f,"utf8");
+s=s.replace(/moduleNameMapping/g,"moduleNameMapper");
+if(!/collectCoverageFrom/.test(s)){
+  s=s.replace(/setupFilesAfterEnv:[^\\]]*\\],?/m, m => m + `
+  collectCoverage: true,
+  collectCoverageFrom: ["<rootDir>/**/*.{ts,tsx}", "!<rootDir>/**/?(*.)+(spec|test).{ts,tsx}", "!<rootDir>/**/__mocks__/**", "!<rootDir>/**/types/**"],
+  coverageReporters: ["text","lcov"],
+  coverageThreshold: { global: { branches: 60, functions: 70, lines: 70, statements: 70 } },`);
+}
+fs.writeFileSync(f,s);
+console.log("Patched coverage settings in jest.config.ts");
+'
+
+echo "=== PATCH ESLINT CONFIG UNDER apps/web OR FLAT ==="
+if [ -f apps/web/.eslintrc.json ]; then
+  node -e '
+const fs=require("fs"), f="apps/web/.eslintrc.json";
+const j=JSON.parse(fs.readFileSync(f,"utf8"));
+j.plugins = Array.from(new Set([...(j.plugins||[]), "jsx-a11y","@next/next"]));
+const ex=new Set([...(j.extends||[])]);
+["plugin:jsx-a11y/recommended","next/core-web-vitals"].forEach(x=>ex.add(x));
+j.extends=[...ex];
+fs.writeFileSync(f, JSON.stringify(j,null,2)); console.log("Patched", f);
+'
+elif [ -f apps/web/.eslintrc.js ]; then
+  node -e '
+const fs=require("fs"), f="apps/web/.eslintrc.js";
+let s=fs.readFileSync(f,"utf8");
+if(!/jsx-a11y/.test(s)) s=s.replace(/plugins:\\s*\\[/, "plugins: [\"jsx-a11y\", ");
+if(!/@next\\/next/.test(s)) s=s.replace(/plugins:\\s*\\[/, "plugins: [\"@next/next\", ");
+if(!/plugin:jsx-a11y\\/recommended/.test(s)) s=s.replace(/extends:\\s*\\[/, "extends: [\"plugin:jsx-a11y/recommended\", ");
+if(!/next\\/core-web-vitals/.test(s)) s=s.replace(/extends:\\s*\\[/, "extends: [\"next/core-web-vitals\", ");
+fs.writeFileSync(f,s); console.log("Patched", f);
+'
+elif [ -f eslint.config.js ]; then
+  # append a block for apps/web if not present
+  node -e '
+const fs=require("fs"), f="eslint.config.js";
+let s=fs.readFileSync(f,"utf8");
+if(!/jsx-a11y/.test(s) || !/@next\\/eslint-plugin-next/.test(s)){
+  s += `
+
+/** Added by audit fix **/
+import nextPlugin from "@next/eslint-plugin-next";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+export default [
+  ...(Array.isArray(module.exports)?module.exports:[]),
+  {
+    files: ["apps/web/**/*.{ts,tsx,js,jsx}"],
+    plugins: { "@next/next": nextPlugin, "jsx-a11y": jsxA11y },
+    rules: {
+      ...nextPlugin.configs["core-web-vitals"].rules,
+      ...jsxA11y.configs.recommended.rules
+    }
+  }
+];
+`;
+  fs.writeFileSync(f,s);
+  console.log("Patched eslint.config.js");
+} else {
+  console.log("Flat config already appears to include a11y/next");
+}
+'
+else
+  echo "No ESLint config found to patch (skipping)"
+fi
+
+echo "=== MAKE test:web DETERMINISTIC (ensures authLink) ==="
+node -e '
+const fs=require("fs"); const pj=JSON.parse(fs.readFileSync("package.json","utf8"));
+pj.scripts=pj.scripts||{};
+const desired="cd apps/web && NODE_ENV=test pnpm exec jest --config jest.config.ts --runInBand";
+pj.scripts["test:web"]=desired;
+fs.writeFileSync("package.json", JSON.stringify(pj,null,2));
+console.log("test:web ->", desired);
+'
+
+echo "=== DOUBLE-CHECK DRIZZLE SCHEMAS ==="
+if command -v rg >/dev/null 2>&1; then
+  rg -n --no-ignore -S -g '!node_modules' -e 'drizzle-orm|pgTable\\(|mysqlTable\\(|sqliteTable\\(' || true
+else
+  grep -RInE --exclude-dir=node_modules 'drizzle-orm|pgTable\(|mysqlTable\(|sqliteTable\(' . || true
+fi
+
+echo "=== MEASURE applyImportSession SIZE ==="
+node -e '
+const fs=require("fs"); const path=require("path");
+function measure(file){
+  const src=fs.readFileSync(file,"utf8");
+  const m=src.match(/applyImportSession\\s*\\([^)]*\\)\\s*\\{/m);
+  if(!m) return null;
+  let i=m.index+m[0].length, depth=1;
+  while(i<src.length && depth>0){ const ch=src[i++]; if(ch=="{") depth++; else if(ch=="}") depth--; }
+  return src.slice(m.index,i).split(/\\r?\\n/).length;
+}
+function* walk(dir){ for(const e of fs.readdirSync(dir,{withFileTypes:true})){ if(e.name==="node_modules") continue; const p=path.join(dir,e.name); if(e.isDirectory()) yield* walk(p); else if(/\\.(ts|tsx)$/.test(p)) yield p; } }
+let found=false;
+for (const f of walk("apps")) { const n=path.basename(f); if(n.includes("directory")){ const len=measure(f); if(len){ found=true; console.log(f, "->", len, "lines"); } } }
+if(!found) console.log("No applyImportSession method found under apps/**/directory*.ts*");
+'
+
+echo "=== PROVE IT: scripts & lint plugins ==="
+node -e 'const p=require("./package.json"); console.log("scripts:", p.scripts);'
+pnpm ls -D eslint-plugin-jsx-a11y @next/eslint-plugin-next || true
+
+echo "=== PROVE IT: test listing (authLink only) ==="
+pnpm -s test:web -- --listTests --passWithNoTests || true
+
+echo "=== PROVE IT: coverage on CI command (dry run) ==="
+pnpm -s test:web -- --coverage --passWithNoTests || true
+
+echo "=== DONE ==="
+STOP.

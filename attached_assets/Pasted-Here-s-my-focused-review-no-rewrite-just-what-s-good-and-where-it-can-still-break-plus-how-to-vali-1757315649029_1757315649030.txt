@@ -1,0 +1,79 @@
+Here’s my focused review—no rewrite, just what’s good and where it can still break, plus how to validate each bit quickly.
+
+👍 What’s strong
+
+Fails fast with set -euo pipefail.
+
+Installs ESLint plugins only if missing, at workspace scope (-w) and checks recursively (-r).
+
+Script patching via Node (safer than sed), with Nx detection for build.
+
+Test verification at the end (--listTests) to prove targeting.
+
+Drizzle search excludes node_modules.
+
+applyImportSession length uses brace counting (big step up from file-line count).
+
+⚠️ Remaining brittle spots
+
+Jest coverage injection can misplace text (regex vs nested braces)
+
+Your matcher:
+
+/(const\s+config\s*=\s*{[^}]*)(}\s*;) /s
+
+
+will stop at the first } inside config (e.g., moduleNameMapper, transform, etc.). You’ll likely inject the coverage block in the middle of the object or fail to match at all.
+
+✔ Quick validation: after running the prompt, open apps/web/jest.config.ts and search for the coverage block. Is it inside the top-level config object and before its closing };? If not, the regex misfired.
+
+ESLint JS config “prepend” bug (only first plugin/extend gets inserted)
+
+In .eslintrc.js, you do two sequential replace(/plugins:\s*\[/, 'plugins: ["X", '). After the first replace, the pattern plugins:[ no longer exists, so the second plugin won’t be inserted. Same for extends.
+
+✔ Quick validation: if you have .eslintrc.js, check that both jsx-a11y and @next/next appear in the plugins array, and both plugin:jsx-a11y/recommended and next/core-web-vitals appear in extends. If only one shows up, that’s the bug.
+
+Next ESLint plugin: plugin vs extends
+
+Enabling next/core-web-vitals is typically sufficient (it brings the plugin). Adding plugins: ["@next/next"] is optional and sometimes redundant. Not harmful, but be aware it’s not strictly required.
+
+✔ Quick validation: run pnpm -s lint and ensure no “unknown plugin” or duplicate rule warnings.
+
+test:web isn’t guaranteed to use the project config
+
+If test:web already contains jest but without --config apps/web/jest.config.ts, you only add --runInBand. That keeps runs nondeterministic (may pick up another config).
+
+✔ Quick validation: print package.json after patch and confirm test:web includes --config apps/web/jest.config.ts. If not, consider also appending --config when missing.
+
+Method length check limited by filename heuristic
+
+You only examine files whose basename contains “directory”. If applyImportSession lives in import.service.ts, you’ll miss it.
+
+✔ Quick validation: after running, if you see “⚠ No applyImportSession method found” but you know it exists, broaden the filter (search all apps/**/*.ts[x]? for the method name).
+
+Drizzle search may miss schemas in non-standard files
+
+You search for pgTable|mysqlTable|sqliteTable. If you wrapped table builders or re-export them under custom names, this will falsely report none.
+
+✔ Quick validation: manually spot-check your db/schema folders. If schemas exist but weren’t reported, that’s expected with custom wrappers.
+
+Build script is Nx-only
+
+You skip adding build when nx.json isn’t present (good), but when it is, --all can also target e2e/tools depending on workspace config. That might be okay, just know it’s broader than named projects.
+
+✔ Quick validation: pnpm -s build --dry-run (or nx show projects) to ensure you’re not pulling unintended targets.
+
+🧪 Post-run checks (fast sanity)
+
+Jest config integrity: node -e "console.log(require('fs').readFileSync('apps/web/jest.config.ts','utf8'))" and visually confirm the coverage block sits inside const config = { ... } (top level).
+
+Deterministic tests: pnpm -s test:web -- --listTests --passWithNoTests | head -5 → should list only the authLink spec(s) or at least clearly use your apps/web/jest.config.ts.
+
+Lint config actually active: pnpm -s lint → ensure no config parse errors, and that a11y rules are indeed enforced (introduce a known a11y violation locally to see a fail, if you want to be sure).
+
+Method length: If your audit expects a number, confirm the script printed a line like
+✓ apps/.../directory.service.ts: applyImportSession method is N lines. If absent, the heuristic likely missed the file.
+
+Bottom line
+
+This revision meaningfully tightens things up. The two places I’d still worry about are (1) the regex injection into config (most likely to misplace coverage) and (2) the .eslintrc.js multi-insert bug (only one plugin/extend gets injected). Everything else is reasonable and verifiable with the quick checks above.
