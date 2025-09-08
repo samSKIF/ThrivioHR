@@ -31,7 +31,8 @@ export default function LoginPage() {
       if (!res.ok) {
         throw new Error(data?.message || "Invalid email or password");
       }
-      window.location.href = "/me";
+      // After successful login, send users to the feed instead of /me
+      window.location.href = "/feed";
     } catch (err: any) {
       setError(err.message || "Failed to login");
     } finally {

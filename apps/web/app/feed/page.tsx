@@ -1,0 +1,117 @@
+"use client";
+
+/**
+ * Feed page (accessible to logged-in users of the same organization)
+ * Mirrors the EmployeeRewards social feed UI: filter pills, disabled composer,
+ * vertical list of post cards, and simple loading/empty states.
+ */
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+
+/** Fetch the current user and org details. Returns { orgId, user }. */
+async function fetchMe() {
+  const res = await fetch("/api/bff/auth/me");
+  if (!res.ok) throw new Error("Failed to fetch user");
+  return res.json();
+}
+
+/** Fetch posts for the given orgId. */
+async function fetchPosts(orgId: string) {
+  const res = await fetch(`/api/social/posts?orgId=${orgId}`);
+  if (!res.ok) throw new Error("Failed to fetch posts");
+  return res.json();
+}
+
+export default function FeedPage() {
+  const { data: me, isLoading: loadingMe } = useQuery(["me"], fetchMe);
+  const orgId = me?.org?.id;
+  const { data: posts, isLoading: loadingPosts } = useQuery(
+    ["posts", orgId],
+    () => fetchPosts(orgId),
+    { enabled: !!orgId },
+  );
+
+  if (loadingMe) {
+    return (
+      <main className="p-6 space-y-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 w-1/4 bg-muted rounded"></div>
+          <div className="h-4 w-1/2 bg-muted rounded"></div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="p-6 space-y-4">
+      {/* Header */}
+      <header className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Feed</h1>
+        {/* Composer disabled until future functionality */}
+        <button
+          className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
+          disabled
+        >
+          New post (coming soon)
+        </button>
+      </header>
+
+      {/* Filter pills (no behaviour for now) */}
+      <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Feed filters">
+        {["All", "Company", "People", "You"].map((label) => (
+          <button
+            key={label}
+            className="px-3 py-1 rounded-full border text-xs hover:bg-muted/10"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Post list */}
+      <section className="space-y-3" aria-live="polite">
+        {loadingPosts ? (
+          // Simple skeleton
+          <>
+            {[...Array(3)].map((_, idx) => (
+              <div key={idx} className="space-y-2 p-4 border rounded-2xl animate-pulse">
+                <div className="h-4 w-1/3 bg-muted rounded"></div>
+                <div className="h-3 w-2/3 bg-muted rounded"></div>
+                <div className="h-3 w-1/2 bg-muted rounded"></div>
+              </div>
+            ))}
+          </>
+        ) : posts?.length ? (
+          posts.map((post: any) => (
+            <article key={post.id} className="rounded-2xl border p-4">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full border text-xs">
+                    {post.kind === "announcement"
+                      ? "Announcement"
+                      : post.kind === "hire"
+                      ? "New hire"
+                      : post.kind === "promotion"
+                      ? "Promotion"
+                      : post.kind === "kudos"
+                      ? "Kudos"
+                      : "Update"}
+                  </span>
+                  <time dateTime={post.ts}>{new Date(post.ts).toLocaleString()}</time>
+                </div>
+                <span>by {post.author}</span>
+              </div>
+              <h3 className="mt-2 font-medium">{post.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{post.body}</p>
+            </article>
+          ))
+        ) : (
+          <p className="text-sm text-center text-muted-foreground">
+            No posts yet. Start the conversation soon!
+          </p>
+        )}
+      </section>
+    </main>
+  );
+}
