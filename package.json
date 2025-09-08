@@ -8,7 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:identity": "jest --config services/identity/jest.config.ts --runInBand",
-    "test:web": "cd apps/web && NODE_ENV=test pnpm exec jest --config jest.config.ts --runInBand",
+    "test:web": "NODE_ENV=test jest --config apps/web/jest.config.ts --runInBand",
     "db:check": "drizzle-kit check",
     "typecheck:web": "tsc --noEmit -p apps/web/tsconfig.json",
     "typecheck:web:test": "tsc --noEmit -p apps/web/tsconfig.test.json",
