@@ -112,8 +112,35 @@ export default function EmployeeDirectoryPage() {
       return await response.json();
     } catch (error) {
       console.warn('Failed to fetch subscription from API:', error);
-      return { seatsLimit: 500 }; // Fallback to default
+      // For demo mode, calculate subscription based on actual employee count
+      if (orgId === "demo-org") {
+        return await fetchDemoSubscription();
+      }
+      return { seatsLimit: 500 }; // Fallback for other cases
     }
+  }
+
+  async function fetchDemoSubscription() {
+    // Calculate realistic subscription limit based on current employees
+    const employeesData = await fetchEmployees("demo-org");
+    const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
+    const currentEmployeeCount = users.length;
+    
+    // Business logic: subscription limits are typically set with some buffer
+    // Small org (1-10 employees) → 25 seats
+    // Medium org (11-50 employees) → 100 seats  
+    // Large org (50+ employees) → 200 seats
+    let seatsLimit: number;
+    if (currentEmployeeCount <= 10) {
+      seatsLimit = 25;
+    } else if (currentEmployeeCount <= 50) {
+      seatsLimit = 100;
+    } else {
+      seatsLimit = 200;
+    }
+    
+    console.log(`Demo subscription calculated: ${currentEmployeeCount} employees → ${seatsLimit} seats limit`);
+    return { seatsLimit };
   }
 
   async function fetchDepartments(orgId: string) {
