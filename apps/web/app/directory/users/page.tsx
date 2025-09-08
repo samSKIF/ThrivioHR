@@ -124,9 +124,38 @@ export default function EmployeeDirectoryPage() {
       }
       return await response.json();
     } catch (error) {
-      console.warn('Failed to fetch departments from API, using mock data:', error);
-      return await fetchMockDepartments(); // Fallback to mock data
+      console.warn('Failed to fetch departments from API, calculating from employees:', error);
+      // For demo mode, calculate departments based on actual employee data
+      if (orgId === "demo-org") {
+        return await fetchDemoDepartments();
+      }
+      return await fetchMockDepartments(); // Fallback to mock data for other cases
     }
+  }
+
+  async function fetchDemoDepartments() {
+    // Get departments dynamically from employees instead of hardcoded mock
+    const employeesData = await fetchEmployees("demo-org");
+    const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
+    
+    // Extract unique departments from actual employees
+    const uniqueDepartments = new Set<string>();
+    users.forEach((user: any) => {
+      // Use transform function to get employee department
+      const emailHash = user.email ? user.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
+      const mockDepts = ["Human Resources", "Sales", "Marketing", "Information Technology", "Finance", "Operations"];
+      const deptName = mockDepts[Math.abs(emailHash) % mockDepts.length];
+      uniqueDepartments.add(deptName);
+    });
+    
+    // Convert to department objects
+    const departmentsArray = Array.from(uniqueDepartments).map((name, index) => ({
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name: name
+    }));
+    
+    console.log('Demo departments calculated from employees:', departmentsArray);
+    return departmentsArray;
   }
 
   function generateMockEmployeeData() {
@@ -178,16 +207,14 @@ export default function EmployeeDirectoryPage() {
   }
 
   async function fetchMockDepartments() {
-    // Mock departments until we have real API
+    // Reduced mock departments - only commonly used ones
     return [
       { id: "hr", name: "Human Resources" },
+      { id: "tech", name: "Information Technology" },
       { id: "sales", name: "Sales" },
       { id: "marketing", name: "Marketing" },
-      { id: "tech", name: "Information Technology" },
       { id: "finance", name: "Finance" },
-      { id: "operations", name: "Operations" },
-      { id: "legal", name: "Legal" },
-      { id: "design", name: "Design" },
+      { id: "operations", name: "Operations" }
     ];
   }
 
@@ -206,6 +233,7 @@ export default function EmployeeDirectoryPage() {
   function transformToEmployee(user: any): Employee {
     const mockJobTitles = ["Software Engineer", "Product Manager", "Designer", "Sales Manager", "HR Specialist", "Marketing Coordinator", "Finance Analyst", "Operations Manager"];
     const mockStatuses = ["active", "active", "active", "active", "pending", "inactive"] as const;
+    const mockDepartments = ["Human Resources", "Sales", "Marketing", "Information Technology", "Finance", "Operations"];
     
     // Use email hash to consistently assign mock data
     const emailHash = user.email ? user.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
@@ -213,7 +241,7 @@ export default function EmployeeDirectoryPage() {
     return {
       ...user,
       jobTitle: mockJobTitles[Math.abs(emailHash) % mockJobTitles.length],
-      department: departments[Math.abs(emailHash) % departments.length]?.name || "Information Technology",
+      department: mockDepartments[Math.abs(emailHash) % mockDepartments.length],
       location: locations[Math.abs(emailHash) % locations.length]?.name || "New York", 
       status: mockStatuses[Math.abs(emailHash) % mockStatuses.length],
       hireDate: new Date(2020 + (Math.abs(emailHash) % 5), Math.abs(emailHash) % 12, 1).toISOString().split('T')[0],
