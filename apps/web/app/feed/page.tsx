@@ -301,32 +301,73 @@ export default function FeedPage() {
         {/* Left sidebar - optimized width */}
         <div className="hidden lg:block lg:col-span-3 w-full max-w-[300px]">
           <div className="space-y-6">
-            {/* ThrivioHR Points */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">ThrivioHR Points</h2>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-600 text-sm">💎 Available</span>
-                  <span className="text-2xl font-bold text-blue-600">1250</span>
+            {/* Enhanced ThrivioHR Points Widget */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900">ThrivioHR Points</h2>
+                  <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-green-600 text-sm">💚 Pending</span>
-                  <span className="text-2xl font-bold text-green-600">1000</span>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">💎</span>
+                      </div>
+                      <span className="text-blue-700 font-medium">Available</span>
+                    </div>
+                    <span className="text-2xl font-bold text-blue-600">1,250</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">⏳</span>
+                      </div>
+                      <span className="text-green-700 font-medium">Pending</span>
+                    </div>
+                    <span className="text-2xl font-bold text-green-600">1,000</span>
+                  </div>
                 </div>
+                
+                <button className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Send Points
+                  </div>
+                </button>
               </div>
-              
-              <button className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md text-sm font-medium">
-                Send Points
-              </button>
             </div>
 
-            {/* Priorities */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold mb-3">Priorities</h3>
-              <p className="text-sm text-gray-600 mb-3">Looking out for the department</p>
-              <p className="text-xs text-gray-500">You have not added new priority</p>
+            {/* Enhanced Priorities Widget */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">Priorities</h3>
+                  <button className="text-cyan-600 hover:text-cyan-700 text-sm font-medium">
+                    Manage
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="p-3 bg-amber-50 rounded-lg border-l-4 border-amber-400">
+                    <p className="text-sm font-medium text-amber-800">Looking out for the department</p>
+                    <p className="text-xs text-amber-600 mt-1">Active priority</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p className="text-xs text-gray-500 text-center">You have not added new priority</p>
+                    <button className="w-full mt-2 text-cyan-600 hover:text-cyan-700 text-sm font-medium">
+                      + Add Priority
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -501,58 +542,104 @@ export default function FeedPage() {
         {/* Right sidebar - optimized width */}
         <div className="hidden lg:block lg:col-span-3 w-full max-w-[300px]">
           <div className="space-y-6">
-            {/* My Active Spaces */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">My Active Spaces</h3>
-                <button className="text-cyan-600 text-sm hover:underline">View all →</button>
-              </div>
-              <p className="text-xs text-gray-500 mb-4">Your recently new active spaces yet</p>
-              <button className="text-cyan-600 text-sm hover:underline">Discover Spaces</button>
-              
-              <div className="mt-4 space-y-3">
-                <div className="text-sm">
-                  <div className="text-pink-600 font-medium">🎉 Celebrations</div>
-                  <div className="text-xs text-gray-500">No celebrations today, but check what's coming up!</div>
+            {/* Enhanced My Active Spaces */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">My Active Spaces</h3>
+                  <button className="text-cyan-600 text-sm hover:text-cyan-700 font-medium">View all →</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <p className="text-xs text-gray-500 text-center mb-2">No active spaces yet</p>
+                    <button className="w-full text-cyan-600 hover:text-cyan-700 text-sm font-medium">
+                      Discover Spaces
+                    </button>
+                  </div>
+                  
+                  <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">🎉</span>
+                      </div>
+                      <div className="text-pink-700 font-medium">Celebrations</div>
+                    </div>
+                    <div className="text-xs text-pink-600">No celebrations today, but check what's coming up!</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Last Thanked */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Last Thanked</h3>
-                <button className="text-cyan-600 text-sm hover:underline">View All</button>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">DM</span>
-                  </div>
-                  <div className="text-sm">Donna Meagle</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
+            {/* Enhanced Last Thanked */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">Last Thanked</h3>
+                  <button className="text-cyan-600 text-sm hover:text-cyan-700 font-medium">View All</button>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">AD</span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">DM</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Donna Meagle</div>
+                      <div className="text-xs text-gray-500">2 hours ago</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-cyan-600">👍</span>
+                      <span className="text-xs text-gray-400">+5</span>
+                    </div>
                   </div>
-                  <div className="text-sm">Andy Dwyer</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
+                  
+                  <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">AD</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Andy Dwyer</div>
+                      <div className="text-xs text-gray-500">1 day ago</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-cyan-600">👍</span>
+                      <span className="text-xs text-gray-400">+10</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">AP</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Ann Perkins</div>
+                      <div className="text-xs text-gray-500">2 days ago</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-cyan-600">👍</span>
+                      <span className="text-xs text-gray-400">+15</span>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">AP</span>
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="text-sm text-green-700">
+                        <div className="font-medium">Recognition Progress</div>
+                        <div className="text-xs">65% of team this month</div>
+                      </div>
+                    </div>
+                    <div className="w-12 h-2 bg-green-200 rounded-full">
+                      <div className="w-8 h-2 bg-green-500 rounded-full"></div>
+                    </div>
                   </div>
-                  <div className="text-sm">Ann Perkins</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
                 </div>
-              </div>
-              
-              <div className="mt-4 pt-3 border-t text-center">
-                <div className="text-sm text-gray-600">You've recognized 65% of your team this month</div>
               </div>
             </div>
           </div>
