@@ -1,8 +1,21 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear server-side session - it's a GET request that redirects
+      window.location.href = '/api/bff/auth/logout';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect to login page
+      router.push('/login');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 px-4 py-4">
@@ -124,7 +137,13 @@ export default function Header() {
                       <span>Analytics</span>
                     </button>
                     <div className="border-t border-gray-100 my-1"></div>
-                    <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+                    >
                       <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
