@@ -1,0 +1,107 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Stabilize Jest for apps/web using next/jest and run ONLY the authLink unit test with correct deps and env.
+
+TOUCH ONLY
+apps/web/jest.config.js
+apps/web/jest.setup.js
+package.json
+
+CHANGES
+--- CREATE OR REPLACE: apps/web/jest.config.js ---
+const nextJest = require('next/jest');
+const createJestConfig = nextJest({ dir: './' });
+
+/** @type {import('jest').Config} */
+const customJestConfig = {
+  testEnvironment: 'jsdom',
+  // lock to the single authLink spec for now
+  testMatch: ['<rootDir>/lib/apollo/authLink.spec.{ts,tsx}'],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/__tests__/', // ignore legacy suite for now
+  ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1', // harmless if not used
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+};
+
+module.exports = createJestConfig(customJestConfig);
+
+--- CREATE OR REPLACE: apps/web/jest.setup.js ---
+// Minimal DOM matchers + test env defaults
+require('@testing-library/jest-dom');
+// Safe defaults for auth link env usage
+process.env.NEXT_PUBLIC_BFF_BASE_URL ||= 'http://localhost:8000';
+process.env.JWT_SECRET ||= 'test-secret';
+
+--- PATCH: package.json ---
+Add these scripts WITHOUT removing existing ones:
+{
+  "scripts": {
+    "test:web": "jest --config apps/web/jest.config.js --runInBand",
+    "test:ci": "pnpm -s test:identity && pnpm -s test:web"
+  }
+}
+
+RUN & PRINT
+set -e
+
+echo "=== PREFLIGHT: verify target test exists ==="
+if ls apps/web/lib/apollo/authLink.spec.ts >/dev/null 2>&1 || ls apps/web/lib/apollo/authLink.spec.tsx >/dev/null 2>&1; then
+  echo "OK: authLink spec present"
+else
+  echo "ERROR: Missing apps/web/lib/apollo/authLink.spec.ts(x). Please add it or adjust testMatch." && exit 1
+fi
+
+echo "=== PREFLIGHT: show first lines of test ==="
+head -n 40 apps/web/lib/apollo/authLink.spec.* || true
+
+echo "=== PREFLIGHT: dependency scan for common testing imports ==="
+NEED_RTL=$(grep -Eo '@testing-library/react|render\\(|screen\\(' -n apps/web/lib/apollo/authLink.spec.* || true)
+NEED_UE=$(grep -Eo '@testing-library/user-event|userEvent' -n apps/web/lib/apollo/authLink.spec.* || true)
+
+echo "NEED_RTL? -> ${NEED_RTL:+yes}"; echo "NEED_UE? -> ${NEED_UE:+yes}"
+
+echo "=== INSTALL: ensure minimal dev deps present ==="
+ADD_PKGS=()
+# Always ensure jest-dom (used in setup)
+pnpm ls -D @testing-library/jest-dom >/dev/null 2>&1 || ADD_PKGS+=("@testing-library/jest-dom@^6.6.3")
+# If test references RTL APIs, add @testing-library/react
+if [ -n "$NEED_RTL" ]; then pnpm ls -D @testing-library/react >/dev/null 2>&1 || ADD_PKGS+=("@testing-library/react@^14.0.0"); fi
+# If test references userEvent, add it
+if [ -n "$NEED_UE" ]; then pnpm ls -D @testing-library/user-event >/dev/null 2>&1 || ADD_PKGS+=("@testing-library/user-event@^14.0.0"); fi
+# Ensure Jest types for TS (workspace already had some, but guarantee)
+pnpm ls -D @types/jest >/dev/null 2>&1 || ADD_PKGS+=("@types/jest@^29.5.12")
+
+if [ ${#ADD_PKGS[@]} -gt 0 ]; then
+  echo "Adding dev deps: ${ADD_PKGS[*]}"
+  pnpm add -D ${ADD_PKGS[*]}
+else
+  echo "No additional dev deps needed."
+fi
+
+echo "=== SHOW web jest config & setup ==="
+sed -n '1,200p' apps/web/jest.config.js
+sed -n '1,80p' apps/web/jest.setup.js
+
+echo "=== VERSIONS: next/jest/jest ==="
+pnpm ls next @next/jest jest || true
+
+echo "=== TYPECHECK (prod) ==="
+pnpm -s typecheck
+
+echo "=== RUN SINGLE TEST (authLink) ==="
+pnpm -s test:web
+
+STOP.
+
+# Replit — please confirm briefly:
+# 1) Did test:web execute ONLY the authLink spec and pass?
+# 2) Were any extra deps installed? If so, which?
+# 3) Are builds and workflows still green (no regressions)?
+# And where are we vs ROADMAP Big 3a DoD now?

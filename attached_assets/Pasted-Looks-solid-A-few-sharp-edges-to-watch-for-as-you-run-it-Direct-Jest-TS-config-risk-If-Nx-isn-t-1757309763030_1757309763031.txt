@@ -1,0 +1,27 @@
+Looks solid. A few sharp edges to watch for as you run it:
+
+Direct Jest + TS config risk
+If Nx isn’t available and it falls back to cd apps/web && jest --config jest.config.ts, plain Jest can’t parse TypeScript configs by default. Your Nx paths are handled, but in the direct branch this could error unless Jest picks up TS via next/jest. If you see “failed to parse config,” that’s why.
+
+Forcing Nx to use your config
+Nice: you detect whether project.json references jest.config.ts and, if not, add --config apps/web/jest.config.ts. That should guarantee jest-dom and .env.test are loaded. If matchers like toBeInTheDocument are missing, it means the forced config wasn’t honored—double-check that branch.
+
+Word boundary grep
+grep -E "\\brender\\(" and \\bscreen\\. may not behave as word boundaries in non-Perl regex. It’s harmless (you also check @testing-library/react and screen.), but don’t rely on \b alone for detection.
+
+Version pin sanity
+@next/jest@^${NEXT_MAJOR}.0.0 is sensible for Next 15; if the Next major ever outpaces a published @next/jest, install could fail. Low risk now, but if it 404s, that’s the reason.
+
+Scope-aware dep checks
+You now check within apps/web when app-scoped—great. Just note: if a dep is only at the root and you’re in app scope, pnpm ls -D in apps/web will report “missing” (it’ll install again locally—benign but duplicative).
+
+Pattern escaping
+The Nx path uses --testPathPattern='lib/apollo/authLink\.spec\.(ts|tsx)'. Quoting/escaping looks correct for bash/sh. If you see “no tests found,” verify the dot-escaping survived the shell and the file name matches exactly.
+
+.env.test loading
+You set NODE_ENV=test on both Nx and direct paths—good. If the test still complains about missing env, it means the config branch didn’t load next/jest.
+
+Verbose output
+verbose: true will print every test; helpful now, but can be noisy later in CI.
+
+If anything trips, the most likely culprit is the direct Jest + TS config path. Everything else looks defensively covered.

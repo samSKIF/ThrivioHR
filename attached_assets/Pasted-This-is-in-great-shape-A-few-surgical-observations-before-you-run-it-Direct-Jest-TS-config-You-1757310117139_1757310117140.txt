@@ -1,0 +1,25 @@
+This is in great shape. A few surgical observations before you run it:
+
+Direct Jest + TS config: You smartly check DIRECT_JEST_COMPATIBLE and add ts-node. That’s the right hedge—Jest 29 can parse TS configs if ts-node is present. If the direct path still barks about parsing jest.config.ts, switch to the Nx branch (which you already do) or temporarily add --config apps/web/jest.config.ts to the Nx command (you already handle this).
+
+next/jest app dir: In apps/web/jest.config.ts you use nextJest({ dir: './' }). Since the config file lives under apps/web/, ./ points at the app—good. If Nx ever starts resolving from repo root and ignores the config’s directory, the --config apps/web/jest.config.ts flag in your Nx branch will keep this sound.
+
+.env.test loading: You set NODE_ENV=test across branches—good. Your extra dotenv probe is harmless but noisy if dotenv isn’t installed (you catch the error). If you see that warning, it’s not a real failure; Next/Jest handles .env.test without dotenv.
+
+Regex heuristics: You removed \b and switched to grep -E with [[:space:]]—nice. Note user[[:space:]]*\. could over-match benign user. identifiers, but the worst case is installing @testing-library/user-event unnecessarily (low cost).
+
+Version pin: @next/jest@^${NEXT_MAJOR}.0.0 is sensible for Next 15+. If the registry lags (rare), install could fail; your fallback to 15 is a solid default.
+
+Scope-aware dep checks: The check_dependency() function runs pnpm ls in the right scope—great. Just remember: if a dep is available only at the root and you’re in app-scope, it will re-install locally (benign duplication).
+
+Nx config forcing: You now detect whether project.json references jest.config.ts and force --config if not. That’s the big reliability win—ensures jest-dom and .env.test actually load.
+
+Dry run parity: You mirror the final command in the dry-run (list tests) step per branch. Good parity. If dry-run lists nothing, it’s almost always a pattern mismatch (authLink.spec) or path mismatch.
+
+Verbosity: verbose: true is handy while bootstrapping; consider removing once green to speed CI output.
+
+Everything else looks defensively covered. If anything trips, the most likely culprits are:
+
+Jest parsing TS config in direct mode (you already guard and fail fast with clear guidance),
+
+Nx not honoring config unless --config is passed (you handle that).

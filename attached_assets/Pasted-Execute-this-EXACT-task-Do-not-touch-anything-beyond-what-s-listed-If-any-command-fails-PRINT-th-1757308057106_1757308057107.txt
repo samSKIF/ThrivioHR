@@ -1,0 +1,153 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Set up robust Jest for apps/web (TypeScript, Nx-safe) and run ONLY the authLink unit test.
+
+TOUCH ONLY
+apps/web/jest.config.ts
+apps/web/jest.setup.ts
+apps/web/.env.test
+package.json
+
+CHANGES
+# === PRE-FLIGHT DISCOVERY (READ-ONLY) ===
+echo "=== ARCHITECTURE DISCOVERY ==="
+echo "Project type:" $([ -f apps/web/tsconfig.json ] && echo "TypeScript" || echo "JavaScript")
+echo "Nx present? " $([ -f nx.json ] && echo "yes" || echo "no")
+grep -q '"executor": "@nx/jest:jest"' apps/web/project.json 2>/dev/null && echo "WARNING: Nx jest executor active for web" || true
+echo "Paths in tsconfig:" && node -e "try{const ts=require('./apps/web/tsconfig.json');console.log(ts.compilerOptions?.paths||'none')}catch(e){console.log('tsconfig read error:',e.message)}"
+
+echo "=== VERIFY TARGET TEST (authLink) ==="
+if ls apps/web/lib/apollo/authLink.spec.ts >/dev/null 2>&1 || ls apps/web/lib/apollo/authLink.spec.tsx >/dev/null 2>&1; then
+  echo "OK: apps/web/lib/apollo/authLink.spec.ts(x) exists"
+else
+  echo "ERROR: Missing apps/web/lib/apollo/authLink.spec.ts(x). Create it or adjust testMatch." && exit 1
+fi
+echo "=== TEST HEADER (first 30 lines) ==="
+head -n 30 apps/web/lib/apollo/authLink.spec.* || true
+
+echo "=== COMPATIBILITY MATRIX ==="
+pnpm ls next @next/jest jest || true
+node -e "try{const next=require('next/package.json');const jest=require('jest/package.json');console.log({next:next.version,jest:jest.version})}catch(e){console.log('version-read:',e.message)}"
+
+echo "=== SMART DEP SCAN ==="
+TEST_FILE=$(ls apps/web/lib/apollo/authLink.spec.ts* | head -n1)
+RTL_NEEDED=$(node -e "const fs=require('fs');const c=fs.readFileSync(process.argv[1],'utf8');const pats=[/@testing-library\/react/,/\\brender\\s*\\(/,/\\bscreen\\./,/\\bfireEvent\\./];console.log(pats.some(p=>p.test(c))?'yes':'no')" "$TEST_FILE")
+UE_NEEDED=$(node -e "const fs=require('fs');const c=fs.readFileSync(process.argv[1],'utf8');console.log(/(@testing-library\\/user-event|userEvent\\.|user\\.click)/.test(c)?'yes':'no')" "$TEST_FILE")
+APOLLO_MOCKS_NEEDED=$(node -e "const fs=require('fs');const c=fs.readFileSync(process.argv[1],'utf8');console.log(/(MockedProvider|@apollo\\/client\\/testing)/.test(c)?'yes':'no')" "$TEST_FILE")
+echo "React Testing Library: $RTL_NEEDED"
+echo "User Event: $UE_NEEDED"
+echo "Apollo Mocks: $APOLLO_MOCKS_NEEDED"
+
+# === CONFIG FILES (TS) ===
+echo "=== WRITE: apps/web/jest.config.ts ==="
+cat > apps/web/jest.config.ts << 'EOF'
+import nextJest from 'next/jest';
+import type { Config } from 'jest';
+
+const createJestConfig = nextJest({ dir: './' });
+
+const baseMapper: Record<string,string> = {};
+try {
+  // Use TS path alias only if configured
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const ts = require('./tsconfig.json');
+  if (ts?.compilerOptions?.paths) {
+    baseMapper['^@/(.*)$'] = '<rootDir>/$1';
+  }
+} catch {}
+
+const customConfig: Config = {
+  testEnvironment: 'jsdom',
+  testMatch: ['<rootDir>/lib/apollo/authLink.spec.{ts,tsx}'],
+  testPathIgnorePatterns: ['<rootDir>/.next/','<rootDir>/node_modules/','<rootDir>/__tests__/'],
+  moduleNameMapper: baseMapper,
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  maxWorkers: 1,          // safer in Nx monorepos
+  testTimeout: 30000
+};
+
+export default createJestConfig(customConfig);
+EOF
+
+echo "=== WRITE: apps/web/jest.setup.ts ==="
+cat > apps/web/jest.setup.ts << 'EOF'
+import '@testing-library/jest-dom';
+
+// Provide safe defaults for tests only (overridden by env if set)
+if (!process.env.NEXT_PUBLIC_BFF_BASE_URL) process.env.NEXT_PUBLIC_BFF_BASE_URL = 'http://localhost:8000';
+if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'test-secret-safe';
+EOF
+
+echo "=== WRITE: apps/web/.env.test ==="
+cat > apps/web/.env.test << 'EOF'
+# Loaded by next/jest when NODE_ENV=test
+NEXT_PUBLIC_BFF_BASE_URL=http://localhost:8000
+JWT_SECRET=test-secret-safe
+EOF
+
+# === PACKAGE PATCH (scripts) ===
+echo "=== PATCH package.json (add test scripts) ==="
+node -e "const fs=require('fs');const p=require('./package.json');p.scripts=p.scripts||{};p.scripts['test:web']='jest --config apps/web/jest.config.ts --runInBand';p.scripts['test:ci']=p.scripts['test:ci']||'pnpm -s test:identity && pnpm -s test:web';fs.writeFileSync('package.json',JSON.stringify(p,null,2));console.log({scripts:p.scripts})"
+
+# === DEP INSTALL (scope-aware) ===
+echo '=== ENSURE DEV DEPS (scope-aware) ==='
+NEEDED=('@testing-library/jest-dom@^6.6.3' '@types/jest@^29.5.12')
+[ "$RTL_NEEDED" = "yes" ] && NEEDED+=('@testing-library/react@^14.0.0')
+[ "$UE_NEEDED" = "yes" ] && NEEDED+=('@testing-library/user-event@^14.0.0')
+[ "$APOLLO_MOCKS_NEEDED" = "yes" ] && NEEDED+=('@apollo/client@^3.11.0')
+# Also ensure jest (runner) and @next/jest if missing
+pnpm ls -D jest >/dev/null 2>&1 || NEEDED+=('jest@^29.7.0')
+pnpm ls -D @next/jest >/dev/null 2>&1 || NEEDED+=('@next/jest@^15.0.0')
+
+INSTALL_SCOPE='workspace'
+if [ -f apps/web/package.json ]; then INSTALL_SCOPE='app'; fi
+echo "Install scope: $INSTALL_SCOPE"
+
+MISSING=()
+for dep in "${NEEDED[@]}"; do
+  PKG="${dep%%@*}"
+  if ! pnpm ls -D "$PKG" >/dev/null 2>&1; then MISSING+=("$dep"); fi
+done
+
+if [ ${#MISSING[@]} -gt 0 ]; then
+  echo "Installing missing dev deps: ${MISSING[*]}"
+  if [ "$INSTALL_SCOPE" = "app" ]; then
+    (cd apps/web && pnpm add -D "${MISSING[@]}") || (echo "ERROR: app-scope install failed" && exit 1)
+  else
+    pnpm add -D -w "${MISSING[@]}" || (echo "ERROR: workspace install failed" && exit 1)
+  fi
+else
+  echo "All required dev deps already present."
+fi
+
+# === VALIDATION ===
+echo "=== CONFIG TS SYNTAX CHECK ==="
+npx tsc --noEmit apps/web/jest.config.ts || (echo 'ERROR: jest.config.ts TypeScript errors' && exit 1)
+
+echo "=== MODULE RESOLUTION CHECK ==="
+node -e "try{require.resolve('./apps/web/jest.config.ts');console.log('OK: jest.config.ts resolvable')}catch(e){console.log('ERROR:',e.message);process.exit(1)}"
+
+echo "=== DRY RUN (list tests) ==="
+( cd apps/web && pnpm -s jest --config jest.config.ts --listTests --passWithNoTests ) || (echo 'ERROR: jest list tests failed' && exit 1)
+
+echo "=== TYPECHECK (prod) ==="
+pnpm -s typecheck || (echo 'ERROR: prod typecheck failed' && exit 1)
+
+echo "=== RUN SINGLE TEST (authLink) ==="
+pnpm -s test:web || (echo 'ERROR: test:web failed' && exit 1)
+
+STOP.
+
+# Replit — please confirm briefly:
+# 1) Did test:web execute ONLY apps/web/lib/apollo/authLink.spec.* and pass?
+# 2) Which dev deps (if any) were installed and at which scope (app/workspace)?
+# 3) Any regressions in nx build web or workflows (wf@8000/5000)?
+# Also, where are we vs ROADMAP Big 3a DoD (web build green + one unit test)?
+
+
+
+
+
+Ask ChatGPT

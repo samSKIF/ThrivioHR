@@ -1,0 +1,68 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Set up Jest for apps/web using next/jest, run only the auth-link unit test now, and keep other web tests ignored (incremental).
+
+TOUCH ONLY
+apps/web/jest.config.ts
+apps/web/jest.setup.ts
+package.json
+
+CHANGES
+--- CREATE FILE: apps/web/jest.config.ts ---
+import nextJest from 'next/jest';
+
+const createJestConfig = nextJest({
+  dir: './',
+});
+
+const customJestConfig = {
+  testEnvironment: 'jsdom',
+  // Only run the auth link unit test for now; ignore legacy/__tests__ until we stabilize them.
+  testMatch: ['<rootDir>/lib/**/*.spec.ts', '<rootDir>/lib/**/*.spec.tsx'],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/__tests__/', // defer these
+  ],
+  moduleNameMapper: {
+    // Handle TS path aliases if used later
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+};
+
+export default createJestConfig(customJestConfig);
+
+--- CREATE FILE: apps/web/jest.setup.ts ---
+// Add minimal DOM/Jest setup here if needed later.
+// (kept intentionally light to avoid surprises)
+
+--- PATCH FILE: package.json ---
+Add these scripts WITHOUT removing existing ones:
+{
+  "scripts": {
+    "test:web": "jest --config apps/web/jest.config.ts --runInBand",
+    "test:ci": "pnpm -s test:identity && pnpm -s test:web"
+  }
+}
+
+RUN & PRINT
+echo "=== SHOW web jest.config.ts ===" && sed -n '1,200p' apps/web/jest.config.ts \
+&& echo "=== SHOW package.json test scripts ===" && node -e "const p=require('./package.json');console.log(Object.fromEntries(Object.entries(p.scripts).filter(([k])=>['test:web','test:ci','test:identity'].includes(k))))" \
+&& echo "=== TYPECHECK (prod) ===" && pnpm -s typecheck \
+&& echo "=== RUN WEB UNIT TESTS (auth link only) ===" && pnpm -s test:web
+
+STOP.
+
+# Replit, confirm briefly:
+# 1) Did test:web run and pass (only authLink.spec.*)?
+# 2) Any regressions introduced in builds or workflows?
+# 3) Are we now aligned with Big 3a DoD on “one unit test (auth link)” with web build green?
+
+
+
+
+
+Ask ChatGPT

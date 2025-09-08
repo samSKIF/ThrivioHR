@@ -1,0 +1,71 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Set up a reliable Jest config for apps/web using next/jest, verify the target test exists, ensure minimal deps, and run ONLY the authLink unit test.
+
+TOUCH ONLY
+apps/web/jest.config.ts
+apps/web/jest.setup.ts
+package.json
+# (Read-only check for the existing test file at apps/web/lib/apollo/authLink.spec.ts)
+
+CHANGES
+--- CREATE OR REPLACE: apps/web/jest.config.ts ---
+import nextJest from 'next/jest';
+
+const createJestConfig = nextJest({ dir: './' });
+
+const customJestConfig = {
+  testEnvironment: 'jsdom',
+  // run only the single auth-link spec for now
+  testMatch: ['<rootDir>/lib/apollo/authLink.spec.{ts,tsx}'],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/__tests__/', // defer legacy tests for now
+  ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1', // harmless if not used
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+};
+
+export default createJestConfig(customJestConfig);
+
+--- CREATE OR REPLACE: apps/web/jest.setup.ts ---
+import '@testing-library/jest-dom';
+
+--- PATCH: package.json ---
+Add these scripts WITHOUT removing existing ones:
+{
+  "scripts": {
+    "test:web": "jest --config apps/web/jest.config.ts --runInBand",
+    "test:ci": "pnpm -s test:identity && pnpm -s test:web"
+  }
+}
+Also, ensure devDependency @testing-library/jest-dom exists. If missing, ADD it:
+- name: "@testing-library/jest-dom"
+- version: "^6.6.3"
+
+RUN & PRINT
+echo "=== VERIFY TARGET TEST FILE ===" \
+&& (ls -la apps/web/lib/apollo | grep -E 'authLink.spec.(ts|tsx)$' || (echo 'ERROR: Missing apps/web/lib/apollo/authLink.spec.ts(x). Please add it or adjust testMatch.' && exit 1)) \
+&& echo "=== SHOW jest.config.ts ===" && sed -n '1,200p' apps/web/jest.config.ts \
+&& echo "=== SHOW jest.setup.ts ===" && sed -n '1,50p' apps/web/jest.setup.ts \
+&& echo "=== CONFIRM jest-dom INSTALLED ===" && pnpm ls -D @testing-library/jest-dom || true \
+&& echo "=== TYPECHECK (prod) ===" && pnpm -s typecheck \
+&& echo "=== RUN WEB UNIT TEST (authLink only) ===" && pnpm -s test:web
+
+STOP.
+
+# Replit — after running, please confirm briefly:
+# 1) Did test:web execute the single authLink test (not “0 tests”)? Pass/fail output?
+# 2) Any regressions in web build or workflows after this change?
+# 3) If the authLink test imports React Testing Library, I’ll add @testing-library/react + user-event next; otherwise we keep deps minimal.
+
+
+
+
+
+Ask ChatGPT

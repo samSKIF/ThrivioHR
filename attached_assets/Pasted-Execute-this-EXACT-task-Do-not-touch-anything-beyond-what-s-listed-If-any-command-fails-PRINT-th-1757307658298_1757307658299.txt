@@ -1,0 +1,103 @@
+Execute this EXACT task. Do not touch anything beyond what’s listed.
+If any command fails, PRINT the error and STOP. Do not “fix” or scaffold.
+
+GOAL
+Stabilize Jest for apps/web using next/jest and run ONLY the authLink unit test with correct deps, env, and Nx-friendly setup.
+
+TOUCH ONLY
+apps/web/jest.config.js
+apps/web/jest.setup.js
+package.json
+
+CHANGES
+--- CREATE OR REPLACE: apps/web/jest.config.js ---
+const nextJest = require('next/jest');
+const createJestConfig = nextJest({ dir: './' });
+
+/** @type {import('jest').Config} */
+const customJestConfig = {
+  testEnvironment: 'jsdom',
+  // Run only the single authLink spec for now (explicit path to avoid surprises)
+  testMatch: ['<rootDir>/lib/apollo/authLink.spec.{ts,tsx}'],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/__tests__/', // ignore legacy suite for now
+  ],
+  moduleNameMapper: {
+    // Path alias (harmless if not used)
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+};
+
+module.exports = createJestConfig(customJestConfig);
+
+--- CREATE OR REPLACE: apps/web/jest.setup.js ---
+// Minimal DOM matchers (do NOT set env here to avoid global leakage)
+require('@testing-library/jest-dom');
+
+--- PATCH: package.json ---
+Add these scripts WITHOUT removing existing ones:
+{
+  "scripts": {
+    "test:web:auth": "cross-env NEXT_PUBLIC_BFF_BASE_URL=http://localhost:8000 JWT_SECRET=test-secret jest --config apps/web/jest.config.js --runInBand",
+    "test:web": "pnpm -s test:web:auth",
+    "test:ci": "pnpm -s test:identity && pnpm -s test:web"
+  }
+}
+
+RUN & PRINT
+set -e
+
+echo "=== PREFLIGHT: versions matrix ==="
+pnpm ls next @next/jest jest || true
+node -e "try{const next=require('next/package.json');const jest=require('jest/package.json');console.log({next:next.version,jest:jest.version})}catch(e){console.log('version-read:',e.message)}"
+
+echo "=== PREFLIGHT: Nx / root jest indicators ==="
+ls -la jest.config.* nx.json || true
+
+echo "=== VERIFY TARGET TEST EXISTS ==="
+if ls apps/web/lib/apollo/authLink.spec.ts >/dev/null 2>&1 || ls apps/web/lib/apollo/authLink.spec.tsx >/dev/null 2>&1; then
+  echo "OK: apps/web/lib/apollo/authLink.spec.ts(x) present"
+else
+  echo "ERROR: Missing apps/web/lib/apollo/authLink.spec.ts(x). Adjust testMatch or add the file." && exit 1
+fi
+
+echo "=== ENSURE MINIMAL DEV DEPS (single workspace-scoped install) ==="
+MISSING=()
+pnpm ls -D @testing-library/jest-dom >/dev/null 2>&1 || MISSING+=("@testing-library/jest-dom@^6.6.3")
+pnpm ls -D @testing-library/react >/dev/null 2>&1 || MISSING+=("@testing-library/react@^14.0.0")
+pnpm ls -D @testing-library/user-event >/dev/null 2>&1 || MISSING+=("@testing-library/user-event@^14.0.0")
+pnpm ls -D @types/jest >/dev/null 2>&1 || MISSING+=("@types/jest@^29.5.12")
+pnpm ls -D cross-env >/dev/null 2>&1 || MISSING+=("cross-env@^7.0.3")
+if [ ${#MISSING[@]} -gt 0 ]; then
+  echo "Adding dev deps: ${MISSING[*]}"
+  pnpm add -D -w ${MISSING[*]}
+else
+  echo "All required dev deps already present."
+fi
+
+echo "=== SHOW web jest config & setup ==="
+sed -n '1,160p' apps/web/jest.config.js
+sed -n '1,80p' apps/web/jest.setup.js
+
+echo "=== TYPECHECK (prod) ==="
+pnpm -s typecheck
+
+echo "=== RUN SINGLE TEST (authLink) ==="
+pnpm -s test:web
+
+STOP.
+
+# Replit — please confirm briefly:
+# 1) Did test:web execute ONLY the authLink spec and pass?
+# 2) Which (if any) dev deps were installed?
+# 3) Any regressions in nx build web or workflows (wf@8000/5000)?
+# And where are we vs ROADMAP Big 3a DoD now?
+
+
+
+
+
+Ask ChatGPT
