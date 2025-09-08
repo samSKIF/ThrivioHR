@@ -130,6 +130,9 @@ export default function EmployeeDirectoryPage() {
   }
 
   function generateMockEmployeeData() {
+    // Load demo employees from localStorage first
+    const storedEmployees = JSON.parse(localStorage.getItem('demo-employees') || '[]');
+    
     // Generate realistic mock employee data for demonstration
     const mockEmployees = [
       {
@@ -168,7 +171,10 @@ export default function EmployeeDirectoryPage() {
         displayName: "Lisa Garcia"
       }
     ];
-    return { users: mockEmployees };
+    
+    // Combine mock employees with stored demo employees
+    const allEmployees = [...mockEmployees, ...storedEmployees];
+    return { users: allEmployees };
   }
 
   async function fetchMockDepartments() {
@@ -287,33 +293,67 @@ export default function EmployeeDirectoryPage() {
 
   const handleAddEmployee = async () => {
     try {
-      if (!orgId) {
-        throw new Error('Organization ID is required');
-      }
-
       console.log('Creating employee:', newEmployee);
       
-      // Call the API to create employee
-      const response = await fetch('/api/bff/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          orgId: orgId,
+      if (orgId === "demo-org") {
+        // Demo mode - add employee to local storage
+        const newEmp: Employee = {
+          id: `demo-${Date.now()}`,
+          organizationId: "demo-org",
           email: newEmployee.email,
-          givenName: newEmployee.firstName,
-          familyName: newEmployee.lastName
-        })
-      });
+          firstName: newEmployee.firstName,
+          lastName: newEmployee.lastName,
+          displayName: `${newEmployee.firstName} ${newEmployee.lastName}`,
+          jobTitle: newEmployee.jobTitle,
+          department: newEmployee.department,
+          location: newEmployee.location,
+          status: newEmployee.status as 'active' | 'pending' | 'inactive',
+          hireDate: newEmployee.hireDate,
+          lastConnected: "Just now"
+        };
+        
+        // Add to current employee list immediately
+        setEmployees(prev => [...prev, newEmp]);
+        setFilteredEmployees(prev => [...prev, newEmp]);
+        
+        // Update stats
+        setOrgStats(prev => ({
+          ...prev,
+          totalEmployees: prev.totalEmployees + 1
+        }));
+        
+        // Store in localStorage for persistence
+        const storedEmployees = JSON.parse(localStorage.getItem('demo-employees') || '[]');
+        storedEmployees.push(newEmp);
+        localStorage.setItem('demo-employees', JSON.stringify(storedEmployees));
+        
+        console.log('Employee added to demo mode successfully:', newEmp);
+      } else {
+        // Real mode - call API
+        const response = await fetch('/api/bff/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            orgId: orgId,
+            email: newEmployee.email,
+            givenName: newEmployee.firstName,
+            familyName: newEmployee.lastName
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const createdEmployee = await response.json();
+        console.log('Employee created successfully:', createdEmployee);
+        
+        // Refresh employee list
+        await loadInitialData();
       }
-
-      const createdEmployee = await response.json();
-      console.log('Employee created successfully:', createdEmployee);
       
       setShowAddEmployee(false);
       
@@ -324,8 +364,6 @@ export default function EmployeeDirectoryPage() {
         gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
       });
       
-      // Refresh employee list
-      await loadInitialData();
     } catch (error: unknown) {
       console.error('Failed to create employee:', error);
       alert(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
