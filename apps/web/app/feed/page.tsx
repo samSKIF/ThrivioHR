@@ -278,10 +278,10 @@ export default function FeedPage() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">My Active Spaces</h3>
-                <button className="text-teal-600 text-sm hover:underline">View all →</button>
+                <button className="text-cyan-600 text-sm hover:underline">View all →</button>
               </div>
               <p className="text-xs text-gray-500 mb-4">Your recently new active spaces yet</p>
-              <button className="text-teal-600 text-sm hover:underline">Discover Spaces</button>
+              <button className="text-cyan-600 text-sm hover:underline">Discover Spaces</button>
               
               <div className="mt-4 space-y-3">
                 <div className="text-sm">
@@ -295,7 +295,7 @@ export default function FeedPage() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Last Thanked</h3>
-                <button className="text-teal-600 text-sm hover:underline">View All</button>
+                <button className="text-cyan-600 text-sm hover:underline">View All</button>
               </div>
               
               <div className="space-y-3">
@@ -304,7 +304,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">DM</span>
                   </div>
                   <div className="text-sm">Donna Meagle</div>
-                  <div className="ml-auto text-teal-600">👍</div>
+                  <div className="ml-auto text-cyan-600">👍</div>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -312,7 +312,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">AD</span>
                   </div>
                   <div className="text-sm">Andy Dwyer</div>
-                  <div className="ml-auto text-teal-600">👍</div>
+                  <div className="ml-auto text-cyan-600">👍</div>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">AP</span>
                   </div>
                   <div className="text-sm">Ann Perkins</div>
-                  <div className="ml-auto text-teal-600">👍</div>
+                  <div className="ml-auto text-cyan-600">👍</div>
                 </div>
               </div>
               
