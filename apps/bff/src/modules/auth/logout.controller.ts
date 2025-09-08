@@ -10,6 +10,10 @@ export class LogoutController {
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
-    return res.redirect('/login');
+    // Redirect to the frontend login page
+    const frontendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://your-domain.com' 
+      : 'http://localhost:5000';
+    return res.redirect(`${frontendUrl}/login`);
   }
 }
