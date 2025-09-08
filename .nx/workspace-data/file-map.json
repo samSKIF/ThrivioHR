@@ -24,6 +24,64 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
+      "contracts": [
+        {
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
+        },
+        {
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
+        },
+        {
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
+        },
+        {
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
+        },
+        {
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
+        },
+        {
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
+        }
+      ],
       "recognition": [
         {
           "file": "services/recognition/project.json",
@@ -46,203 +104,449 @@
           "hash": "2543962308852854802"
         }
       ],
-      "identity": [
+      "web": [
         {
-          "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
-          "hash": "9995049679412742541"
+          "file": "apps/web/.env.example",
+          "hash": "4736595944577925380"
         },
         {
-          "file": "services/identity/drizzle/migrations/0000_shocking_leper_queen.sql",
-          "hash": "11486356036310775745"
+          "file": "apps/web/.env.local",
+          "hash": "1266752528742284126"
         },
         {
-          "file": "services/identity/drizzle/migrations/0001_ambitious_giant_man.sql",
-          "hash": "13943745886699260150"
+          "file": "apps/web/.env.test",
+          "hash": "16591250612621173514"
         },
         {
-          "file": "services/identity/drizzle/migrations/0002_rainy_ricochet.sql",
-          "hash": "9748416948995768584"
+          "file": "apps/web/.eslintignore",
+          "hash": "17163383520659559976"
         },
         {
-          "file": "services/identity/drizzle/migrations/20250821_big3c_local_auth.sql",
-          "hash": "14609538632977439196"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/20250905_add_users_rls.sql",
-          "hash": "18143306002084242407"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/20250907_corporate_management.sql",
-          "hash": "6802603682374586768"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0000_snapshot.json",
-          "hash": "1673585877390318144"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0001_snapshot.json",
-          "hash": "4362580660924215635"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0002_snapshot.json",
-          "hash": "10311774399560916073"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/_journal.json",
-          "hash": "14464629374985213429"
-        },
-        {
-          "file": "services/identity/jest.config.ts",
-          "hash": "15300988821512552776"
-        },
-        {
-          "file": "services/identity/project.json",
-          "hash": "13232276208306800449"
-        },
-        {
-          "file": "services/identity/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/identity/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/identity/src/db/index.ts",
-          "hash": "15136210484516578895"
-        },
-        {
-          "file": "services/identity/src/db/schema/corporateAdmins.ts",
-          "hash": "7209163839265706584",
+          "file": "apps/web/__tests__/eslint.health.spec.ts",
+          "hash": "2778747459933774091",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:eslint"
           ]
         },
         {
-          "file": "services/identity/src/db/schema/employment_events.ts",
-          "hash": "15092341679682323203"
-        },
-        {
-          "file": "services/identity/src/db/schema/identities.ts",
-          "hash": "12687761386328759387"
-        },
-        {
-          "file": "services/identity/src/db/schema/index.ts",
-          "hash": "14477377581375242483",
+          "file": "apps/web/__tests__/eslint.ignores-next.spec.ts",
+          "hash": "11813958119334576357",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:@jest/globals"
           ]
         },
         {
-          "file": "services/identity/src/db/schema/locations.ts",
-          "hash": "4524730804028631739"
+          "file": "apps/web/__tests__/eslint.ignores-static.spec.ts",
+          "hash": "2006388196810224606"
         },
         {
-          "file": "services/identity/src/db/schema/org_membership.ts",
-          "hash": "18375543450047616586"
+          "file": "apps/web/__tests__/eslint.smoke.spec.ts",
+          "hash": "2420198624126276911"
         },
         {
-          "file": "services/identity/src/db/schema/org_units.ts",
-          "hash": "11410128857344893372"
+          "file": "apps/web/__tests__/middleware.redirect.spec.ts",
+          "hash": "13052973307026460219"
         },
         {
-          "file": "services/identity/src/db/schema/organizationFeatures.ts",
-          "hash": "3583927803467499468",
+          "file": "apps/web/app/(shell)/layout.tsx",
+          "hash": "1410016749451590043"
+        },
+        {
+          "file": "apps/web/app/api/bff/[...path]/route.ts",
+          "hash": "12257940678066635417"
+        },
+        {
+          "file": "apps/web/app/api/bff/health/route.ts",
+          "hash": "211112036563962351",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/src/db/schema/organizations.ts",
-          "hash": "6622367977006634272",
+          "file": "apps/web/app/api/corporate/auth/login/route.ts",
+          "hash": "7001831192781791020",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/src/db/schema/role_bindings.ts",
-          "hash": "12612519209428020030"
-        },
-        {
-          "file": "services/identity/src/db/schema/roles.ts",
-          "hash": "9670906524569723787"
-        },
-        {
-          "file": "services/identity/src/db/schema/sessions.ts",
-          "hash": "3106736526078779507"
-        },
-        {
-          "file": "services/identity/src/db/schema/subscriptions.ts",
-          "hash": "7458578250505417571",
+          "file": "apps/web/app/api/corporate/dashboard/route.ts",
+          "hash": "6439786689501931371",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/src/db/schema/users.ts",
-          "hash": "6977887886117462511"
-        },
-        {
-          "file": "services/identity/src/db/schema/walletTransactions.ts",
-          "hash": "5569809690944046987",
+          "file": "apps/web/app/api/corporate/organizations/[id]/reset-admin-password/route.ts",
+          "hash": "16556733234121925029",
           "deps": [
-            "npm:drizzle-orm"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/src/main.ts",
-          "hash": "12110202960230799724"
-        },
-        {
-          "file": "services/identity/src/seeds/identity.seed.ts",
-          "hash": "1599845465182442772"
-        },
-        {
-          "file": "services/identity/src/seeds/seed.big3c.ts",
-          "hash": "9152055022483171916",
+          "file": "apps/web/app/api/corporate/organizations/[id]/route.ts",
+          "hash": "13766898528947765998",
           "deps": [
-            "npm:pg"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/test/db/cascades.test.ts",
-          "hash": "8455369373978721315"
-        },
-        {
-          "file": "services/identity/test/db/constraints.test.ts",
-          "hash": "3414188754497434856"
-        },
-        {
-          "file": "services/identity/test/db/sessions-index.test.ts",
-          "hash": "17328702381921243069"
-        },
-        {
-          "file": "services/identity/test/helpers.ts",
-          "hash": "17734678534350261779"
-        },
-        {
-          "file": "services/identity/test/jest.setup.db.ts",
-          "hash": "16796094970740578394",
+          "file": "apps/web/app/api/corporate/organizations/[id]/subscription/route.ts",
+          "hash": "6529921253120543230",
           "deps": [
-            "npm:pg",
-            "npm:drizzle-orm"
+            "npm:next"
           ]
         },
         {
-          "file": "services/identity/test/schema-import.test.ts",
-          "hash": "5364599584904245307"
+          "file": "apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts",
+          "hash": "5382676781834971663"
         },
         {
-          "file": "services/identity/test/setup.ts",
-          "hash": "7175117513073555270"
+          "file": "apps/web/app/api/corporate/organizations/route.ts",
+          "hash": "10172076310355224106",
+          "deps": [
+            "npm:next"
+          ]
         },
         {
-          "file": "services/identity/tsconfig.jest.json",
-          "hash": "11089798308806373180"
+          "file": "apps/web/app/api/graphql/route.ts",
+          "hash": "4219090930702773119",
+          "deps": [
+            "npm:next"
+          ]
         },
         {
-          "file": "services/identity/tsconfig.json",
-          "hash": "63426151987760438"
+          "file": "apps/web/app/auth/login/route.ts",
+          "hash": "9875359875705578378",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/layout.tsx",
+          "hash": "271330602925457686",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/login/layout.tsx",
+          "hash": "18046370574411996184"
+        },
+        {
+          "file": "apps/web/app/corporate/login/page.tsx",
+          "hash": "1735152238969213198",
+          "deps": [
+            "npm:react",
+            "npm:next",
+            "npm:lucide-react"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/organizations/components/ManageOrganizationModal.tsx",
+          "hash": "10360451084780975610",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/organizations/create/page.tsx",
+          "hash": "5502412036208202305",
+          "deps": [
+            "npm:react",
+            "npm:next",
+            "npm:lucide-react"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/organizations/metadata.ts",
+          "hash": "11567286910339579239",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/organizations/page.tsx",
+          "hash": "12954008241613643397",
+          "deps": [
+            "npm:react",
+            "npm:next",
+            "npm:lucide-react"
+          ]
+        },
+        {
+          "file": "apps/web/app/corporate/page.tsx",
+          "hash": "1239107816226795133",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/app/dev/auth/page.tsx",
+          "hash": "3488991411294796153",
+          "deps": [
+            "npm:react",
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/directory/users/page.tsx",
+          "hash": "14110660265835632567",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/app/error.tsx",
+          "hash": "196995191542701148"
+        },
+        {
+          "file": "apps/web/app/globals.css",
+          "hash": "15441770147889210853"
+        },
+        {
+          "file": "apps/web/app/layout.tsx",
+          "hash": "2051165557905920988"
+        },
+        {
+          "file": "apps/web/app/loading.tsx",
+          "hash": "9987991418666268171"
+        },
+        {
+          "file": "apps/web/app/login/layout.tsx",
+          "hash": "7475422613999299065"
+        },
+        {
+          "file": "apps/web/app/login/page.tsx",
+          "hash": "14894012640131293975",
+          "deps": [
+            "npm:react",
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/me/page.spec.tsx",
+          "hash": "11030790113494482095",
+          "deps": [
+            "npm:@jest/globals"
+          ]
+        },
+        {
+          "file": "apps/web/app/me/page.tsx",
+          "hash": "1477804516792521979",
+          "deps": [
+            "npm:react",
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/not-found.tsx",
+          "hash": "11279828826333649919"
+        },
+        {
+          "file": "apps/web/app/page.tsx",
+          "hash": "9678172442131999999",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/app/password/new/page.tsx",
+          "hash": "15919957082480463268",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/app/test-auth/page.tsx",
+          "hash": "15822422567069306546",
+          "deps": [
+            "npm:react",
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/components.json",
+          "hash": "13754576994414349937"
+        },
+        {
+          "file": "apps/web/components/ClientOnlyWrapper.tsx",
+          "hash": "9061151171594121947",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/components/DynamicNoSSR.tsx",
+          "hash": "5447597126601232285",
+          "deps": [
+            "npm:next",
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/components/ExtensionSafeWrapper.tsx",
+          "hash": "7438950819490930840",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/components/Header.tsx",
+          "hash": "12181830496793283315",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/components/HydrationErrorBoundary.tsx",
+          "hash": "8324833711972091553",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/components/ProgressiveEnhancement.tsx",
+          "hash": "4034592869052063844",
+          "deps": [
+            "npm:react"
+          ]
+        },
+        {
+          "file": "apps/web/components/skeletons/ModalSkeleton.tsx",
+          "hash": "7207401551754604481"
+        },
+        {
+          "file": "apps/web/components/skeletons/OrganizationListSkeleton.tsx",
+          "hash": "17032450665032336055"
+        },
+        {
+          "file": "apps/web/eslint.config.mjs",
+          "hash": "10515957547174375273",
+          "deps": [
+            "npm:@eslint/js",
+            "npm:@typescript-eslint/eslint-plugin",
+            "npm:@typescript-eslint/parser"
+          ]
+        },
+        {
+          "file": "apps/web/jest.config.ts",
+          "hash": "1169534679061029190",
+          "deps": [
+            "npm:next",
+            "npm:jest"
+          ]
+        },
+        {
+          "file": "apps/web/jest.setup.ts",
+          "hash": "6275308593544359856",
+          "deps": [
+            "npm:@jest/globals"
+          ]
+        },
+        {
+          "file": "apps/web/lib/apollo/authLink.spec.ts",
+          "hash": "8791136063404795563"
+        },
+        {
+          "file": "apps/web/lib/apollo/authLink.ts",
+          "hash": "15345733695514783473"
+        },
+        {
+          "file": "apps/web/lib/utils.ts",
+          "hash": "15447805119367099467",
+          "deps": [
+            "npm:clsx",
+            "npm:tailwind-merge"
+          ]
+        },
+        {
+          "file": "apps/web/next-env.d.ts",
+          "hash": "1320675027584673186"
+        },
+        {
+          "file": "apps/web/next.config.js",
+          "hash": "3249869036423631702"
+        },
+        {
+          "file": "apps/web/next.config.mjs",
+          "hash": "1978145260999427396"
+        },
+        {
+          "file": "apps/web/postcss.config.js",
+          "hash": "17430255171421331363"
+        },
+        {
+          "file": "apps/web/project.json",
+          "hash": "10467917340807350395"
+        },
+        {
+          "file": "apps/web/public/hero-illustration.png",
+          "hash": "6130020605904592046"
+        },
+        {
+          "file": "apps/web/src/app/api/bff/health/route.ts",
+          "hash": "14335994720171694135",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/api/sso/oidc/start/route.ts",
+          "hash": "8531777375079673228",
+          "deps": [
+            "npm:next"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/page.spec.tsx",
+          "hash": "5180160862121496059",
+          "deps": [
+            "npm:@jest/globals"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/apollo.tsx",
+          "hash": "11255882507373511655",
+          "deps": [
+            "npm:@apollo/client"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/env.ts",
+          "hash": "4545673719035008186"
+        },
+        {
+          "file": "apps/web/styles/legacy.css",
+          "hash": "16521862089121045088"
+        },
+        {
+          "file": "apps/web/tailwind.config.js",
+          "hash": "5817595918868387787",
+          "deps": [
+            "npm:@tailwindcss/typography",
+            "npm:tailwindcss-animate"
+          ]
+        },
+        {
+          "file": "apps/web/tsconfig.eslint.json",
+          "hash": "14603773414890094944"
+        },
+        {
+          "file": "apps/web/tsconfig.eslint.tsbuildinfo",
+          "hash": "8254911477578145637"
+        },
+        {
+          "file": "apps/web/tsconfig.json",
+          "hash": "12386124494934992903"
+        },
+        {
+          "file": "apps/web/tsconfig.test.json",
+          "hash": "9877041727218950101"
+        },
+        {
+          "file": "apps/web/tsconfig.tsbuildinfo",
+          "hash": "14698313359158478524"
         }
       ],
       "bff": [
@@ -760,447 +1064,6 @@
           "hash": "5589598467114817326"
         }
       ],
-      "web": [
-        {
-          "file": "apps/web/.env.example",
-          "hash": "4736595944577925380"
-        },
-        {
-          "file": "apps/web/.env.local",
-          "hash": "1266752528742284126"
-        },
-        {
-          "file": "apps/web/.env.test",
-          "hash": "16591250612621173514"
-        },
-        {
-          "file": "apps/web/.eslintignore",
-          "hash": "17163383520659559976"
-        },
-        {
-          "file": "apps/web/__tests__/eslint.health.spec.ts",
-          "hash": "2778747459933774091",
-          "deps": [
-            "npm:eslint"
-          ]
-        },
-        {
-          "file": "apps/web/__tests__/eslint.ignores-next.spec.ts",
-          "hash": "11813958119334576357",
-          "deps": [
-            "npm:@jest/globals"
-          ]
-        },
-        {
-          "file": "apps/web/__tests__/eslint.ignores-static.spec.ts",
-          "hash": "2006388196810224606"
-        },
-        {
-          "file": "apps/web/__tests__/eslint.smoke.spec.ts",
-          "hash": "2420198624126276911"
-        },
-        {
-          "file": "apps/web/__tests__/middleware.redirect.spec.ts",
-          "hash": "13052973307026460219"
-        },
-        {
-          "file": "apps/web/app/(shell)/layout.tsx",
-          "hash": "1410016749451590043"
-        },
-        {
-          "file": "apps/web/app/api/bff/[...path]/route.ts",
-          "hash": "12257940678066635417"
-        },
-        {
-          "file": "apps/web/app/api/bff/health/route.ts",
-          "hash": "211112036563962351",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/auth/login/route.ts",
-          "hash": "7001831192781791020",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/dashboard/route.ts",
-          "hash": "6439786689501931371",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/organizations/[id]/reset-admin-password/route.ts",
-          "hash": "16556733234121925029",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/organizations/[id]/route.ts",
-          "hash": "13766898528947765998",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/organizations/[id]/subscription/route.ts",
-          "hash": "6529921253120543230",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/corporate/organizations/[id]/wallet/credit/route.ts",
-          "hash": "5382676781834971663"
-        },
-        {
-          "file": "apps/web/app/api/corporate/organizations/route.ts",
-          "hash": "10172076310355224106",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/api/graphql/route.ts",
-          "hash": "4219090930702773119",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/auth/login/route.ts",
-          "hash": "9875359875705578378",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/layout.tsx",
-          "hash": "271330602925457686",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/login/layout.tsx",
-          "hash": "18046370574411996184"
-        },
-        {
-          "file": "apps/web/app/corporate/login/page.tsx",
-          "hash": "1735152238969213198",
-          "deps": [
-            "npm:react",
-            "npm:next",
-            "npm:lucide-react"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/organizations/components/ManageOrganizationModal.tsx",
-          "hash": "10360451084780975610",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/organizations/create/page.tsx",
-          "hash": "5502412036208202305",
-          "deps": [
-            "npm:react",
-            "npm:next",
-            "npm:lucide-react"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/organizations/metadata.ts",
-          "hash": "11567286910339579239",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/organizations/page.tsx",
-          "hash": "12954008241613643397",
-          "deps": [
-            "npm:react",
-            "npm:next",
-            "npm:lucide-react"
-          ]
-        },
-        {
-          "file": "apps/web/app/corporate/page.tsx",
-          "hash": "1239107816226795133",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/app/dev/auth/page.tsx",
-          "hash": "3488991411294796153",
-          "deps": [
-            "npm:react",
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/directory/users/page.tsx",
-          "hash": "14110660265835632567",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/app/error.tsx",
-          "hash": "196995191542701148"
-        },
-        {
-          "file": "apps/web/app/globals.css",
-          "hash": "15441770147889210853"
-        },
-        {
-          "file": "apps/web/app/layout.tsx",
-          "hash": "2051165557905920988"
-        },
-        {
-          "file": "apps/web/app/loading.tsx",
-          "hash": "9987991418666268171"
-        },
-        {
-          "file": "apps/web/app/login/layout.tsx",
-          "hash": "7475422613999299065"
-        },
-        {
-          "file": "apps/web/app/login/page.tsx",
-          "hash": "14894012640131293975",
-          "deps": [
-            "npm:react",
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/me/page.spec.tsx",
-          "hash": "11030790113494482095",
-          "deps": [
-            "npm:@jest/globals"
-          ]
-        },
-        {
-          "file": "apps/web/app/me/page.tsx",
-          "hash": "1477804516792521979",
-          "deps": [
-            "npm:react",
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/not-found.tsx",
-          "hash": "11279828826333649919"
-        },
-        {
-          "file": "apps/web/app/page.tsx",
-          "hash": "9678172442131999999",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/app/password/new/page.tsx",
-          "hash": "15919957082480463268",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/app/test-auth/page.tsx",
-          "hash": "15822422567069306546",
-          "deps": [
-            "npm:react",
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/components.json",
-          "hash": "13754576994414349937"
-        },
-        {
-          "file": "apps/web/components/ClientOnlyWrapper.tsx",
-          "hash": "9061151171594121947",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/components/DynamicNoSSR.tsx",
-          "hash": "5447597126601232285",
-          "deps": [
-            "npm:next",
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/components/ExtensionSafeWrapper.tsx",
-          "hash": "7438950819490930840",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/components/Header.tsx",
-          "hash": "12181830496793283315",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/components/HydrationErrorBoundary.tsx",
-          "hash": "8324833711972091553",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/components/ProgressiveEnhancement.tsx",
-          "hash": "4034592869052063844",
-          "deps": [
-            "npm:react"
-          ]
-        },
-        {
-          "file": "apps/web/components/skeletons/ModalSkeleton.tsx",
-          "hash": "7207401551754604481"
-        },
-        {
-          "file": "apps/web/components/skeletons/OrganizationListSkeleton.tsx",
-          "hash": "17032450665032336055"
-        },
-        {
-          "file": "apps/web/eslint.config.mjs",
-          "hash": "10515957547174375273",
-          "deps": [
-            "npm:@eslint/js",
-            "npm:@typescript-eslint/eslint-plugin",
-            "npm:@typescript-eslint/parser"
-          ]
-        },
-        {
-          "file": "apps/web/jest.config.ts",
-          "hash": "1169534679061029190",
-          "deps": [
-            "npm:next",
-            "npm:jest"
-          ]
-        },
-        {
-          "file": "apps/web/jest.setup.ts",
-          "hash": "6275308593544359856",
-          "deps": [
-            "npm:@jest/globals"
-          ]
-        },
-        {
-          "file": "apps/web/lib/apollo/authLink.spec.ts",
-          "hash": "8791136063404795563"
-        },
-        {
-          "file": "apps/web/lib/apollo/authLink.ts",
-          "hash": "15345733695514783473"
-        },
-        {
-          "file": "apps/web/lib/utils.ts",
-          "hash": "15447805119367099467",
-          "deps": [
-            "npm:clsx",
-            "npm:tailwind-merge"
-          ]
-        },
-        {
-          "file": "apps/web/next-env.d.ts",
-          "hash": "1320675027584673186"
-        },
-        {
-          "file": "apps/web/next.config.js",
-          "hash": "3651791444613533157"
-        },
-        {
-          "file": "apps/web/next.config.mjs",
-          "hash": "1978145260999427396"
-        },
-        {
-          "file": "apps/web/project.json",
-          "hash": "10467917340807350395"
-        },
-        {
-          "file": "apps/web/public/hero-illustration.png",
-          "hash": "6130020605904592046"
-        },
-        {
-          "file": "apps/web/src/app/api/bff/health/route.ts",
-          "hash": "14335994720171694135",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/api/sso/oidc/start/route.ts",
-          "hash": "8531777375079673228",
-          "deps": [
-            "npm:next"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/page.spec.tsx",
-          "hash": "5180160862121496059",
-          "deps": [
-            "npm:@jest/globals"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/apollo.tsx",
-          "hash": "11255882507373511655",
-          "deps": [
-            "npm:@apollo/client"
-          ]
-        },
-        {
-          "file": "apps/web/src/lib/env.ts",
-          "hash": "4545673719035008186"
-        },
-        {
-          "file": "apps/web/styles/legacy.css",
-          "hash": "16521862089121045088"
-        },
-        {
-          "file": "apps/web/tailwind.config.js",
-          "hash": "5817595918868387787",
-          "deps": [
-            "npm:@tailwindcss/typography",
-            "npm:tailwindcss-animate"
-          ]
-        },
-        {
-          "file": "apps/web/tsconfig.eslint.json",
-          "hash": "14603773414890094944"
-        },
-        {
-          "file": "apps/web/tsconfig.eslint.tsbuildinfo",
-          "hash": "8254911477578145637"
-        },
-        {
-          "file": "apps/web/tsconfig.json",
-          "hash": "12386124494934992903"
-        },
-        {
-          "file": "apps/web/tsconfig.test.json",
-          "hash": "9877041727218950101"
-        },
-        {
-          "file": "apps/web/tsconfig.tsbuildinfo",
-          "hash": "14698313359158478524"
-        }
-      ],
       "ledger": [
         {
           "file": "services/ledger/project.json",
@@ -1223,62 +1086,203 @@
           "hash": "2543962308852854802"
         }
       ],
-      "contracts": [
+      "identity": [
         {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
+          "hash": "9995049679412742541"
         },
         {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/identity/drizzle/migrations/0000_shocking_leper_queen.sql",
+          "hash": "11486356036310775745"
         },
         {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
+          "file": "services/identity/drizzle/migrations/0001_ambitious_giant_man.sql",
+          "hash": "13943745886699260150"
         },
         {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
+          "file": "services/identity/drizzle/migrations/0002_rainy_ricochet.sql",
+          "hash": "9748416948995768584"
         },
         {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
+          "file": "services/identity/drizzle/migrations/20250821_big3c_local_auth.sql",
+          "hash": "14609538632977439196"
         },
         {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
+          "file": "services/identity/drizzle/migrations/20250905_add_users_rls.sql",
+          "hash": "18143306002084242407"
         },
         {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
+          "file": "services/identity/drizzle/migrations/20250907_corporate_management.sql",
+          "hash": "6802603682374586768"
         },
         {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
+          "file": "services/identity/drizzle/migrations/meta/0000_snapshot.json",
+          "hash": "1673585877390318144"
         },
         {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
+          "file": "services/identity/drizzle/migrations/meta/0001_snapshot.json",
+          "hash": "4362580660924215635"
         },
         {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
+          "file": "services/identity/drizzle/migrations/meta/0002_snapshot.json",
+          "hash": "10311774399560916073"
         },
         {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
+          "file": "services/identity/drizzle/migrations/meta/_journal.json",
+          "hash": "14464629374985213429"
         },
         {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
+          "file": "services/identity/jest.config.ts",
+          "hash": "15300988821512552776"
         },
         {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
+          "file": "services/identity/project.json",
+          "hash": "13232276208306800449"
         },
         {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
+          "file": "services/identity/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/identity/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/identity/src/db/index.ts",
+          "hash": "15136210484516578895"
+        },
+        {
+          "file": "services/identity/src/db/schema/corporateAdmins.ts",
+          "hash": "7209163839265706584",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/employment_events.ts",
+          "hash": "15092341679682323203"
+        },
+        {
+          "file": "services/identity/src/db/schema/identities.ts",
+          "hash": "12687761386328759387"
+        },
+        {
+          "file": "services/identity/src/db/schema/index.ts",
+          "hash": "14477377581375242483",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/locations.ts",
+          "hash": "4524730804028631739"
+        },
+        {
+          "file": "services/identity/src/db/schema/org_membership.ts",
+          "hash": "18375543450047616586"
+        },
+        {
+          "file": "services/identity/src/db/schema/org_units.ts",
+          "hash": "11410128857344893372"
+        },
+        {
+          "file": "services/identity/src/db/schema/organizationFeatures.ts",
+          "hash": "3583927803467499468",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/organizations.ts",
+          "hash": "6622367977006634272",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/role_bindings.ts",
+          "hash": "12612519209428020030"
+        },
+        {
+          "file": "services/identity/src/db/schema/roles.ts",
+          "hash": "9670906524569723787"
+        },
+        {
+          "file": "services/identity/src/db/schema/sessions.ts",
+          "hash": "3106736526078779507"
+        },
+        {
+          "file": "services/identity/src/db/schema/subscriptions.ts",
+          "hash": "7458578250505417571",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/users.ts",
+          "hash": "6977887886117462511"
+        },
+        {
+          "file": "services/identity/src/db/schema/walletTransactions.ts",
+          "hash": "5569809690944046987",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/main.ts",
+          "hash": "12110202960230799724"
+        },
+        {
+          "file": "services/identity/src/seeds/identity.seed.ts",
+          "hash": "1599845465182442772"
+        },
+        {
+          "file": "services/identity/src/seeds/seed.big3c.ts",
+          "hash": "9152055022483171916",
+          "deps": [
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "services/identity/test/db/cascades.test.ts",
+          "hash": "8455369373978721315"
+        },
+        {
+          "file": "services/identity/test/db/constraints.test.ts",
+          "hash": "3414188754497434856"
+        },
+        {
+          "file": "services/identity/test/db/sessions-index.test.ts",
+          "hash": "17328702381921243069"
+        },
+        {
+          "file": "services/identity/test/helpers.ts",
+          "hash": "17734678534350261779"
+        },
+        {
+          "file": "services/identity/test/jest.setup.db.ts",
+          "hash": "16796094970740578394",
+          "deps": [
+            "npm:pg",
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/test/schema-import.test.ts",
+          "hash": "5364599584904245307"
+        },
+        {
+          "file": "services/identity/test/setup.ts",
+          "hash": "7175117513073555270"
+        },
+        {
+          "file": "services/identity/tsconfig.jest.json",
+          "hash": "11089798308806373180"
+        },
+        {
+          "file": "services/identity/tsconfig.json",
+          "hash": "63426151987760438"
         }
       ]
     },
@@ -240000,6 +240004,10 @@
         "hash": "5087407627364788657"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_9c8e7c4ff7270c6036aca7911b7755837219472e.bin",
+        "hash": "13231685632710227826"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_9cc71106338756818e49a985b44e80b08dc1a72e.bin",
         "hash": "4350836413565395676"
       },
@@ -240266,6 +240274,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_c38c022225b267ab1cac651f5101626e0e3fcc96.bin",
         "hash": "11822651012878730509"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_c3b95cef5f2275632bd3f56efbe27556abca740b.bin",
+        "hash": "6631046733961141565"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_c3d9803db925088eaba5daabda2abc847d6efb48.bin",
@@ -240697,11 +240709,11 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "1872821595938851475"
+        "hash": "6518042867666854931"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
-        "hash": "3688231244080053223"
+        "hash": "14645384371209425127"
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
@@ -240717,7 +240729,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "13623306845164287501"
+        "hash": "9810836233183394277"
       },
       {
         "file": ".prettierrc",
@@ -242010,10 +242022,6 @@
       {
         "file": "static/styles.js",
         "hash": "7569025066195547382"
-      },
-      {
-        "file": "tailwind.config.js",
-        "hash": "6578929323791291666"
       },
       {
         "file": "test_pagination_stability.sh",
