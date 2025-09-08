@@ -1,0 +1,129 @@
+Execute this EXACT task. Do not modify, create, or delete any files. Read-only audit only.
+If any command fails, PRINT the error and CONTINUE (do not exit).
+GOAL
+Audit the repo against Codex’ claims and output a concise PASS/FAIL/INFO list with short evidence.
+
+CHANGES
+(none)
+
+RUN & PRINT
+#!/usr/bin/env bash
+set -u  # no -e: we want to continue even if some checks fail
+
+echo "=== PREP ==="
+have() { command -v "$1" >/dev/null 2>&1; }
+search() {
+  # usage: search <pattern> [path]
+  if have rg; then rg -n --no-ignore -S -g '!node_modules' -e "$1" "${2:-.}"; else grep -RInE --exclude-dir=node_modules "$1" "${2:-.}"; fi
+}
+NODE="node"
+if ! have node; then echo "WARN: node not found; some checks will be skipped"; fi
+
+say()   { printf "%s\n" "$*"; }
+pass()  { printf "[PASS] %s\n" "$*"; }
+fail()  { printf "[FAIL] %s\n" "$*"; }
+info()  { printf "[INFO] %s\n" "$*"; }
+
+summary=()
+
+note() { summary+=("$1"); }
+print_summary() { printf "\n=== SUMMARY ===\n"; for s in "${summary[@]}"; do printf "%s\n" "$s"; done; }
+
+echo "=== CHECK 1: Root workspace scripts exist ==="
+SCRIPTS_JSON="$($NODE -e "try{const p=require('./package.json');console.log(JSON.stringify(p.scripts||{},null,2))}catch(e){console.log('{}');process.exit(0)}" 2>/dev/null)"
+echo "$SCRIPTS_JSON"
+# look for common scripts
+need=("dev" "lint" "typecheck" "build" "test:web" "test:ci")
+missing=()
+for k in "${need[@]}"; do echo "$SCRIPTS_JSON" | grep -q "\"$k\"" || missing+=("$k"); done
+if [ ${#missing[@]} -eq 0 ]; then pass "Root scripts present: ${need[*]}"; note "[PASS] Root scripts present"; else fail "Missing scripts: ${missing[*]}"; note "[FAIL] Root scripts missing: ${missing[*]}"; fi
+
+echo -e "\n=== CHECK 2: BFF uses NestJS modules & DI ==="
+nest_hits=$(search "@Module\\(" "apps" | wc -l | tr -d ' ')
+say "Found @Module() occurrences: $nest_hits"
+if [ "${nest_hits:-0}" -gt 0 ]; then pass "NestJS modules detected ($nest_hits)"; note "[PASS] NestJS modules detected"; else fail "No @Module() found under apps/*"; note "[FAIL] No NestJS modules found"; fi
+
+echo -e "\n=== CHECK 3: Drizzle schemas & indexes ==="
+drizzle_tables=$(search "(pgTable\\(|mysqlTable\\(|sqliteTable\\()" "apps libs" | head -n 10)
+drizzle_idx=$(search "(index\\(|uniqueIndex\\(|primaryKey\\()" "apps libs" | head -n 10)
+say "Sample table defs:\n${drizzle_tables:-'(none)'}"
+say "Sample indexes:\n${drizzle_idx:-'(none)'}"
+if [ -n "$drizzle_tables" ]; then pass "Drizzle table definitions found"; note "[PASS] Drizzle schemas present"; else fail "No Drizzle table definitions found"; note "[FAIL] No Drizzle schemas found"; fi
+
+echo -e "\n=== CHECK 4: Auth strength (password/SSO/JWT presence) ==="
+auth_pw=$(search "(argon2|bcrypt|scrypt|pbkdf2)" "apps" | head -n 5)
+auth_ssO=$(search "(passport|@nestjs/passport|openid-client|oidc|oauth)" "apps" | head -n 5)
+auth_jwt=$(search "(@nestjs/jwt|JwtService|jwt.sign|jwt.verify)" "apps" | head -n 5)
+say "Password primitives:\n${auth_pw:-'(none)'}"
+say "SSO/OIDC libs:\n${auth_ssO:-'(none)'}"
+say "JWT usage:\n${auth_jwt:-'(none)'}"
+if [ -z "$auth_pw" ] && [ -z "$auth_ssO" ]; then
+  info "No password/SSO primitives detected (may be email/org only)"; note "[INFO] Auth appears email/org only (no password/SSO libs found)"
+else
+  pass "Auth libraries detected (password and/or SSO/JWT)"; note "[PASS] Auth libs present (password/SSO/JWT)"
+fi
+
+echo -e "\n=== CHECK 5: Size of DirectoryService.applyImportSession ==="
+# find files containing the method
+apply_files=$(search "applyImportSession[[:space:]]*\\(" | awk -F: '{print $1}' | sort -u)
+if [ -z "$apply_files" ]; then
+  info "applyImportSession not found"; note "[INFO] applyImportSession not found"
+else
+  echo "Files: $apply_files"
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    lines="$($NODE -e "
+const fs=require('fs');const p=process.argv[1];try{
+  const src=fs.readFileSync(p,'utf8');
+  const m=src.match(/applyImportSession\\s*\\([^)]*\\)\\s*\\{/m);
+  if(!m){console.log('NOFUNC');process.exit(0)}
+  let i=m.index+m[0].length, depth=1;
+  while(i<src.length && depth>0){
+    const ch=src[i++]; if(ch=='{') depth++; else if(ch=='}') depth--;
+  }
+  const body=src.slice(m.index,i);
+  console.log(body.split(/\\r?\\n/).length);
+}catch(e){console.log('ERR')}" "$f" 2>/dev/null)"
+    echo " - $f : ${lines} lines (method body incl. signature)"
+    if [[ "$lines" =~ ^[0-9]+$ ]] && [ "$lines" -le 70 ]; then
+      pass "applyImportSession length OK in $f ($lines ≤ 70)"; note "[PASS] applyImportSession OK ($lines lines) — $f"
+    elif [[ "$lines" =~ ^[0-9]+$ ]]; then
+      fail "applyImportSession large in $f ($lines > 70)"; note "[FAIL] applyImportSession large ($lines lines) — $f"
+    else
+      info "Could not measure method length in $f ($lines)"; note "[INFO] Could not measure applyImportSession — $f"
+    fi
+  done <<< "$apply_files"
+fi
+
+echo -e "\n=== CHECK 6: Jest coverage guardrails & CI scripts ==="
+coverage_cfg=$(search "(collectCoverage|coverageThreshold)" "apps libs" | head -n 10)
+say "Coverage config (sample):\n${coverage_cfg:-'(none)'}"
+echo "$SCRIPTS_JSON" | grep -q "\"test:ci\"" && pass "test:ci script present" || fail "test:ci script missing"
+if [ -n "$coverage_cfg" ]; then note "[PASS] Coverage config present"; else note "[FAIL] No coverage config found"; fi
+
+echo -e "\n=== CHECK 7: RBAC/ABAC enforcement hooks ==="
+rbac_hits=$(search "(hasRole|RolesGuard|PermissionsGuard|policy|ability|casl|oso|isAllowed|enforce)" "apps" | head -n 10)
+say "Policy/guard hits (sample):\n${rbac_hits:-'(none)'}"
+if [ -n "$rbac_hits" ]; then pass "RBAC/ABAC enforcement references found"; note "[PASS] RBAC/ABAC present (sample above)"; else info "No obvious RBAC/ABAC references"; note "[INFO] No RBAC/ABAC references found"; fi
+
+echo -e "\n=== CHECK 8: Accessibility & Next lint rules ==="
+eslint_a11y=$(search "eslint-plugin-jsx-a11y" "package.json .eslintrc* apps/web" | head -n 3)
+eslint_next=$(search "@next/eslint-plugin-next" "package.json .eslintrc* apps/web" | head -n 3)
+say "jsx-a11y refs:\n${eslint_a11y:-'(none)'}"
+say "next eslint refs:\n${eslint_next:-'(none)'}"
+if [ -n "$eslint_a11y" ] && [ -n "$eslint_next" ]; then pass "Accessibility & Next lint rules referenced"; note "[PASS] a11y/Next lint rules present"; else info "Lint plugins not clearly referenced"; note "[INFO] a11y/Next lint references not found"; fi
+
+echo -e "\n=== CHECK 9: Test wiring (authLink only) — dry list ==="
+if have pnpm; then
+  (pnpm -s test:web -- --listTests --passWithNoTests 2>/dev/null) | sed -n '1,50p'
+  if (pnpm -s test:web -- --listTests --passWithNoTests 2>/dev/null | grep -q "authLink\\.spec\\."); then
+    pass "test:web lists authLink spec"; note "[PASS] test:web targets authLink spec"
+  else
+    info "test:web did not list authLink spec (pattern mismatch?)"; note "[INFO] authLink not listed by test:web"
+  fi
+else
+  info "pnpm not available; skipped test listing"; note "[INFO] Skipped test listing (pnpm missing)"
+fi
+
+print_summary
+STOP.
