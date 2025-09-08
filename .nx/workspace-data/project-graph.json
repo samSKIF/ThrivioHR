@@ -272,10 +272,10 @@
             ]
           },
           "test": {
-            "executor": "nx:run-commands",
+            "executor": "@nx/jest:jest",
             "options": {
-              "command": "jest",
-              "cwd": "apps/web"
+              "jestConfig": "apps/web/jest.config.ts",
+              "passWithNoTests": true
             },
             "configurations": {},
             "parallelism": true
@@ -13752,6 +13752,11 @@
       {
         "source": "web",
         "target": "npm:@typescript-eslint/parser",
+        "type": "static"
+      },
+      {
+        "source": "web",
+        "target": "npm:jest",
         "type": "static"
       },
       {
@@ -30173,5 +30178,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757306411200
+  "computedAt": 1757319565948
 }

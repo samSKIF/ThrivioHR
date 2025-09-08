@@ -278,11 +278,11 @@
       "apps/web/project.json",
       "nx/core/project-json"
     ],
-    "targets.test.options.command": [
+    "targets.test.options.jestConfig": [
       "apps/web/project.json",
       "nx/core/project-json"
     ],
-    "targets.test.options.cwd": [
+    "targets.test.options.passWithNoTests": [
       "apps/web/project.json",
       "nx/core/project-json"
     ],
