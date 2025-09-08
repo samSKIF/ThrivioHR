@@ -184,13 +184,13 @@ export default function FeedPage() {
         </div>
       </header>
       
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           {/* Left Sidebar - Points & Priorities */}
-          <div className="lg:col-span-1 space-y-8">
+          <div className="lg:col-span-1 space-y-6">
             {/* ThrivioHR Points */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-200">
               <h2 className="text-lg font-semibold mb-4">ThrivioHR Points</h2>
               
               <div className="space-y-3">
@@ -205,13 +205,13 @@ export default function FeedPage() {
                 </div>
               </div>
               
-              <button className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-md text-sm font-medium">
+              <button className="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors duration-150">
                 Send Points
               </button>
             </div>
 
             {/* Priorities */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-200">
               <h3 className="font-semibold mb-3">Priorities</h3>
               <p className="text-sm text-gray-600 mb-3">Looking out for the department</p>
               <p className="text-xs text-gray-500">You have not added new priority</p>
@@ -221,7 +221,7 @@ export default function FeedPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Composer */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium">👋</span>
@@ -229,7 +229,7 @@ export default function FeedPage() {
                 <input
                   type="text"
                   placeholder="What's on your mind?"
-                  className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:bg-white transition-all duration-200"
+                  className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:bg-white border border-gray-200/60 transition-all duration-200"
                   disabled
                 />
                 <button className="text-gray-400 hover:text-gray-600">😊</button>
@@ -311,15 +311,15 @@ export default function FeedPage() {
           </div>
 
           {/* Right Sidebar */}
-          <div className="lg:col-span-1 space-y-8">
+          <div className="lg:col-span-1 space-y-6">
             {/* My Active Spaces */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">My Active Spaces</h3>
-                <button className="text-cyan-600 text-sm hover:underline">View all →</button>
+                <button className="text-slate-600 text-sm hover:text-slate-800 transition-colors">View all →</button>
               </div>
               <p className="text-xs text-gray-500 mb-4">Your recently new active spaces yet</p>
-              <button className="text-cyan-600 text-sm hover:underline">Discover Spaces</button>
+              <button className="text-slate-600 text-sm hover:text-slate-800 transition-colors">Discover Spaces</button>
               
               <div className="mt-4 space-y-3">
                 <div className="text-sm">
@@ -330,7 +330,7 @@ export default function FeedPage() {
             </div>
 
             {/* Last Thanked */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Last Thanked</h3>
                 <button className="text-cyan-600 text-sm hover:underline">View All</button>
@@ -342,7 +342,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">DM</span>
                   </div>
                   <div className="text-sm">Donna Meagle</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
+                  <div className="ml-auto text-slate-500">👍</div>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -350,7 +350,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">AD</span>
                   </div>
                   <div className="text-sm">Andy Dwyer</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
+                  <div className="ml-auto text-slate-500">👍</div>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -358,7 +358,7 @@ export default function FeedPage() {
                     <span className="text-white text-xs font-medium">AP</span>
                   </div>
                   <div className="text-sm">Ann Perkins</div>
-                  <div className="ml-auto text-cyan-600">👍</div>
+                  <div className="ml-auto text-slate-500">👍</div>
                 </div>
               </div>
               
