@@ -24,6 +24,14 @@ export class DirectoryController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('subscription')
+  async getSubscription(@Query('orgId') orgId: string) {
+    if (!orgId) throw new BadRequestException('orgId is required');
+    
+    return this.svc.getOrganizationSubscription(orgId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('import/validate')
   validate(@Body() dto: ImportValidateDto) {
     return this.svc.validate(dto.csv);

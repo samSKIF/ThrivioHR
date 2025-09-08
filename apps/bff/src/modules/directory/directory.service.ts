@@ -9,6 +9,9 @@ import type { CommitOverview, CommitRecord, NormalizedRow } from './lib/types';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as crypto from 'crypto';
 import { getJwtSecret } from '../../env';
+import { Pool } from 'pg';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 type ValidationResult = {
   rows: number;
@@ -467,5 +470,49 @@ export class DirectoryService {
       locationsCreated,
       rows,
     };
+  }
+
+  async getOrganizationSubscription(orgId: string) {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          s.id, 
+          s.seats_limit,
+          s.plan_code,
+          s.status,
+          s.start_at,
+          s.end_at
+        FROM subscriptions s
+        WHERE s.org_id = $1 AND s.status = 'active'
+        ORDER BY s.created_at DESC
+        LIMIT 1
+      `, [orgId]);
+
+      if (result.rows.length === 0) {
+        return {
+          seatsLimit: 500, // Default fallback
+          planCode: 'default',
+          status: 'active'
+        };
+      }
+
+      const subscription = result.rows[0];
+      return {
+        id: subscription.id,
+        seatsLimit: subscription.seats_limit,
+        planCode: subscription.plan_code,
+        status: subscription.status,
+        startAt: subscription.start_at,
+        endAt: subscription.end_at,
+      };
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      // Return fallback on error
+      return {
+        seatsLimit: 500,
+        planCode: 'default',
+        status: 'active'
+      };
+    }
   }
 }

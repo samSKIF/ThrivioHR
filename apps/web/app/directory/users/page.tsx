@@ -103,6 +103,19 @@ export default function EmployeeDirectoryPage() {
     }
   }
 
+  async function fetchSubscription(orgId: string) {
+    try {
+      const response = await fetch(`/api/bff/directory/subscription?orgId=${orgId}`, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.warn('Failed to fetch subscription from API:', error);
+      return { seatsLimit: 500 }; // Fallback to default
+    }
+  }
+
   function generateMockEmployeeData() {
     // Generate realistic mock employee data for demonstration
     const mockEmployees = [
@@ -197,10 +210,11 @@ export default function EmployeeDirectoryPage() {
         if (!id) throw new Error("No organizationId found on current user.");
         setOrgId(id);
         
-        const [employeesData, departmentsData, locationsData] = await Promise.all([
+        const [employeesData, departmentsData, locationsData, subscriptionData] = await Promise.all([
           fetchEmployees(id),
           fetchMockDepartments(),
-          fetchMockLocations()
+          fetchMockLocations(),
+          fetchSubscription(id)
         ]);
         
         setDepartments(departmentsData);
@@ -214,7 +228,7 @@ export default function EmployeeDirectoryPage() {
         const activeEmployees = transformedEmployees.filter(u => u.status !== 'inactive').length;
         setOrgStats({
           totalEmployees: activeEmployees,
-          subscriptionLimit: 500, // Mock - should come from org subscription
+          subscriptionLimit: subscriptionData?.seatsLimit || 500, // Real subscription limit
           departmentCount: departmentsData.length
         });
         
