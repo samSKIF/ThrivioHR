@@ -44,6 +44,12 @@ export default function FeedPage() {
   const [userRole, setUserRole] = useState("admin"); // Toggle between "admin" and "user" for testing
   const dropdownRef = useRef<HTMLDivElement>(null);
   
+  // Post creator state
+  const [postContent, setPostContent] = useState('');
+  const [isComposerExpanded, setIsComposerExpanded] = useState(false);
+  const [isRecognitionModalOpen, setIsRecognitionModalOpen] = useState(false);
+  const [isPollModalOpen, setIsPollModalOpen] = useState(false);
+  
   const { data: me, isLoading: loadingMe } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
@@ -327,33 +333,111 @@ export default function FeedPage() {
 
         {/* Main content - wider and centered */}
         <div className="lg:col-span-6 w-full max-w-[800px] space-y-6">
-            {/* Composer */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">👋</span>
+            {/* Enhanced Post Composer */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">A</span>
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={postContent}
+                      onChange={(e) => setPostContent(e.target.value)}
+                      onFocus={() => setIsComposerExpanded(true)}
+                      placeholder="What's on your mind?"
+                      className="w-full bg-transparent resize-none text-gray-900 placeholder-gray-500 border-none outline-none text-lg min-h-[60px] max-h-[200px]"
+                      style={{ height: 'auto' }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  placeholder="What's on your mind?"
-                  className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  disabled
-                />
-                <button className="text-gray-400 hover:text-gray-600">😊</button>
-              </div>
-              
-              <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium hover:bg-emerald-200">
-                  📢 Share
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium hover:bg-amber-200">
-                  👏 Appreciate
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-violet-100 text-violet-700 rounded-full text-sm font-medium hover:bg-violet-200">
-                  📊 Poll
-                </button>
+
+                {/* Expanded composer actions */}
+                {(isComposerExpanded || postContent) && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setIsRecognitionModalOpen(true)}
+                          className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-medium hover:bg-amber-100 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                          Recognize
+                        </button>
+                        <button 
+                          onClick={() => setIsPollModalOpen(true)}
+                          className="flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-700 rounded-full text-sm font-medium hover:bg-violet-100 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Poll
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                          </svg>
+                          Attach
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {postContent && (
+                          <button 
+                            onClick={() => {
+                              setPostContent('');
+                              setIsComposerExpanded(false);
+                            }}
+                            className="text-gray-500 hover:text-gray-700 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        <button 
+                          disabled={!postContent.trim()}
+                          className="bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
+                        >
+                          Post
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Recognition Modal Placeholder */}
+            {isRecognitionModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h3 className="text-lg font-semibold mb-4">Recognize Someone</h3>
+                  <p className="text-gray-600 mb-4">Recognition feature coming soon!</p>
+                  <button 
+                    onClick={() => setIsRecognitionModalOpen(false)}
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-md"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Poll Modal Placeholder */}
+            {isPollModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h3 className="text-lg font-semibold mb-4">Create Poll</h3>
+                  <p className="text-gray-600 mb-4">Poll creation feature coming soon!</p>
+                  <button 
+                    onClick={() => setIsPollModalOpen(false)}
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-md"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Filter */}
             <div className="flex items-center justify-between">
