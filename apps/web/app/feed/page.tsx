@@ -6,7 +6,7 @@
  * 
  * Uses client-only rendering with error boundaries to handle browser extension conflicts.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 /** Fetch the current user and org details. Returns { orgId, user }. */
@@ -41,6 +41,8 @@ async function fetchPosts(orgId: string) {
 
 export default function FeedPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userRole, setUserRole] = useState("admin"); // Toggle between "admin" and "user" for testing
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const { data: me, isLoading: loadingMe } = useQuery({
     queryKey: ["me"],
@@ -53,8 +55,19 @@ export default function FeedPage() {
     enabled: !!orgId,
   });
 
-  // Mock user role - in real app this would come from authentication
-  const userRole = "admin"; // or "user" for regular users
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isDropdownOpen]);
 
   if (loadingMe) {
     return (
@@ -138,45 +151,58 @@ export default function FeedPage() {
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
               </button>
               
-              {/* User Profile */}
-              <div className="relative">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 text-sm font-medium">A</span>
+              {/* Role Toggle for Testing */}
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setUserRole(userRole === "admin" ? "user" : "admin")}
+                  className={`px-3 py-1 text-xs rounded-full border ${
+                    userRole === "admin" 
+                      ? "bg-blue-100 border-blue-300 text-blue-800" 
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  }`}
+                >
+                  {userRole === "admin" ? "👑 Admin" : "👤 User"}
+                </button>
+
+                {/* User Profile */}
+                <div className="relative" ref={dropdownRef}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                      <span className="text-gray-600 text-sm font-medium">A</span>
+                    </div>
+                    <button 
+                      className="text-gray-400 hover:text-gray-600"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
-                  <button 
-                    className="text-gray-400 hover:text-gray-600"
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="py-2">
-                      {/* My Account Section */}
-                      <div className="px-4 py-2">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2">My Account</h3>
-                        <button className="flex items-center gap-3 w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          Profile
-                        </button>
-                      </div>
+                  {/* Dropdown Menu */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                      <div className="py-2">
+                        {/* My Account Section */}
+                        <div className="px-4 py-2">
+                          <h3 className="text-sm font-semibold text-gray-900 mb-2">My Account</h3>
+                          <button className="flex items-center gap-3 w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Profile
+                          </button>
+                        </div>
 
-                      {/* Admin Only Sections */}
-                      {userRole === "admin" && (
-                        <>
-                          <div className="border-t border-gray-100 px-4 py-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-sm font-semibold text-gray-900">My Activity</h3>
-                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">Admin</span>
-                            </div>
+                        {/* Admin Only Sections */}
+                        {userRole === "admin" && (
+                          <>
+                            <div className="border-t border-gray-100 px-4 py-2">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-sm font-semibold text-gray-900">My Activity</h3>
+                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">Admin</span>
+                              </div>
                             <div className="space-y-1">
                               <button className="flex items-center gap-3 w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,21 +268,22 @@ export default function FeedPage() {
                               Business Settings
                             </button>
                           </div>
-                        </>
-                      )}
+                          </>
+                        )}
 
-                      {/* Logout for all users */}
-                      <div className="border-t border-gray-100 px-4 py-2">
-                        <button className="flex items-center gap-3 w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Logout
-                        </button>
+                        {/* Logout for all users */}
+                        <div className="border-t border-gray-100 px-4 py-2">
+                          <button className="flex items-center gap-3 w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
