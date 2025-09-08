@@ -12,7 +12,8 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "__tests__/**/*",
-    "jest.setup.ts"
+    "jest.setup.ts",
+    "jest.config.ts"
   ],
   "exclude": [
     "node_modules",
@@ -21,7 +22,6 @@
     "coverage",
     "../../static",
     "../../**/static",
-    "**/*.d.ts",
-    "jest.config.ts"
+    "**/*.d.ts"
   ]
 }
