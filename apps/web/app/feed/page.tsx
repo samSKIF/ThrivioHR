@@ -5,27 +5,10 @@
  * Mirrors the EmployeeRewards social feed UI: filter pills, disabled composer,
  * vertical list of post cards, and simple loading/empty states.
  * 
- * Uses dynamic import with ssr: false to prevent hydration conflicts from browser extensions.
+ * Uses client-only rendering with error boundaries to handle browser extension conflicts.
  */
-import dynamic from "next/dynamic";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-
-// Dynamically import this page component with SSR disabled to prevent hydration conflicts
-const DynamicFeedPage = dynamic(
-  () => Promise.resolve(FeedPageComponent),
-  {
-    ssr: false,
-    loading: () => (
-      <main className="p-6 space-y-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 w-1/4 bg-gray-300 rounded"></div>
-          <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
-        </div>
-      </main>
-    ),
-  }
-);
 
 /** Fetch the current user and org details. Returns { orgId, user }. */
 async function fetchMe() {
@@ -57,8 +40,7 @@ async function fetchPosts(orgId: string) {
   }
 }
 
-// The actual feed component that will be dynamically loaded
-function FeedPageComponent() {
+export default function FeedPage() {
   const { data: me, isLoading: loadingMe } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
@@ -154,7 +136,3 @@ function FeedPageComponent() {
   );
 }
 
-// Export the dynamically loaded version to prevent hydration conflicts
-export default function FeedPage() {
-  return <DynamicFeedPage />;
-}
