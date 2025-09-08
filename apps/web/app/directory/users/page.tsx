@@ -116,6 +116,19 @@ export default function EmployeeDirectoryPage() {
     }
   }
 
+  async function fetchDepartments(orgId: string) {
+    try {
+      const response = await fetch(`/api/bff/directory/departments?orgId=${orgId}`, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.warn('Failed to fetch departments from API, using mock data:', error);
+      return await fetchMockDepartments(); // Fallback to mock data
+    }
+  }
+
   function generateMockEmployeeData() {
     // Generate realistic mock employee data for demonstration
     const mockEmployees = [
@@ -212,7 +225,7 @@ export default function EmployeeDirectoryPage() {
         
         const [employeesData, departmentsData, locationsData, subscriptionData] = await Promise.all([
           fetchEmployees(id),
-          fetchMockDepartments(),
+          fetchDepartments(id),
           fetchMockLocations(),
           fetchSubscription(id)
         ]);

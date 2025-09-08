@@ -515,4 +515,32 @@ export class DirectoryService {
       };
     }
   }
+
+  async getOrganizationDepartments(orgId: string) {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          ou.id, 
+          ou.name,
+          ou.description,
+          COUNT(u.id) as member_count
+        FROM org_units ou
+        LEFT JOIN users u ON u.organization_id = ou.organization_id
+        WHERE ou.organization_id = $1 AND ou.type = 'department'
+        GROUP BY ou.id, ou.name, ou.description
+        ORDER BY ou.name ASC
+      `, [orgId]);
+
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        memberCount: parseInt(row.member_count, 10) || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      // Return empty array on error - will trigger mock data fallback
+      return [];
+    }
+  }
 }
