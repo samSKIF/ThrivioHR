@@ -24,13 +24,16 @@ async function fetchPosts(orgId: string) {
 }
 
 export default function FeedPage() {
-  const { data: me, isLoading: loadingMe } = useQuery(["me"], fetchMe);
+  const { data: me, isLoading: loadingMe } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+  });
   const orgId = me?.org?.id;
-  const { data: posts, isLoading: loadingPosts } = useQuery(
-    ["posts", orgId],
-    () => fetchPosts(orgId),
-    { enabled: !!orgId },
-  );
+  const { data: posts, isLoading: loadingPosts } = useQuery({
+    queryKey: ["posts", orgId],
+    queryFn: () => fetchPosts(orgId!),
+    enabled: !!orgId,
+  });
 
   if (loadingMe) {
     return (
@@ -82,7 +85,7 @@ export default function FeedPage() {
               </div>
             ))}
           </>
-        ) : posts?.length ? (
+        ) : posts && Array.isArray(posts) && posts.length > 0 ? (
           posts.map((post: any) => (
             <article key={post.id} className="rounded-2xl border p-4">
               <div className="flex items-center justify-between text-xs text-muted-foreground">

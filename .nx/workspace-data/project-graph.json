@@ -13689,7 +13689,7 @@
       },
       {
         "source": "bff",
-        "target": "npm:argon2",
+        "target": "npm:@node-rs/argon2",
         "type": "static"
       },
       {
@@ -30178,5 +30178,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757319811760
+  "computedAt": 1757324366031
 }

@@ -1,5 +1,7 @@
 'use client';
 import { ApolloClient, InMemoryCache, HttpLink, ApolloProvider } from '@apollo/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
 
 function authHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
@@ -19,5 +21,18 @@ const client = new ApolloClient({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <ApolloProvider client={client}>{children}</ApolloProvider>;
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 minute
+        retry: 1,
+      },
+    },
+  }));
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    </QueryClientProvider>
+  );
 }
