@@ -11,11 +11,20 @@ export default function ClientOnlyWrapper({ children, fallback }: ClientOnlyWrap
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setHasMounted(true);
+    // Add a small delay to ensure DOM is stable and avoid hydration mismatches
+    const timer = setTimeout(() => {
+      setHasMounted(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   if (!hasMounted) {
-    return fallback || null;
+    return fallback || (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return <>{children}</>;

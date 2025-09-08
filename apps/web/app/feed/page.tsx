@@ -53,17 +53,17 @@ export default function FeedPage() {
 
   if (loadingMe) {
     return (
-      <main className="p-6 space-y-4">
+      <main className="p-6 space-y-4" suppressHydrationWarning={true}>
         <div className="animate-pulse space-y-4">
-          <div className="h-6 w-1/4 bg-muted rounded"></div>
-          <div className="h-4 w-1/2 bg-muted rounded"></div>
+          <div className="h-6 w-1/4 bg-gray-300 rounded"></div>
+          <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="p-6 space-y-4">
+    <main className="p-6 space-y-4" suppressHydrationWarning={true}>
       {/* Header */}
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Feed</h1>
@@ -95,9 +95,9 @@ export default function FeedPage() {
           <>
             {[...Array(3)].map((_, idx) => (
               <div key={idx} className="space-y-2 p-4 border rounded-2xl animate-pulse">
-                <div className="h-4 w-1/3 bg-muted rounded"></div>
-                <div className="h-3 w-2/3 bg-muted rounded"></div>
-                <div className="h-3 w-1/2 bg-muted rounded"></div>
+                <div className="h-4 w-1/3 bg-gray-300 rounded"></div>
+                <div className="h-3 w-2/3 bg-gray-300 rounded"></div>
+                <div className="h-3 w-1/2 bg-gray-300 rounded"></div>
               </div>
             ))}
           </>
