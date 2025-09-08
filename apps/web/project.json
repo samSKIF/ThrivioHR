@@ -26,10 +26,10 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/jest:jest",
       "options": {
-        "command": "jest",
-        "cwd": "apps/web"
+        "jestConfig": "apps/web/jest.config.ts",
+        "passWithNoTests": true
       }
     },
     "lint": {
