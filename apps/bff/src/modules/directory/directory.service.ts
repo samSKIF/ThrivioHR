@@ -478,21 +478,23 @@ export class DirectoryService {
         SELECT 
           s.id, 
           s.seats_limit,
+          s.subscribed_users,
           s.plan_code,
           s.status,
           s.start_at,
-          s.end_at
+          s.expiration_date
         FROM subscriptions s
-        WHERE s.org_id = $1 AND s.status = 'active'
+        WHERE s.organization_id = $1 AND s.status = 'active'
         ORDER BY s.created_at DESC
         LIMIT 1
       `, [orgId]);
 
       if (result.rows.length === 0) {
         return {
-          seatsLimit: 500, // Default fallback
-          planCode: 'default',
-          status: 'active'
+          seatsLimit: null, // No subscription found
+          subscribedUsers: 0,
+          planCode: null,
+          status: 'no_subscription'
         };
       }
 
@@ -500,18 +502,20 @@ export class DirectoryService {
       return {
         id: subscription.id,
         seatsLimit: subscription.seats_limit,
+        subscribedUsers: subscription.subscribed_users,
         planCode: subscription.plan_code,
         status: subscription.status,
         startAt: subscription.start_at,
-        endAt: subscription.end_at,
+        expirationDate: subscription.expiration_date,
       };
     } catch (error) {
       console.error('Error fetching subscription:', error);
-      // Return fallback on error
+      // Return no subscription on error to indicate issue
       return {
-        seatsLimit: 500,
-        planCode: 'default',
-        status: 'active'
+        seatsLimit: null,
+        subscribedUsers: 0,
+        planCode: null,
+        status: 'error'
       };
     }
   }

@@ -30,7 +30,9 @@ type Location = {
 
 type OrgStats = {
   totalEmployees: number;
-  subscriptionLimit: number;
+  subscriptionLimit: number | null;
+  subscribedUsers: number;
+  subscriptionStatus?: string;
   departmentCount: number;
 };
 
@@ -112,35 +114,27 @@ export default function EmployeeDirectoryPage() {
       return await response.json();
     } catch (error) {
       console.warn('Failed to fetch subscription from API:', error);
-      // For demo mode, calculate subscription based on actual employee count
+      // For demo mode, create a realistic demo subscription
       if (orgId === "demo-org") {
         return await fetchDemoSubscription();
       }
-      return { seatsLimit: 500 }; // Fallback for other cases
+      return { seatsLimit: null, subscribedUsers: 0, status: 'no_subscription' }; // No subscription fallback
     }
   }
 
   async function fetchDemoSubscription() {
-    // Calculate realistic subscription limit based on current employees
+    // Create realistic demo subscription data for demo mode
     const employeesData = await fetchEmployees("demo-org");
     const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
     const currentEmployeeCount = users.length;
     
-    // Business logic: subscription limits are typically set with some buffer
-    // Small org (1-10 employees) → 25 seats
-    // Medium org (11-50 employees) → 100 seats  
-    // Large org (50+ employees) → 200 seats
-    let seatsLimit: number;
-    if (currentEmployeeCount <= 10) {
-      seatsLimit = 25;
-    } else if (currentEmployeeCount <= 50) {
-      seatsLimit = 100;
-    } else {
-      seatsLimit = 200;
-    }
-    
-    console.log(`Demo subscription calculated: ${currentEmployeeCount} employees → ${seatsLimit} seats limit`);
-    return { seatsLimit };
+    // Demo subscription: Small business plan with 50 seats, current usage based on employees
+    return { 
+      seatsLimit: 50, 
+      subscribedUsers: currentEmployeeCount,
+      planCode: 'small_business',
+      status: 'active'
+    };
   }
 
   async function fetchDepartments(orgId: string) {
@@ -301,7 +295,9 @@ export default function EmployeeDirectoryPage() {
       const activeEmployees = transformedEmployees.filter((u: Employee) => u.status !== 'inactive').length;
       setOrgStats({
         totalEmployees: activeEmployees,
-        subscriptionLimit: subscriptionData?.seatsLimit || 500, // Real subscription limit
+        subscriptionLimit: subscriptionData?.seatsLimit,
+        subscribedUsers: subscriptionData?.subscribedUsers || activeEmployees,
+        subscriptionStatus: subscriptionData?.status,
         departmentCount: departmentsData.length
       });
       
@@ -511,17 +507,26 @@ export default function EmployeeDirectoryPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Subscription Usage</p>
-                <p className="text-3xl font-semibold text-gray-900">{orgStats.totalEmployees}/{orgStats.subscriptionLimit}</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min((orgStats.totalEmployees / orgStats.subscriptionLimit) * 100, 100)}%` }}
-                  ></div>
-                </div>
+                <p className="text-sm text-gray-600">Subscribed Users</p>
+                {orgStats.subscriptionLimit ? (
+                  <>
+                    <p className="text-3xl font-semibold text-gray-900">{orgStats.subscribedUsers}/{orgStats.subscriptionLimit}</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${Math.min((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-3xl font-semibold text-red-600">No Active Subscription</p>
+                    <p className="text-sm text-red-500 mt-1">Please contact HR to set up a subscription plan</p>
+                  </>
+                )}
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-yellow-600" />
+              <div className={`w-12 h-12 ${orgStats.subscriptionLimit ? 'bg-yellow-100' : 'bg-red-100'} rounded-lg flex items-center justify-center`}>
+                <TrendingUp className={`w-6 h-6 ${orgStats.subscriptionLimit ? 'text-yellow-600' : 'text-red-600'}`} />
               </div>
             </div>
           </div>
