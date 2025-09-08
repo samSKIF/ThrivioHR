@@ -89,12 +89,34 @@ export class IdentityService {
     // Fallback: direct SQL via pg
     return await this.withPg(async (c) => {
       const q = `
-        SELECT id, email, password_hash, password_reset_required
+        SELECT id, email, password_hash, password_reset_required,
+               first_name, last_name, display_name, organization_id
         FROM users
         WHERE lower(email)=lower($1)
         ORDER BY created_at ASC
         LIMIT 1`;
       const r = await c.query(q, [email]);
+      return r.rows[0] || null;
+    });
+  }
+
+  /** Lookup user by ID; returns user or null. */
+  async findUserById(userId: string) {
+    // Try the flexible getUsers method first if it exists
+    try {
+      const list = await (this as any).getUsers?.({ id: userId });
+      if (Array.isArray(list) && list.length) return list[0];
+    } catch { /* fall through */ }
+    
+    // Fallback: direct SQL via pg
+    return await this.withPg(async (c) => {
+      const q = `
+        SELECT id, email, password_hash, password_reset_required,
+               first_name, last_name, display_name, organization_id
+        FROM users
+        WHERE id = $1
+        LIMIT 1`;
+      const r = await c.query(q, [userId]);
       return r.rows[0] || null;
     });
   }

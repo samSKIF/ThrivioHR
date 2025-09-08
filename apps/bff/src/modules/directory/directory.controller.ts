@@ -1,13 +1,27 @@
 import { Body, Controller, Get, Post, Query, Req, UseGuards, BadRequestException, Inject } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DirectoryService } from './directory.service';
+import { IdentityService } from '../identity/identity.service';
 import { ImportValidateDto } from './dtos/import-validate.dto';
 import { ImportCommitDto } from './dtos/import-commit.dto';
 import { ImportSessionCreateDto, ImportSessionApproveDto, ImportSessionRejectDto } from './dtos/import-session.dto';
 
 @Controller('directory')
 export class DirectoryController {
-  constructor(@Inject(DirectoryService) private readonly svc: DirectoryService) {}
+  constructor(
+    @Inject(DirectoryService) private readonly svc: DirectoryService,
+    @Inject(IdentityService) private readonly identity: IdentityService
+  ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  async getUsers(@Query('orgId') orgId: string, @Query('limit') limit?: string, @Query('cursor') cursor?: string) {
+    const parsedLimit = limit ? parseInt(limit, 10) : 20;
+    if (!orgId) throw new BadRequestException('orgId is required');
+    
+    const users = await this.identity.getUsersByOrg(orgId, parsedLimit);
+    return { users, nextCursor: null }; // Simple response for now
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('import/validate')

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 const BFF_BASE =
   process.env.BFF_INTERNAL_URL ||
   process.env.NEXT_PUBLIC_BFF_URL ||
-  "http://127.0.0.1:5000"; // server-to-server default
+  "http://127.0.0.1:8000"; // server-to-server default
 
 function buildTarget(req: Request, path: string[]) {
   const url = new URL(req.url);

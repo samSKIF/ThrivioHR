@@ -62,8 +62,8 @@ export class AuthController {
     const sub = readSidSub(req);
     if (!sub) throw new HttpException('unauthorized', HttpStatus.UNAUTHORIZED);
 
-    // Use the direct database query method instead of the flexible getUsers method
-    const user = await this.identity.findUserByEmailCI('admin@canva.com'); // TODO: get user by ID instead of hardcoded email
+    // Use the user ID from the token to look up the user
+    const user = await this.identity.findUserById(sub);
     if (!user) throw new HttpException('user_not_found', HttpStatus.NOT_FOUND);
 
     res.json({
@@ -72,7 +72,7 @@ export class AuthController {
       firstName: user.firstName || user.first_name,
       lastName: user.lastName || user.last_name,
       displayName: user.displayName || user.display_name,
-      orgId: user.organizationId || user.organization_id,
+      organizationId: user.organizationId || user.organization_id,
       passwordResetRequired: !!user.password_reset_required
     });
   }
