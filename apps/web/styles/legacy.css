@@ -72,4 +72,18 @@ html, body { background: hsl(var(--background)); color: hsl(var(--foreground)); 
 /* ===== HEADER ===== */
 .site-header { border-bottom: 1px solid hsl(var(--border)); }
 .nav { display: flex; gap: .5rem; align-items: center; }
-.nav a.active { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-radius: 10px; padding: .35rem .6rem; }
+.nav a { 
+  color: hsl(var(--foreground)); 
+  text-decoration: none; 
+  padding: .35rem .6rem; 
+  border-radius: 10px; 
+  transition: all 0.2s ease;
+}
+.nav a:hover { 
+  background: hsl(var(--muted)); 
+  color: hsl(var(--foreground));
+}
+.nav a.active { 
+  background: hsl(var(--primary)); 
+  color: hsl(var(--primary-foreground)); 
+}
