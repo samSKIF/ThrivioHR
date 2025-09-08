@@ -7,18 +7,126 @@
  * Uses client-only rendering with error boundaries to handle browser extension conflicts.
  */
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// GraphQL queries
+const GET_CURRENT_USER_QUERY = `
+  query CurrentUser {
+    currentUser {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+  }
+`;
+
+const GET_POSTS_QUERY = `
+  query GetPosts($limit: Int, $cursor: String) {
+    posts(limit: $limit, cursor: $cursor) {
+      id
+      content
+      type
+      likeCount
+      commentCount
+      isLiked
+      createdAt
+      author {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+    }
+  }
+`;
+
+const GET_USER_POINTS_QUERY = `
+  query GetUserPoints($userId: ID) {
+    userPoints(userId: $userId) {
+      userId
+      availablePoints
+      pendingPoints
+      totalEarned
+      totalSpent
+    }
+  }
+`;
+
+const CREATE_POST_MUTATION = `
+  mutation CreatePost($input: CreatePostInput!) {
+    createPost(input: $input) {
+      id
+      content
+      type
+      likeCount
+      commentCount
+      isLiked
+      createdAt
+      author {
+        id
+        firstName
+        lastName
+        displayName
+      }
+    }
+  }
+`;
+
+// GraphQL client function
+async function graphqlRequest(query: string, variables?: any) {
+  try {
+    const res = await fetch('http://localhost:8000/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
+    const data = await res.json();
+    
+    if (data.errors) {
+      throw new Error(data.errors[0]?.message || 'GraphQL error');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('GraphQL request error:', error);
+    throw error;
+  }
+}
 
 /** Fetch the current user and org details. Returns { orgId, user }. */
 async function fetchMe() {
   try {
-    const res = await fetch("/api/bff/auth/me");
-    if (!res.ok) {
-      // For now, return mock data since endpoint doesn't exist yet
-      return { org: { id: "jumia", name: "Jumia" }, user: { id: "admin", email: "admin@jumia.com" } };
+    const data = await graphqlRequest(GET_CURRENT_USER_QUERY);
+    const user = data?.currentUser;
+    if (user) {
+      return { 
+        org: { id: "jumia", name: "Jumia" }, 
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          displayName: user.displayName
+        }
+      };
     }
-    return res.json();
-  } catch {
+    // Fallback for development
+    return { org: { id: "jumia", name: "Jumia" }, user: { id: "admin", email: "admin@jumia.com" } };
+  } catch (error) {
+    console.error('Error fetching user:', error);
     // Fallback for development
     return { org: { id: "jumia", name: "Jumia" }, user: { id: "admin", email: "admin@jumia.com" } };
   }
@@ -27,15 +135,45 @@ async function fetchMe() {
 /** Fetch posts for the given orgId. */
 async function fetchPosts(orgId: string) {
   try {
-    const res = await fetch(`/api/social/posts?orgId=${orgId}`);
-    if (!res.ok) {
-      // Return empty array since endpoint doesn't exist yet
-      return [];
-    }
-    return res.json();
-  } catch {
-    // Fallback for development
+    const data = await graphqlRequest(GET_POSTS_QUERY, { limit: 20 });
+    return data?.posts || [];
+  } catch (error) {
+    console.error('Error fetching posts:', error);
     return [];
+  }
+}
+
+/** Fetch user points */
+async function fetchUserPoints(userId?: string) {
+  try {
+    const data = await graphqlRequest(GET_USER_POINTS_QUERY, { userId });
+    return data?.userPoints || { 
+      availablePoints: 1250, 
+      pendingPoints: 1000, 
+      totalEarned: 2500, 
+      totalSpent: 250 
+    };
+  } catch (error) {
+    console.error('Error fetching user points:', error);
+    return { 
+      availablePoints: 1250, 
+      pendingPoints: 1000, 
+      totalEarned: 2500, 
+      totalSpent: 250 
+    };
+  }
+}
+
+/** Create a new post */
+async function createPost(content: string, type = 'text') {
+  try {
+    const data = await graphqlRequest(CREATE_POST_MUTATION, {
+      input: { content, type }
+    });
+    return data?.createPost;
+  } catch (error) {
+    console.error('Error creating post:', error);
+    throw error;
   }
 }
 
@@ -50,16 +188,46 @@ export default function FeedPage() {
   const [isRecognitionModalOpen, setIsRecognitionModalOpen] = useState(false);
   const [isPollModalOpen, setIsPollModalOpen] = useState(false);
   
+  const queryClient = useQueryClient();
+  
   const { data: me, isLoading: loadingMe } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
   });
+  
   const orgId = me?.org?.id;
+  const userId = me?.user?.id;
+  
   const { data: posts, isLoading: loadingPosts } = useQuery({
     queryKey: ["posts", orgId],
     queryFn: () => fetchPosts(orgId!),
     enabled: !!orgId,
   });
+
+  const { data: userPoints, isLoading: loadingPoints } = useQuery({
+    queryKey: ["userPoints", userId],
+    queryFn: () => fetchUserPoints(userId),
+    enabled: !!userId,
+  });
+
+  const createPostMutation = useMutation({
+    mutationFn: (content: string) => createPost(content, 'text'),
+    onSuccess: () => {
+      // Refresh posts list after creating a new post
+      queryClient.invalidateQueries({ queryKey: ["posts", orgId] });
+      setPostContent('');
+      setIsComposerExpanded(false);
+    },
+    onError: (error) => {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    },
+  });
+
+  const handleCreatePost = () => {
+    if (!postContent.trim()) return;
+    createPostMutation.mutate(postContent.trim());
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -321,7 +489,9 @@ export default function FeedPage() {
                       </div>
                       <span className="text-blue-700 font-medium">Available</span>
                     </div>
-                    <span className="text-2xl font-bold text-blue-600">1,250</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {loadingPoints ? '...' : userPoints?.availablePoints?.toLocaleString() || '1,250'}
+                    </span>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -331,7 +501,9 @@ export default function FeedPage() {
                       </div>
                       <span className="text-green-700 font-medium">Pending</span>
                     </div>
-                    <span className="text-2xl font-bold text-green-600">1,000</span>
+                    <span className="text-2xl font-bold text-green-600">
+                      {loadingPoints ? '...' : userPoints?.pendingPoints?.toLocaleString() || '1,000'}
+                    </span>
                   </div>
                 </div>
                 
@@ -436,10 +608,11 @@ export default function FeedPage() {
                           </button>
                         )}
                         <button 
-                          disabled={!postContent.trim()}
+                          disabled={!postContent.trim() || createPostMutation.isPending}
+                          onClick={handleCreatePost}
                           className="bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full text-sm font-medium transition-colors"
                         >
-                          Post
+                          {createPostMutation.isPending ? 'Posting...' : 'Post'}
                         </button>
                       </div>
                     </div>
