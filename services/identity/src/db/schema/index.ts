@@ -12,10 +12,6 @@ export * from './corporateAdmins';
 export * from './subscriptions';
 export * from './walletTransactions';
 export * from './organizationFeatures';
-export * from './posts';
-export * from './userPoints';
-export * from './recognition';
-export * from './polls';
 
 import { organizations } from './organizations';
 import { users } from './users';
@@ -31,10 +27,6 @@ import { corporateAdmins } from './corporateAdmins';
 import { subscriptions } from './subscriptions';
 import { walletTransactions } from './walletTransactions';
 import { organizationFeatures } from './organizationFeatures';
-import { posts, postLikes, postComments } from './posts';
-import { userPoints, pointTransactions } from './userPoints';
-import { recognitions, companyValues } from './recognition';
-import { polls, pollOptions, pollVotes } from './polls';
 
 import type { PgTable } from 'drizzle-orm/pg-core';
 
@@ -53,14 +45,4 @@ export const allTables: PgTable[] = [
   subscriptions,
   walletTransactions,
   organizationFeatures,
-  posts,
-  postLikes,
-  postComments,
-  userPoints,
-  pointTransactions,
-  recognitions,
-  companyValues,
-  polls,
-  pollOptions,
-  pollVotes,
 ];

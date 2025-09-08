@@ -9,7 +9,6 @@ import { DirectoryModule } from './modules/directory/directory.module';
 import { BffGraphqlModule } from './graphql/graphql.module';
 import { OidcModule } from './modules/sso/oidc/oidc.module';
 import { CorporateModule } from './modules/corporate/corporate.module';
-import { SocialModule } from './modules/social/social.module';
 
 @Module({
   imports: [
@@ -19,8 +18,7 @@ import { SocialModule } from './modules/social/social.module';
     DirectoryModule,
     BffGraphqlModule,
     OidcModule,
-    CorporateModule,
-    SocialModule
+    CorporateModule
   ],
   controllers: [AppController, LogoutController, DebugRoutesController],
 })

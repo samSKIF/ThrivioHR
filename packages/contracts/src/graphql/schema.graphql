@@ -30,67 +30,9 @@ type PageInfo {
   endCursor: String
 }
 
-type Post {
-  id: ID!
-  organizationId: ID!
-  author: User!
-  content: String!
-  type: String!
-  likeCount: Int!
-  commentCount: Int!
-  isLiked: Boolean!
-  createdAt: String!
-  updatedAt: String!
-}
-
-type UserPoints {
-  userId: ID!
-  availablePoints: Int!
-  pendingPoints: Int!
-  totalEarned: Int!
-  totalSpent: Int!
-}
-
-type Recognition {
-  id: ID!
-  fromUser: User!
-  toUser: User!
-  values: [String!]
-  pointsAwarded: Int!
-  message: String
-  isPublic: Boolean!
-  createdAt: String!
-}
-
-input CreatePostInput {
-  content: String!
-  type: String = "text"
-}
-
-input CreateRecognitionInput {
-  toUserId: ID!
-  values: [String!]!
-  pointsAwarded: Int!
-  message: String
-  isPublic: Boolean = true
-}
-
-type Mutation {
-  createPost(input: CreatePostInput!): Post!
-  likePost(postId: ID!): Post!
-  unlikePost(postId: ID!): Post!
-  createRecognition(input: CreateRecognitionInput!): Recognition!
-  sendPoints(toUserId: ID!, amount: Int!, reason: String): Boolean!
-}
-
 type Query {
   currentUser: User
   listEmployees(orgId: ID!, limit: Int = 20, cursor: String): [Employee!]! @deprecated(reason: "Use listEmployeesConnection")
   listEmployeesConnection(first: Int = 20, after: String): EmployeeConnection!
   getEmployee(id: ID!): Employee
-  
-  # Social Feed Queries
-  posts(limit: Int = 20, cursor: String): [Post!]!
-  userPoints(userId: ID): UserPoints
-  recognitions(limit: Int = 10): [Recognition!]!
 }
