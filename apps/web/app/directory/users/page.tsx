@@ -285,19 +285,48 @@ export default function EmployeeDirectoryPage() {
 
   const handleAddEmployee = async () => {
     try {
-      // API call to create employee would go here
+      if (!orgId) {
+        throw new Error('Organization ID is required');
+      }
+
       console.log('Creating employee:', newEmployee);
+      
+      // Call the API to create employee
+      const response = await fetch('/api/bff/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          orgId: orgId,
+          email: newEmployee.email,
+          givenName: newEmployee.firstName,
+          familyName: newEmployee.lastName
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const createdEmployee = await response.json();
+      console.log('Employee created successfully:', createdEmployee);
+      
       setShowAddEmployee(false);
+      
       // Reset form
       setNewEmployee({
         firstName: "", lastName: "", email: "", tempPassword: "", phoneNumber: "",
         jobTitle: "", department: "", location: "", managerEmail: "", hireDate: "",
         gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
       });
+      
       // Refresh employee list
-      // await refetchEmployees();
+      await loadInitialData();
     } catch (error) {
       console.error('Failed to create employee:', error);
+      alert(`Failed to create employee: ${error.message}`);
     }
   };
 
