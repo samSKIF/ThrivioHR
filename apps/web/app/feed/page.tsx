@@ -6,7 +6,7 @@
  * 
  * Uses client-only rendering with error boundaries to handle browser extension conflicts.
  */
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 /** Fetch the current user and org details. Returns { orgId, user }. */
@@ -40,6 +40,7 @@ async function fetchPosts(orgId: string) {
 }
 
 export default function FeedPage() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { data: me, isLoading: loadingMe } = useQuery({
     queryKey: ["me"],
     queryFn: fetchMe,
