@@ -202,7 +202,7 @@ export default function EmployeeDirectoryPage() {
     const mockStatuses = ["active", "active", "active", "active", "pending", "inactive"] as const;
     
     // Use email hash to consistently assign mock data
-    const emailHash = user.email ? user.email.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
+    const emailHash = user.email ? user.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
     
     return {
       ...user,
@@ -215,43 +215,45 @@ export default function EmployeeDirectoryPage() {
     };
   }
 
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      const id = await loadOrgId();
+      if (!id) throw new Error("No organizationId found on current user.");
+      setOrgId(id);
+      
+      const [employeesData, departmentsData, locationsData, subscriptionData] = await Promise.all([
+        fetchEmployees(id),
+        fetchDepartments(id),
+        fetchMockLocations(),
+        fetchSubscription(id)
+      ]);
+      
+      setDepartments(departmentsData);
+      setLocations(locationsData);
+      
+      const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
+      const transformedEmployees = users.map(transformToEmployee);
+      setEmployees(transformedEmployees);
+      
+      // Calculate stats
+      const activeEmployees = transformedEmployees.filter((u: Employee) => u.status !== 'inactive').length;
+      setOrgStats({
+        totalEmployees: activeEmployees,
+        subscriptionLimit: subscriptionData?.seatsLimit || 500, // Real subscription limit
+        departmentCount: departmentsData.length
+      });
+      
+      setError(null);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load directory.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const id = await loadOrgId();
-        if (!id) throw new Error("No organizationId found on current user.");
-        setOrgId(id);
-        
-        const [employeesData, departmentsData, locationsData, subscriptionData] = await Promise.all([
-          fetchEmployees(id),
-          fetchDepartments(id),
-          fetchMockLocations(),
-          fetchSubscription(id)
-        ]);
-        
-        setDepartments(departmentsData);
-        setLocations(locationsData);
-        
-        const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
-        const transformedEmployees = users.map(transformToEmployee);
-        setEmployees(transformedEmployees);
-        
-        // Calculate stats
-        const activeEmployees = transformedEmployees.filter(u => u.status !== 'inactive').length;
-        setOrgStats({
-          totalEmployees: activeEmployees,
-          subscriptionLimit: subscriptionData?.seatsLimit || 500, // Real subscription limit
-          departmentCount: departmentsData.length
-        });
-        
-        setError(null);
-      } catch (e: any) {
-        setError(e?.message || "Failed to load directory.");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadInitialData();
   }, []);
 
   // Filter employees based on search and filters
@@ -324,9 +326,9 @@ export default function EmployeeDirectoryPage() {
       
       // Refresh employee list
       await loadInitialData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to create employee:', error);
-      alert(`Failed to create employee: ${error.message}`);
+      alert(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
