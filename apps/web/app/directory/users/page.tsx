@@ -544,273 +544,280 @@ export default function EmployeeDirectoryPage() {
 
       {/* Add Employee Modal */}
       {showAddEmployee && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowAddEmployee(false)}></div>
-            
-            <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-xl">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200/60">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-lg font-medium text-gray-900">Create New Employee</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full h-fit">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
-                <button 
-                  onClick={() => setShowAddEmployee(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <span className="sr-only">Close</span>
-                  <span className="text-gray-400 text-lg">✕</span>
-                </button>
+                <h3 className="text-lg font-semibold text-gray-900">Create New Employee</h3>
+              </div>
+              <button 
+                onClick={() => setShowAddEmployee(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-5">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Basic Information</h4>
+                
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter first name"
+                      value={newEmployee.firstName}
+                      onChange={(e) => setNewEmployee({...newEmployee, firstName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter last name"
+                      value={newEmployee.lastName}
+                      onChange={(e) => setNewEmployee({...newEmployee, lastName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={newEmployee.email}
+                    onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Temporary Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter temporary password"
+                    value={newEmployee.tempPassword}
+                    onChange={(e) => setNewEmployee({...newEmployee, tempPassword: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Employee will be prompted to change password on first login</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={newEmployee.phoneNumber}
+                    onChange={(e) => setNewEmployee({...newEmployee, phoneNumber: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
               </div>
 
-              <div className="px-6 py-4 max-h-96 overflow-y-auto">
-                {/* Basic Information */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-900 mb-4">Basic Information</h4>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter first name"
-                        value={newEmployee.firstName}
-                        onChange={(e) => setNewEmployee({...newEmployee, firstName: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter last name"
-                        value={newEmployee.lastName}
-                        onChange={(e) => setNewEmployee({...newEmployee, lastName: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
+              {/* Work Information */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Work Information</h4>
+                
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address <span className="text-red-500">*</span>
+                      Job Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter job title"
+                      value={newEmployee.jobTitle}
+                      onChange={(e) => setNewEmployee({...newEmployee, jobTitle: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Department
+                    </label>
+                    <select
+                      value={newEmployee.department}
+                      onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    >
+                      <option value="">Select department</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.name}>{dept.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <select
+                      value={newEmployee.location}
+                      onChange={(e) => setNewEmployee({...newEmployee, location: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    >
+                      <option value="">Select location</option>
+                      {locations.map(loc => (
+                        <option key={loc.id} value={loc.name}>{loc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Manager Email
                     </label>
                     <input
                       type="email"
-                      placeholder="Enter email address"
-                      value={newEmployee.email}
-                      onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Temporary Password <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Enter temporary password"
-                      value={newEmployee.tempPassword}
-                      onChange={(e) => setNewEmployee({...newEmployee, tempPassword: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Employee will be prompted to change password on first login</p>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={newEmployee.phoneNumber}
-                      onChange={(e) => setNewEmployee({...newEmployee, phoneNumber: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                      placeholder="Enter manager's email"
+                      value={newEmployee.managerEmail}
+                      onChange={(e) => setNewEmployee({...newEmployee, managerEmail: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
-                {/* Work Information */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-900 mb-4">Work Information</h4>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Job Title
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter job title"
-                        value={newEmployee.jobTitle}
-                        onChange={(e) => setNewEmployee({...newEmployee, jobTitle: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Department
-                      </label>
-                      <select
-                        value={newEmployee.department}
-                        onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all"
-                      >
-                        <option value="">Select department</option>
-                        {departments.map(dept => (
-                          <option key={dept.id} value={dept.name}>{dept.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hire Date
+                  </label>
+                  <input
+                    type="date"
+                    placeholder="dd/mm/yyyy"
+                    value={newEmployee.hireDate}
+                    onChange={(e) => setNewEmployee({...newEmployee, hireDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Location
-                      </label>
-                      <select
-                        value={newEmployee.location}
-                        onChange={(e) => setNewEmployee({...newEmployee, location: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all"
-                      >
-                        <option value="">Select location</option>
-                        {locations.map(loc => (
-                          <option key={loc.id} value={loc.name}>{loc.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Manager Email
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="Enter manager's email"
-                        value={newEmployee.managerEmail}
-                        onChange={(e) => setNewEmployee({...newEmployee, managerEmail: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
+              {/* Personal Information */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Personal Information</h4>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Hire Date
+                      Gender
+                    </label>
+                    <select
+                      value={newEmployee.gender}
+                      onChange={(e) => setNewEmployee({...newEmployee, gender: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nationality
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter nationality"
+                      value={newEmployee.nationality}
+                      onChange={(e) => setNewEmployee({...newEmployee, nationality: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Birth Date
                     </label>
                     <input
                       type="date"
-                      value={newEmployee.hireDate}
-                      onChange={(e) => setNewEmployee({...newEmployee, hireDate: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                      placeholder="dd/mm/yyyy"
+                      value={newEmployee.birthDate}
+                      onChange={(e) => setNewEmployee({...newEmployee, birthDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                     />
-                  </div>
-                </div>
-
-                {/* Personal Information */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-900 mb-4">Personal Information</h4>
-                  
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Gender
-                      </label>
-                      <select
-                        value={newEmployee.gender}
-                        onChange={(e) => setNewEmployee({...newEmployee, gender: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all"
-                      >
-                        <option value="">Select gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nationality
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter nationality"
-                        value={newEmployee.nationality}
-                        onChange={(e) => setNewEmployee({...newEmployee, nationality: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Birth Date
-                      </label>
-                      <input
-                        type="date"
-                        value={newEmployee.birthDate}
-                        onChange={(e) => setNewEmployee({...newEmployee, birthDate: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Access & Permissions */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-900 mb-4">Access & Permissions</h4>
-                  
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={newEmployee.status}
-                      onChange={(e) => setNewEmployee({...newEmployee, status: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-all"
-                    >
-                      <option value="active">Active</option>
-                      <option value="pending">Pending</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center mb-4">
-                    <input
-                      type="checkbox"
-                      id="adminPrivileges"
-                      checked={newEmployee.isAdmin}
-                      onChange={(e) => setNewEmployee({...newEmployee, isAdmin: e.target.checked})}
-                      className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded transition-colors"
-                    />
-                    <label htmlFor="adminPrivileges" className="ml-2 block text-sm text-gray-900">
-                      Grant administrator privileges
-                    </label>
-                  </div>
-                  
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900">Generated Username</p>
-                    <p className="text-xs text-gray-500">Username will be generated based on name and email</p>
                   </div>
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200/60 flex justify-end gap-3">
-                <button 
-                  onClick={() => setShowAddEmployee(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleAddEmployee}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  Create Employee
-                </button>
+              {/* Access & Permissions */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Access & Permissions</h4>
+                
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={newEmployee.status}
+                    onChange={(e) => setNewEmployee({...newEmployee, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                  >
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center mb-3">
+                  <input
+                    type="checkbox"
+                    id="adminPrivileges"
+                    checked={newEmployee.isAdmin}
+                    onChange={(e) => setNewEmployee({...newEmployee, isAdmin: e.target.checked})}
+                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="adminPrivileges" className="ml-2 block text-sm text-gray-900">
+                    Grant administrator privileges
+                  </label>
+                </div>
+                
+                <div className="text-sm">
+                  <p className="font-medium text-gray-900">Generated Username</p>
+                  <p className="text-xs text-gray-500">Username will be generated based on name and email</p>
+                </div>
               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowAddEmployee(false)}
+                className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleAddEmployee}
+                className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                Create Employee
+              </button>
             </div>
           </div>
         </div>
