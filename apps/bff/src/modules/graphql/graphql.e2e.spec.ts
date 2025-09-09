@@ -702,7 +702,7 @@ describe('GraphQL E2E', () => {
     });
 
     it('fails fast when no org context is set', async () => {
-      // Test what happens when we try to query without setting app.org_id
+      // Test what happens when we try to query without setting app.organization_id
       const identityRepo = app.get(IdentityRepository);
       
       // Use a valid UUID for testing
