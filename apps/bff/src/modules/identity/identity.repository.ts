@@ -12,6 +12,12 @@ function makeDisplayName(firstName: string|null, lastName: string|null): string|
   return d || null;
 }
 
+// helper: UUID validation
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 @Injectable()
 export class IdentityRepository {
   constructor(
@@ -102,6 +108,10 @@ export class IdentityRepository {
   }
 
   async listUsersByOrg(orgId: string, limit = 20, cursor: string | null = null) {
+    // Handle demo mode - return empty array for non-UUID organization IDs
+    if (orgId === 'demo-org' || !isValidUUID(orgId)) {
+      return [];
+    }
     // raw SQL to avoid schema coupling; pagination by id (lexicographic)
     if (cursor) {
       const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
