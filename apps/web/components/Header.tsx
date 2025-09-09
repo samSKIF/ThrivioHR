@@ -14,13 +14,17 @@ export default function Header() {
 
   const handleLogoutConfirm = async () => {
     try {
-      // Call logout API to clear server-side session - it's a GET request that redirects
-      window.location.href = '/api/bff/auth/logout';
+      // Call logout API to clear server-side session
+      await fetch('/api/bff/auth/logout', {
+        method: 'GET',
+        credentials: 'include'
+      });
     } catch (error) {
       console.error('Logout error:', error);
-      // Fallback redirect to login page
-      router.push('/login');
     }
+    
+    // Always redirect to the frontend login page
+    router.push('/login');
   };
 
   const handleLogoutCancel = () => {
