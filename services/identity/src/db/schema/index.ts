@@ -12,6 +12,9 @@ export * from './corporateAdmins';
 export * from './subscriptions';
 export * from './walletTransactions';
 export * from './organizationFeatures';
+export * from './organizationDomains';
+export * from './importJobs';  
+export * from './events';
 
 import { organizations } from './organizations';
 import { users } from './users';
@@ -27,6 +30,9 @@ import { corporateAdmins } from './corporateAdmins';
 import { subscriptions } from './subscriptions';
 import { walletTransactions } from './walletTransactions';
 import { organizationFeatures } from './organizationFeatures';
+import { organizationDomains } from './organizationDomains';
+import { importJobs } from './importJobs';
+import { events } from './events';
 
 import type { PgTable } from 'drizzle-orm/pg-core';
 
@@ -45,4 +51,7 @@ export const allTables: PgTable[] = [
   subscriptions,
   walletTransactions,
   organizationFeatures,
+  organizationDomains,
+  importJobs,
+  events,
 ];

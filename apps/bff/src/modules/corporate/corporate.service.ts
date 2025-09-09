@@ -50,12 +50,12 @@ export class CorporateService {
         ORDER BY organization_id, created_at ASC
       ) su ON o.id = su.organization_id
       LEFT JOIN (
-        SELECT DISTINCT ON (org_id)
-          id, org_id, seats_limit, plan_code, status, start_at, end_at, created_at
+        SELECT DISTINCT ON (organization_id)
+          id, organization_id, seats_limit, plan_code, status, start_at, end_at, created_at
         FROM subscriptions
         WHERE status = 'active'
-        ORDER BY org_id, created_at DESC
-      ) s ON o.id = s.org_id
+        ORDER BY organization_id, created_at DESC
+      ) s ON o.id = s.organization_id
       WHERE o.is_active = true
       ORDER BY o.created_at DESC
     `);
