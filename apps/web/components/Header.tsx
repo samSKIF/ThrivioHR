@@ -4,9 +4,15 @@ import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const router = useRouter();
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
     try {
       // Call logout API to clear server-side session - it's a GET request that redirects
       window.location.href = '/api/bff/auth/logout';
@@ -15,6 +21,10 @@ export default function Header() {
       // Fallback redirect to login page
       router.push('/login');
     }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -138,10 +148,7 @@ export default function Header() {
                     </button>
                     <div className="border-t border-gray-100 my-1"></div>
                     <button 
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        handleLogout();
-                      }}
+                      onClick={handleLogoutClick}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
                     >
                       <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,6 +164,54 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <>
+          {/* Modal Backdrop */}
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-100">
+              {/* Modal Header */}
+              <div className="px-6 py-5 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Confirm Logout</h3>
+                    <p className="text-sm text-gray-500">Are you sure you want to logout?</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-6 py-4">
+                <p className="text-gray-600 text-sm">
+                  You will be signed out of your ThrivioHR account and redirected to the login page.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-3 justify-end">
+                <button
+                  onClick={handleLogoutCancel}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                >
+                  Yes, Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 }
