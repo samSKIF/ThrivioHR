@@ -95,9 +95,9 @@ export class IdentityRepository {
     return { loc: (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as Record<string, unknown> ?? null, created: true };
   }
 
-  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
+  async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null, jobTitle: string, department: string, location: string, hireDate: string): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
-    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
+    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name, job_title, department, location, hire_date) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}, ${jobTitle}, ${department}, ${location}, ${hireDate}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"`);
     return (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 
@@ -114,24 +114,32 @@ export class IdentityRepository {
     }
     // raw SQL to avoid schema coupling; pagination by id (lexicographic)
     if (cursor) {
-      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
+      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", job_title as "jobTitle", department, location, hire_date as "hireDate" FROM users WHERE organization_id = ${orgId} AND id > ${cursor} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
         id: r.id as string, 
         organizationId: r.organizationId as string, 
         email: r.email as string, 
         firstName: r.firstName as string, 
         lastName: r.lastName as string, 
-        displayName: r.displayName as string
+        displayName: r.displayName as string,
+        jobTitle: r.jobTitle as string,
+        department: r.department as string,
+        location: r.location as string,
+        hireDate: r.hireDate as string
       }));
     } else {
-      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
+      const rows = await this.db.execute(sql`SELECT id, organization_id as "organizationId", email, first_name as "firstName", last_name as "lastName", display_name as "displayName", job_title as "jobTitle", department, location, hire_date as "hireDate" FROM users WHERE organization_id = ${orgId} ORDER BY id ASC LIMIT ${limit}`);
       return ((rows as { rows?: Record<string, unknown>[] }).rows ?? []).map((r: Record<string, unknown>) => ({
         id: r.id as string, 
         organizationId: r.organizationId as string, 
         email: r.email as string, 
         firstName: r.firstName as string, 
         lastName: r.lastName as string, 
-        displayName: r.displayName as string
+        displayName: r.displayName as string,
+        jobTitle: r.jobTitle as string,
+        department: r.department as string,
+        location: r.location as string,
+        hireDate: r.hireDate as string
       }));
     }
   }

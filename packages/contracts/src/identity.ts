@@ -3,7 +3,11 @@ import { UUID, Email } from "./primitives";
 export const UserPublic = z.object({
 id: UUID, organizationId: UUID, email: Email,
 firstName: z.string().nullable(), lastName: z.string().nullable(),
-displayName: z.string().nullable()
+displayName: z.string().nullable(),
+jobTitle: z.string().nullable(),
+department: z.string().nullable(),
+location: z.string().nullable(),
+hireDate: z.string().nullable()
 });
 export type UserPublic = z.infer<typeof UserPublic>;
 

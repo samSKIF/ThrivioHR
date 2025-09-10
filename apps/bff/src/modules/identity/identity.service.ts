@@ -24,6 +24,10 @@ export class IdentityService {
       createUserDto.email,
       createUserDto.givenName,
       createUserDto.familyName,
+      createUserDto.jobTitle,
+      createUserDto.department,
+      createUserDto.location,
+      createUserDto.hireDate,
     );
   }
 
