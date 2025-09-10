@@ -1816,13 +1816,16 @@ export class DirectoryService {
     return cities;
   }
 
-  async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string) {
+  async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string, city?: string) {
     try {
+      // For sites, store city information in the address field for tracking
+      const address = type === 'site' && city ? city : null;
+      
       const result = await pool.query(`
-        INSERT INTO locations (organization_id, type, name, code, parent_id, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-        RETURNING id, name, type, code, parent_id
-      `, [orgId, type, name.trim(), code || null, parentId || null]);
+        INSERT INTO locations (organization_id, type, name, code, parent_id, address, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        RETURNING id, name, type, code, parent_id, address
+      `, [orgId, type, name.trim(), code || null, parentId || null, address]);
 
       return {
         id: result.rows[0].id,
@@ -1830,6 +1833,7 @@ export class DirectoryService {
         type: result.rows[0].type,
         code: result.rows[0].code,
         parentId: result.rows[0].parent_id,
+        address: result.rows[0].address,
         memberCount: 0
       };
     } catch (error) {

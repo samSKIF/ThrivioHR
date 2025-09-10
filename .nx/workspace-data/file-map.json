@@ -24,6 +24,86 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
+      "contracts": [
+        {
+          "file": "packages/contracts/events/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/graphql/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "packages/contracts/openapi/auth.yaml",
+          "hash": "18430608757228031014"
+        },
+        {
+          "file": "packages/contracts/openapi/directory.yaml",
+          "hash": "3720627248650367050"
+        },
+        {
+          "file": "packages/contracts/openapi/users.yaml",
+          "hash": "11363685968257081889"
+        },
+        {
+          "file": "packages/contracts/project.json",
+          "hash": "13169721018410004371"
+        },
+        {
+          "file": "packages/contracts/src/directory.ts",
+          "hash": "1865238266696866480"
+        },
+        {
+          "file": "packages/contracts/src/graphql/schema.graphql",
+          "hash": "11995903164561453765"
+        },
+        {
+          "file": "packages/contracts/src/identity.ts",
+          "hash": "2140075590678669076"
+        },
+        {
+          "file": "packages/contracts/src/index.ts",
+          "hash": "6580581771005993415"
+        },
+        {
+          "file": "packages/contracts/src/media.ts",
+          "hash": "9879375309799643555"
+        },
+        {
+          "file": "packages/contracts/src/primitives.ts",
+          "hash": "7311712656321142598"
+        },
+        {
+          "file": "packages/contracts/tsconfig.json",
+          "hash": "14800935771102366691"
+        }
+      ],
+      "recognition": [
+        {
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
+        },
+        {
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
+        },
+        {
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
       "identity": [
         {
           "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
@@ -442,7 +522,7 @@
         },
         {
           "file": "apps/web/app/directory/locations/page.tsx",
-          "hash": "10143612485269163446",
+          "hash": "2475809981840446384",
           "deps": [
             "npm:react",
             "npm:lucide-react"
@@ -718,86 +798,6 @@
           "hash": "14698313359158478524"
         }
       ],
-      "contracts": [
-        {
-          "file": "packages/contracts/events/.gitkeep",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/contracts/graphql/.gitkeep",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/contracts/openapi/.gitkeep",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "packages/contracts/openapi/auth.yaml",
-          "hash": "18430608757228031014"
-        },
-        {
-          "file": "packages/contracts/openapi/directory.yaml",
-          "hash": "3720627248650367050"
-        },
-        {
-          "file": "packages/contracts/openapi/users.yaml",
-          "hash": "11363685968257081889"
-        },
-        {
-          "file": "packages/contracts/project.json",
-          "hash": "13169721018410004371"
-        },
-        {
-          "file": "packages/contracts/src/directory.ts",
-          "hash": "1865238266696866480"
-        },
-        {
-          "file": "packages/contracts/src/graphql/schema.graphql",
-          "hash": "11995903164561453765"
-        },
-        {
-          "file": "packages/contracts/src/identity.ts",
-          "hash": "2140075590678669076"
-        },
-        {
-          "file": "packages/contracts/src/index.ts",
-          "hash": "6580581771005993415"
-        },
-        {
-          "file": "packages/contracts/src/media.ts",
-          "hash": "9879375309799643555"
-        },
-        {
-          "file": "packages/contracts/src/primitives.ts",
-          "hash": "7311712656321142598"
-        },
-        {
-          "file": "packages/contracts/tsconfig.json",
-          "hash": "14800935771102366691"
-        }
-      ],
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
-        },
-        {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
-        },
-        {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "bff": [
         {
           "file": "apps/bff/.env.example",
@@ -1060,7 +1060,7 @@
         },
         {
           "file": "apps/bff/src/modules/directory/directory.controller.ts",
-          "hash": "12031985668980691567",
+          "hash": "2410608089777003780",
           "deps": [
             "npm:@nestjs/common"
           ]
@@ -1071,7 +1071,7 @@
         },
         {
           "file": "apps/bff/src/modules/directory/directory.service.ts",
-          "hash": "4192768563740454557",
+          "hash": "17861242816912385172",
           "deps": [
             "npm:@nestjs/common",
             "npm:drizzle-orm",
@@ -242331,6 +242331,10 @@
         "hash": "7636300369187203525"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_b2f5ce26e7e6aaa0fefffc61a8d2e0fd52fecd96.bin",
+        "hash": "16737587585366641388"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_b3977ac7b0b502336c33542e52c1bf90da58a9c0.bin",
         "hash": "8663585323470964171"
       },
@@ -242996,7 +243000,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "165710499304103988"
+        "hash": "13773605298485523731"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -243004,7 +243008,7 @@
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
-        "hash": "12481833667421197803"
+        "hash": "6126533497708085075"
       },
       {
         "file": ".local/state/replit/agent/rapid_build_started",
@@ -243016,7 +243020,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "632175554084776851"
+        "hash": "8577563296013526970"
       },
       {
         "file": ".prettierrc",

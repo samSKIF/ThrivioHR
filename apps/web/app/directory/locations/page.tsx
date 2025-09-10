@@ -268,15 +268,32 @@ export default function LocationManagementPage() {
           return;
         }
         
-        // Find the parent city
-        const parentCity = locations.find(l => l.type === 'city' && l.name === selectedCity);
-        if (!parentCity) {
-          setNameError("Please create the city location first");
-          return;
+        // Find or create the parent country first (sites can be associated with country directly)
+        const country = countries.find(c => c.code === selectedCountry);
+        let parentCountry = locations.find(l => l.type === 'country' && l.code === selectedCountry);
+        
+        if (!parentCountry && country) {
+          // Create the country if it doesn't exist
+          const countryRes = await fetch('/api/bff/directory/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              type: 'country',
+              name: country.name,
+              code: country.code
+            })
+          });
+          if (countryRes.ok) {
+            const newCountry = await countryRes.json();
+            parentCountry = newCountry;
+            await loadLocations(orgId); // Refresh to get the new country
+          }
         }
         
         name = customLocationName.trim();
-        parentId = parentCity.id;
+        // Associate site with country for tracking (city info will be stored separately)
+        parentId = parentCountry?.id;
       }
 
       const res = await fetch('/api/bff/directory/locations', {
@@ -287,7 +304,9 @@ export default function LocationManagementPage() {
           type: locationType,
           name,
           code,
-          parentId
+          parentId,
+          // For sites, include city information for tracking
+          ...(locationType === 'site' && selectedCity && { city: selectedCity })
         })
       });
 
