@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Upload, MoreHorizontal, Edit, Trash2, Globe, MapPin, Building2, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Plus, Upload, MoreHorizontal, Edit, Trash2, Globe, MapPin, Building2, X, Search, ChevronDown } from "lucide-react";
 import Header from "../../../components/Header";
 
 interface Location {
@@ -76,6 +76,11 @@ export default function LocationManagementPage() {
   const [customLocationName, setCustomLocationName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
+  
+  // Search states
+  const [countrySearchTerm, setCountrySearchTerm] = useState("");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadData();
@@ -313,6 +318,8 @@ export default function LocationManagementPage() {
     setNameError("");
     setEditingLocation(null);
     setCities([]);
+    setCountrySearchTerm("");
+    setShowCountryDropdown(false);
   }
 
   function openEditModal(location: Location) {
@@ -331,12 +338,46 @@ export default function LocationManagementPage() {
   async function handleCountryChange(countryCode: string) {
     setSelectedCountry(countryCode);
     setSelectedCity("");
+    setShowCountryDropdown(false);
+    
+    // Update search term to show selected country name
+    const selectedCountryData = countries.find(c => c.code === countryCode);
+    if (selectedCountryData) {
+      setCountrySearchTerm(selectedCountryData.name);
+    } else {
+      setCountrySearchTerm("");
+    }
+    
     if (countryCode) {
-      await loadCities(countryCode);
+      try {
+        await loadCities(countryCode);
+      } catch (error) {
+        console.error('Error loading cities:', error);
+        setCities([]);
+      }
     } else {
       setCities([]);
     }
   }
+  
+  // Filter countries based on search term
+  const filteredCountries = countries.filter(country => 
+    country.name.toLowerCase().includes(countrySearchTerm.toLowerCase())
+  );
+  
+  // Handle clicking outside the dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -612,20 +653,60 @@ export default function LocationManagementPage() {
                 </div>
               </div>
 
-              {/* Country Selection (for all types) */}
+              {/* Country Selection with Search (for all types) */}
               {(locationType === 'country' || locationType === 'city' || locationType === 'site') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => handleCountryChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a country</option>
-                    {countries.map(country => (
-                      <option key={country.code} value={country.code}>{country.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={countryDropdownRef}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={countrySearchTerm}
+                        onChange={(e) => {
+                          setCountrySearchTerm(e.target.value);
+                          setShowCountryDropdown(true);
+                          if (!e.target.value) {
+                            setSelectedCountry("");
+                            setCities([]);
+                          }
+                        }}
+                        onFocus={() => setShowCountryDropdown(true)}
+                        placeholder="Search for a country..."
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <Search className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    {showCountryDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {filteredCountries.length > 0 ? (
+                          filteredCountries.map(country => (
+                            <button
+                              key={country.code}
+                              onClick={() => handleCountryChange(country.code)}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span>{country.name}</span>
+                                <span className="text-xs text-gray-500">{country.code}</span>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-gray-500 text-sm">
+                            No countries found matching "{countrySearchTerm}"
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {selectedCountry && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Selected: {countries.find(c => c.code === selectedCountry)?.name} ({selectedCountry})
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -643,6 +724,16 @@ export default function LocationManagementPage() {
                       <option key={city.code} value={city.name}>{city.name}</option>
                     ))}
                   </select>
+                  {cities.length === 0 && selectedCountry && (
+                    <div className="mt-2 text-sm text-gray-500">
+                      Loading cities for {countries.find(c => c.code === selectedCountry)?.name}...
+                    </div>
+                  )}
+                  {cities.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      {cities.length} cities available
+                    </div>
+                  )}
                 </div>
               )}
 
