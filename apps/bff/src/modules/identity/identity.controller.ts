@@ -4,6 +4,7 @@ import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PasswordResetGuard } from '../auth/password-reset.guard';
 
 @Controller()
 export class IdentityController {
@@ -34,7 +35,7 @@ export class IdentityController {
     return this.identityService.getUsersByOrg(orgId, parsedLimit);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Put('users/:id')
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;

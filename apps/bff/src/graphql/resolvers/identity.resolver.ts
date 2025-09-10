@@ -1,11 +1,12 @@
 import { Resolver, Query } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { PasswordResetGuard } from '../../modules/auth/password-reset.guard';
 import { IdentityService } from '../../modules/identity/identity.service';
 import { Request } from 'express';
 
 @Resolver('User')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PasswordResetGuard)
 export class IdentityResolver {
   constructor(private readonly identity: IdentityService) {}
   @Query('currentUser')

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Put, Delete, Query, Req, UseGuards, BadRequestException, Inject, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PasswordResetGuard } from '../auth/password-reset.guard';
 import { DirectoryService } from './directory.service';
 import { IdentityService } from '../identity/identity.service';
 import { ImportValidateDto } from './dtos/import-validate.dto';
@@ -13,7 +14,7 @@ export class DirectoryController {
     @Inject(IdentityService) private readonly identity: IdentityService
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Get('users')
   async getUsers(@Query('orgId') orgId: string, @Query('limit') limit?: string, @Query('cursor') cursor?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 20;
@@ -23,7 +24,7 @@ export class DirectoryController {
     return { users, nextCursor: null }; // Simple response for now
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Get('subscription')
   async getSubscription(@Query('orgId') orgId: string) {
     if (!orgId) throw new BadRequestException('orgId is required');
@@ -31,7 +32,7 @@ export class DirectoryController {
     return this.svc.getOrganizationSubscription(orgId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Get('departments')
   async getDepartments(@Query('orgId') orgId: string) {
     if (!orgId) throw new BadRequestException('orgId is required');
@@ -39,7 +40,7 @@ export class DirectoryController {
     return this.svc.getOrganizationDepartments(orgId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('departments')
   async createDepartment(@Body() dto: { name: string; color: string }, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -48,7 +49,7 @@ export class DirectoryController {
     return this.svc.createDepartment(orgId, dto.name, dto.color);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Put('departments/:id')
   async updateDepartment(@Param('id') id: string, @Body() dto: { name: string; color: string }, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -57,7 +58,7 @@ export class DirectoryController {
     return this.svc.updateDepartment(id, orgId, dto.name, dto.color);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Delete('departments/:id')
   async deleteDepartment(@Param('id') id: string, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -66,7 +67,7 @@ export class DirectoryController {
   }
 
   // Location Management Endpoints
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Get('locations')
   async getLocations(@Query('orgId') orgId: string) {
     if (!orgId) throw new BadRequestException('orgId is required');
@@ -86,7 +87,7 @@ export class DirectoryController {
     return this.svc.getAvailableCities(countryCode);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('locations')
   async createLocation(@Body() dto: { type: string; name: string; code?: string; city?: string; country?: string }, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -95,7 +96,7 @@ export class DirectoryController {
     return this.svc.createLocation(orgId, dto.type, dto.name, dto.code, undefined, dto.city, dto.country);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Put('locations/:id')
   async updateLocation(@Param('id') id: string, @Body() dto: { name: string; code?: string }, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -104,7 +105,7 @@ export class DirectoryController {
     return this.svc.updateLocation(id, orgId, dto.name, dto.code);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Delete('locations/:id')
   async deleteLocation(@Param('id') id: string, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
@@ -112,19 +113,19 @@ export class DirectoryController {
     return this.svc.deleteLocation(id, orgId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/validate')
   validate(@Body() dto: ImportValidateDto) {
     return this.svc.validate(dto.csv);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/plan')
   plan(@Body() dto: ImportValidateDto) {
     return this.svc.plan(dto.csv);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/commit')
   async commit(@Body() dto: ImportCommitDto, @Req() req: { user: Record<string, unknown> }) {
     if (!dto?.dryRun) {
@@ -134,7 +135,7 @@ export class DirectoryController {
     return this.svc.commitPlan(dto.csv, orgId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/session')
   async createSession(@Body() dto: ImportSessionCreateDto, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string; 
@@ -143,14 +144,14 @@ export class DirectoryController {
     return this.svc.createImportSession(dto.csv, orgId, userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Get('import/session/preview')
   preview(@Query('token') token: string) {
     if (!token) throw new BadRequestException('token is required');
     return this.svc.previewImportSession(token);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/session/approve')
   async approve(@Body() dto: ImportSessionApproveDto, @Req() req: { user: Record<string, unknown> }) {
     if (!dto?.token) throw new BadRequestException('token is required');
@@ -158,7 +159,7 @@ export class DirectoryController {
     return this.svc.applyImportSession(dto.token, orgId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
   @Post('import/session/reject')
   reject(@Body() dto: ImportSessionRejectDto) {
     if (!dto?.token) throw new BadRequestException('token is required');

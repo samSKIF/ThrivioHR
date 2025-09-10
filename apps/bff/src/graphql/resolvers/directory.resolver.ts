@@ -1,12 +1,13 @@
 import { Resolver, Query, Context } from '@nestjs/graphql';
 import { UseGuards, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../modules/auth/jwt-auth.guard';
+import { PasswordResetGuard } from '../../modules/auth/password-reset.guard';
 import { OrgScopeGuard } from '../../modules/auth/org-scope.guard';
 import { DirectoryService } from '../../modules/directory/directory.service';
 import { OrgSqlContext } from '../../db/with-org';
 
 @Resolver('Employee')
-@UseGuards(JwtAuthGuard, OrgScopeGuard)
+@UseGuards(JwtAuthGuard, PasswordResetGuard, OrgScopeGuard)
 export class DirectoryResolver {
   constructor(
     private readonly directoryService: DirectoryService,
