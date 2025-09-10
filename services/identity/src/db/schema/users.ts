@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, uuid, uniqueIndex, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, uuid, uniqueIndex, timestamp, index, date } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 
@@ -9,6 +9,10 @@ export const users = pgTable('users', {
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   displayName: text('display_name'),
+  jobTitle: text('job_title'),
+  department: text('department'),
+  location: text('location'),
+  hireDate: date('hire_date'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
