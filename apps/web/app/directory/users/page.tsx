@@ -42,7 +42,7 @@ export default function EmployeeDirectoryPage() {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const [orgStats, setOrgStats] = useState<OrgStats>({ totalEmployees: 0, subscriptionLimit: 500, departmentCount: 0 });
+  const [orgStats, setOrgStats] = useState<OrgStats>({ totalEmployees: 0, subscriptionLimit: 500, subscribedUsers: 0, departmentCount: 0 });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   

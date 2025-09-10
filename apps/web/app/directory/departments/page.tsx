@@ -40,6 +40,7 @@ export default function DepartmentManagementPage() {
   const [departmentName, setDepartmentName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PREDEFINED_COLORS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   useEffect(() => {
     loadData();
@@ -47,11 +48,8 @@ export default function DepartmentManagementPage() {
 
   async function loadData() {
     try {
-      // Load org ID
       const orgId = await loadOrgId();
       setOrgId(orgId);
-      
-      // Load departments
       await loadDepartments(orgId);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -85,17 +83,33 @@ export default function DepartmentManagementPage() {
     }
   }
 
+  const checkDuplicateName = (name: string, excludeId?: string) => {
+    const trimmedName = name.trim().toLowerCase();
+    return departments.some(dept => 
+      dept.name.toLowerCase() === trimmedName && 
+      (!excludeId || dept.id !== excludeId)
+    );
+  };
+
   const handleCreateDepartment = async () => {
     if (!departmentName.trim() || !orgId) return;
     
+    // Check for duplicate names
+    if (checkDuplicateName(departmentName)) {
+      setNameError("A department with this name already exists. Please choose a different name.");
+      return;
+    }
+    
     setIsSubmitting(true);
+    setNameError("");
+    
     try {
       const res = await fetch('/api/bff/directory/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          name: departmentName,
+          name: departmentName.trim(),
           color: selectedColor
         })
       });
@@ -109,7 +123,7 @@ export default function DepartmentManagementPage() {
         // Handle authentication error in demo mode - create mock department
         const mockDepartment = {
           id: Date.now().toString(),
-          name: departmentName,
+          name: departmentName.trim(),
           color: selectedColor,
           memberCount: 0,
           status: 'Active'
@@ -134,14 +148,22 @@ export default function DepartmentManagementPage() {
   const handleEditDepartment = async () => {
     if (!departmentName.trim() || !editingDepartment || !orgId) return;
     
+    // Check for duplicate names (excluding current department)
+    if (checkDuplicateName(departmentName, editingDepartment.id)) {
+      setNameError("A department with this name already exists. Please choose a different name.");
+      return;
+    }
+    
     setIsSubmitting(true);
+    setNameError("");
+    
     try {
       const res = await fetch(`/api/bff/directory/departments/${editingDepartment.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          name: departmentName,
+          name: departmentName.trim(),
           color: selectedColor
         })
       });
@@ -152,11 +174,24 @@ export default function DepartmentManagementPage() {
         setEditingDepartment(null);
         setDepartmentName("");
         setSelectedColor(PREDEFINED_COLORS[0]);
+      } else if (res.status === 401) {
+        // Handle demo mode
+        setDepartments(prev => prev.map(dept => 
+          dept.id === editingDepartment.id 
+            ? { ...dept, name: departmentName.trim(), color: selectedColor }
+            : dept
+        ));
+        setShowEditModal(false);
+        setEditingDepartment(null);
+        setDepartmentName("");
+        setSelectedColor(PREDEFINED_COLORS[0]);
       } else {
         console.error('Failed to update department');
+        alert('Failed to update department. Please try again.');
       }
     } catch (error) {
       console.error('Error updating department:', error);
+      alert('Error updating department. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -173,6 +208,9 @@ export default function DepartmentManagementPage() {
 
       if (res.ok) {
         await loadDepartments(orgId!);
+      } else if (res.status === 401) {
+        // Handle demo mode
+        setDepartments(prev => prev.filter(dept => dept.id !== department.id));
       } else {
         const error = await res.text();
         alert(error || 'Failed to delete department');
@@ -189,8 +227,16 @@ export default function DepartmentManagementPage() {
     setEditingDepartment(department);
     setDepartmentName(department.name);
     setSelectedColor(department.color);
+    setNameError("");
     setShowEditModal(true);
     setShowActionMenu(null);
+  };
+
+  const openCreateModal = () => {
+    setDepartmentName("");
+    setSelectedColor(PREDEFINED_COLORS[0]);
+    setNameError("");
+    setShowCreateModal(true);
   };
 
   const totalDepartments = departments.length;
@@ -198,8 +244,11 @@ export default function DepartmentManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-gray-500">Loading...</div>
+        </div>
       </div>
     );
   }
@@ -209,197 +258,197 @@ export default function DepartmentManagementPage() {
       <Header />
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <span>Employee Directory</span>
-          <span>{'>'}</span>
-          <span className="text-gray-800">Department Management</span>
-        </div>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>Employee Directory</span>
+            <span>{'>'}</span>
+            <span className="text-gray-800">Department Management</span>
+          </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => window.location.href = '/directory/users'}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to Employees</span>
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Department Management</h1>
-              <p className="text-gray-600">Organize your workforce by departments and manage organizational structure</p>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => window.location.href = '/directory/users'}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span>Back to Employees</span>
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Department Management</h1>
+                <p className="text-gray-600">Organize your workforce by departments and manage organizational structure</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                <Upload className="w-4 h-4" />
+                Mass Upload
+              </button>
+              <button 
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4" />
+                Create Department
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-              <Upload className="w-4 h-4" />
-              Mass Upload
-            </button>
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4" />
-              Create Department
-            </button>
-          </div>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Total Departments</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalDepartments}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Total Employees</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalEmployees}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Active Departments</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeDepartments}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Department Content */}
+          {departments.length === 0 ? (
+            /* Empty State */
+            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Total Departments</p>
-                <p className="text-2xl font-bold text-gray-900">{totalDepartments}</p>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Departments Yet</h3>
+              <p className="text-gray-500 mb-6">Start organizing your company by creating your first department</p>
+              <button 
+                onClick={openCreateModal}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mx-auto"
+              >
+                <Plus className="w-4 h-4" />
+                Create Your First Department
+              </button>
             </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+          ) : (
+            /* Department List */
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Departments</h2>
+                <p className="text-sm text-gray-500">Manage and organize your company departments</p>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Total Employees</p>
-                <p className="text-2xl font-bold text-gray-900">{totalEmployees}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Active Departments</p>
-                <p className="text-2xl font-bold text-gray-900">{activeDepartments}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Department Content */}
-        {departments.length === 0 ? (
-          /* Empty State */
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Departments Yet</h3>
-            <p className="text-gray-500 mb-6">Start organizing your company by creating your first department</p>
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mx-auto"
-            >
-              <Plus className="w-4 h-4" />
-              Create Your First Department
-            </button>
-          </div>
-        ) : (
-          /* Department List */
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Departments</h2>
-              <p className="text-sm text-gray-500">Manage and organize your company departments</p>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employees</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {departments.map((department) => (
-                    <tr key={department.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: department.color }}
-                          ></div>
-                          <span className="text-sm font-medium text-gray-900">{department.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        No manager assigned
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-white">
-                          {department.memberCount} employees
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="relative">
-                          <button 
-                            onClick={() => setShowActionMenu(showActionMenu === department.id ? null : department.id)}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <MoreHorizontal className="w-5 h-5" />
-                          </button>
-                          
-                          {showActionMenu === department.id && (
-                            <>
-                              <div 
-                                className="fixed inset-0 z-10" 
-                                onClick={() => setShowActionMenu(null)}
-                              ></div>
-                              <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
-                                <button 
-                                  onClick={() => openEditModal(department)}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteDepartment(department)}
-                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </td>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employees</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {departments.map((department) => (
+                      <tr key={department.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: department.color }}
+                            ></div>
+                            <span className="text-sm font-medium text-gray-900">{department.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          No manager assigned
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-white">
+                            {department.memberCount} employees
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Active
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="relative">
+                            <button 
+                              onClick={() => setShowActionMenu(showActionMenu === department.id ? null : department.id)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <MoreHorizontal className="w-5 h-5" />
+                            </button>
+                            
+                            {showActionMenu === department.id && (
+                              <>
+                                <div 
+                                  className="fixed inset-0 z-10" 
+                                  onClick={() => setShowActionMenu(null)}
+                                ></div>
+                                <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                                  <button 
+                                    onClick={() => openEditModal(department)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteDepartment(department)}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
 
@@ -431,9 +480,13 @@ export default function DepartmentManagementPage() {
                     type="text"
                     placeholder="Marketing"
                     value={departmentName}
-                    onChange={(e) => setDepartmentName(e.target.value)}
+                    onChange={(e) => {
+                      setDepartmentName(e.target.value);
+                      setNameError("");
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                 </div>
                 
                 <div>
@@ -500,9 +553,13 @@ export default function DepartmentManagementPage() {
                   <input
                     type="text"
                     value={departmentName}
-                    onChange={(e) => setDepartmentName(e.target.value)}
+                    onChange={(e) => {
+                      setDepartmentName(e.target.value);
+                      setNameError("");
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                 </div>
                 
                 <div>

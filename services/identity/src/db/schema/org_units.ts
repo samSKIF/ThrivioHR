@@ -4,7 +4,7 @@ import { organizations } from './organizations';
 
 export const orgUnitTypeEnum = ['company', 'department', 'team'] as const;
 
-export const orgUnits = pgTable('org_units', {
+export const orgUnits: any = pgTable('org_units', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   organizationId: uuid('organization_id').notNull().references(() => organizations.id),
   parentId: uuid('parent_id'),
@@ -16,7 +16,7 @@ export const orgUnits = pgTable('org_units', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const orgUnitsRelations = relations(orgUnits, ({ one, many }) => ({
+export const orgUnitsRelations: any = relations(orgUnits, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [orgUnits.organizationId],
     references: [organizations.id],
