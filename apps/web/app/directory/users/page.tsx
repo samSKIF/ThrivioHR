@@ -124,6 +124,8 @@ export default function EmployeeDirectoryPage() {
   // Modal states
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -380,6 +382,122 @@ export default function EmployeeDirectoryPage() {
     } catch (error: unknown) {
       console.error('Failed to create employee:', error);
       alert(`❌ Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleUpdateEmployee = async () => {
+    try {
+      if (!editingEmployee) {
+        alert('❌ No employee selected for editing');
+        return;
+      }
+
+      // Validate mandatory fields
+      const missingFields = [];
+      if (!newEmployee.firstName.trim()) missingFields.push("First Name");
+      if (!newEmployee.lastName.trim()) missingFields.push("Last Name");
+      if (!newEmployee.email.trim()) missingFields.push("Email Address");
+      if (!newEmployee.jobTitle.trim()) missingFields.push("Job Title");
+      if (!newEmployee.department.trim()) missingFields.push("Department");
+      if (!newEmployee.location.trim()) missingFields.push("Location");
+      if (!newEmployee.hireDate.trim()) missingFields.push("Hire Date");
+
+      if (missingFields.length > 0) {
+        alert(`The following mandatory fields are missing:\n\n• ${missingFields.join('\n• ')}\n\nPlease fill in all required fields before updating the employee.`);
+        return;
+      }
+
+      // Check for duplicate email (excluding current employee)
+      const existingEmployee = employees.find(emp => 
+        emp.email.toLowerCase() === newEmployee.email.toLowerCase() && emp.id !== editingEmployee.id
+      );
+      if (existingEmployee) {
+        alert(`An employee with the email address "${newEmployee.email}" already exists.\n\nEmployee: ${existingEmployee.displayName || existingEmployee.firstName + ' ' + existingEmployee.lastName}\n\nPlease use a different email address.`);
+        return;
+      }
+
+      console.log('Updating employee:', editingEmployee.id, newEmployee);
+      
+      if (orgId === "demo-org") {
+        // Demo mode - update in local storage
+        const updatedEmp: Employee = {
+          ...editingEmployee,
+          email: newEmployee.email,
+          firstName: newEmployee.firstName,
+          lastName: newEmployee.lastName,
+          displayName: `${newEmployee.firstName} ${newEmployee.lastName}`,
+          jobTitle: newEmployee.jobTitle,
+          department: newEmployee.department,
+          location: newEmployee.location,
+          status: newEmployee.status as 'active' | 'pending' | 'inactive',
+          hireDate: newEmployee.hireDate,
+        };
+        
+        // Update current employee list immediately
+        setEmployees(prev => prev.map(emp => emp.id === editingEmployee.id ? updatedEmp : emp));
+        setFilteredEmployees(prev => prev.map(emp => emp.id === editingEmployee.id ? updatedEmp : emp));
+        
+        // Store in localStorage for persistence
+        const storedEmployees = JSON.parse(localStorage.getItem('demo-employees') || '[]');
+        const updatedStoredEmployees = storedEmployees.map((emp: Employee) => 
+          emp.id === editingEmployee.id ? updatedEmp : emp
+        );
+        localStorage.setItem('demo-employees', JSON.stringify(updatedStoredEmployees));
+        
+        console.log('Employee updated in demo mode successfully:', updatedEmp);
+      } else {
+        // Real mode - call API
+        const response = await fetch(`/api/bff/users/${editingEmployee.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            orgId: orgId,
+            email: newEmployee.email,
+            givenName: newEmployee.firstName,
+            familyName: newEmployee.lastName,
+            jobTitle: newEmployee.jobTitle,
+            department: newEmployee.department,
+            location: newEmployee.location,
+            hireDate: newEmployee.hireDate
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          if (response.status === 400 && (errorText.includes('duplicate') || errorText.includes('unique'))) {
+            alert(`An employee with the email address "${newEmployee.email}" already exists in the system.\n\nPlease use a different email address.`);
+            return;
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const updatedEmployee = await response.json();
+        console.log('Employee updated successfully:', updatedEmployee);
+        
+        // Refresh employee list
+        await loadInitialData();
+      }
+      
+      setShowAddEmployee(false);
+      setIsEditMode(false);
+      setEditingEmployee(null);
+      
+      // Reset form
+      setNewEmployee({
+        firstName: "", lastName: "", email: "", tempPassword: "", phoneNumber: "",
+        jobTitle: "", department: "", location: "", managerEmail: "", hireDate: "",
+        gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
+      });
+
+      // Show success popup
+      alert(`✅ Employee Updated Successfully!\n\n${newEmployee.firstName} ${newEmployee.lastName} has been updated in the system.\n\nEmail: ${newEmployee.email}\nJob Title: ${newEmployee.jobTitle}\nDepartment: ${newEmployee.department}\nLocation: ${newEmployee.location}\nHire Date: ${newEmployee.hireDate}`);
+      
+    } catch (error: unknown) {
+      console.error('Failed to update employee:', error);
+      alert(`❌ Failed to update employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -643,7 +761,26 @@ export default function EmployeeDirectoryPage() {
                                 console.log('View profile for:', employee.displayName || employee.email);
                               }}
                               onEditUser={() => {
-                                console.log('Edit user for:', employee.displayName || employee.email);
+                                setEditingEmployee(employee);
+                                setIsEditMode(true);
+                                setNewEmployee({
+                                  firstName: employee.firstName || "",
+                                  lastName: employee.lastName || "",
+                                  email: employee.email || "",
+                                  tempPassword: "",
+                                  phoneNumber: "",
+                                  jobTitle: employee.jobTitle || "",
+                                  department: employee.department || "",
+                                  location: employee.location || "",
+                                  managerEmail: "",
+                                  hireDate: employee.hireDate || "",
+                                  gender: "",
+                                  nationality: "",
+                                  birthDate: "",
+                                  status: employee.status || "active",
+                                  isAdmin: false
+                                });
+                                setShowAddEmployee(true);
                               }}
                               onDeleteUser={() => {
                                 console.log('Delete user for:', employee.displayName || employee.email);
@@ -682,7 +819,7 @@ export default function EmployeeDirectoryPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Create New Employee</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{isEditMode ? 'Edit Employee' : 'Create New Employee'}</h3>
               </div>
               <button 
                 onClick={() => setShowAddEmployee(false)}
@@ -935,16 +1072,25 @@ export default function EmployeeDirectoryPage() {
             {/* Footer */}
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button 
-                onClick={() => setShowAddEmployee(false)}
+                onClick={() => {
+                  setShowAddEmployee(false);
+                  setIsEditMode(false);
+                  setEditingEmployee(null);
+                  setNewEmployee({
+                    firstName: "", lastName: "", email: "", tempPassword: "", phoneNumber: "",
+                    jobTitle: "", department: "", location: "", managerEmail: "", hireDate: "",
+                    gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
+                  });
+                }}
                 className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"
               >
                 Cancel
               </button>
               <button 
-                onClick={handleAddEmployee}
+                onClick={isEditMode ? handleUpdateEmployee : handleAddEmployee}
                 className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
               >
-                Create Employee
+                {isEditMode ? 'Update Employee' : 'Create Employee'}
               </button>
             </div>
           </div>

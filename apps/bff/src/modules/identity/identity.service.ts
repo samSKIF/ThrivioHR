@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { IdentityRepository } from './identity.repository';
 import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Injectable()
 export class IdentityService {
@@ -29,6 +30,10 @@ export class IdentityService {
       createUserDto.location,
       createUserDto.hireDate,
     );
+  }
+
+  async updateUser(id: string, updateUserDto: UpdateUserDto, orgId: string) {
+    return this.repository.updateUser(id, updateUserDto, orgId);
   }
 
   async getUsersByOrg(orgId: string, limit = 20) {

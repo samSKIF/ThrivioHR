@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Query, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, Param, Inject, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller()
 export class IdentityController {
@@ -30,5 +32,15 @@ export class IdentityController {
   async getUsers(@Query('orgId') orgId: string, @Query('limit') limit?: string) {
     const parsedLimit = limit ? parseInt(limit, 10) : 20;
     return this.identityService.getUsersByOrg(orgId, parsedLimit);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('users/:id')
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    if (!orgId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.identityService.updateUser(id, updateUserDto, orgId);
   }
 }

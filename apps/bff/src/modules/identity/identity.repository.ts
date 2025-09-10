@@ -3,6 +3,7 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
 import type { UserPublic } from '@thrivio/contracts';
 import { DRIZZLE_DB } from '../db/db.module';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 // helper: display name
 function makeDisplayName(firstName: string|null, lastName: string|null): string|null {
@@ -104,6 +105,61 @@ export class IdentityRepository {
   async updateUserNames(userId: string, firstName: string|null, lastName: string|null): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
     const upd = await this.db.execute(sql`UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, display_name = ${displayName}, updated_at = NOW() WHERE id = ${userId} RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName"`);
+    return (upd as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
+  }
+
+  async updateUser(userId: string, updateUserDto: UpdateUserDto, orgId: string): Promise<UserPublic> {
+    // Build the SQL using drizzle's sql template literal approach
+    const setParts: any[] = [];
+    
+    if (updateUserDto.email !== undefined) {
+      setParts.push(sql`email = ${updateUserDto.email}`);
+    }
+    
+    if (updateUserDto.givenName !== undefined) {
+      setParts.push(sql`first_name = ${updateUserDto.givenName}`);
+    }
+    
+    if (updateUserDto.familyName !== undefined) {
+      setParts.push(sql`last_name = ${updateUserDto.familyName}`);
+    }
+    
+    if (updateUserDto.jobTitle !== undefined) {
+      setParts.push(sql`job_title = ${updateUserDto.jobTitle}`);
+    }
+    
+    if (updateUserDto.department !== undefined) {
+      setParts.push(sql`department = ${updateUserDto.department}`);
+    }
+    
+    if (updateUserDto.location !== undefined) {
+      setParts.push(sql`location = ${updateUserDto.location}`);
+    }
+    
+    if (updateUserDto.hireDate !== undefined) {
+      setParts.push(sql`hire_date = ${updateUserDto.hireDate}`);
+    }
+    
+    // Always update display name if first or last name changed
+    if (updateUserDto.givenName !== undefined || updateUserDto.familyName !== undefined) {
+      const displayName = makeDisplayName(
+        updateUserDto.givenName || null, 
+        updateUserDto.familyName || null
+      );
+      setParts.push(sql`display_name = ${displayName}`);
+    }
+    
+    setParts.push(sql`updated_at = NOW()`);
+    
+    // Build the complete update query with org-scoped authorization
+    const updateQuery = sql`
+      UPDATE users SET 
+      ${sql.join(setParts, sql`, `)}
+      WHERE id = ${userId} AND organization_id = ${orgId}
+      RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"
+    `;
+    
+    const upd = await this.db.execute(updateQuery);
     return (upd as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 
