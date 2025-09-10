@@ -629,4 +629,262 @@ export class DirectoryService {
       throw error;
     }
   }
+
+  // Location Management Methods
+  async getOrganizationLocations(orgId: string) {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          l.id, 
+          l.name,
+          l.type,
+          l.code,
+          l.address,
+          l.parent_id,
+          COUNT(u.id) as member_count,
+          p.name as parent_name,
+          p.type as parent_type
+        FROM locations l
+        LEFT JOIN org_membership om ON om.org_unit_id = l.id
+        LEFT JOIN users u ON u.id = om.user_id AND u.is_active = true
+        LEFT JOIN locations p ON p.id = l.parent_id
+        WHERE l.organization_id = $1
+        GROUP BY l.id, l.name, l.type, l.code, l.address, l.parent_id, p.name, p.type
+        ORDER BY l.type, l.name ASC
+      `, [orgId]);
+
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        type: row.type,
+        code: row.code,
+        address: row.address,
+        parentId: row.parent_id,
+        parentName: row.parent_name,
+        parentType: row.parent_type,
+        memberCount: parseInt(row.member_count, 10) || 0,
+      }));
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      return [];
+    }
+  }
+
+  async getAvailableCountries() {
+    // Return comprehensive list of countries with ISO codes
+    return [
+      { code: 'US', name: 'United States' },
+      { code: 'CA', name: 'Canada' },
+      { code: 'GB', name: 'United Kingdom' },
+      { code: 'DE', name: 'Germany' },
+      { code: 'FR', name: 'France' },
+      { code: 'IT', name: 'Italy' },
+      { code: 'ES', name: 'Spain' },
+      { code: 'NL', name: 'Netherlands' },
+      { code: 'SE', name: 'Sweden' },
+      { code: 'NO', name: 'Norway' },
+      { code: 'DK', name: 'Denmark' },
+      { code: 'AU', name: 'Australia' },
+      { code: 'NZ', name: 'New Zealand' },
+      { code: 'JP', name: 'Japan' },
+      { code: 'KR', name: 'South Korea' },
+      { code: 'CN', name: 'China' },
+      { code: 'IN', name: 'India' },
+      { code: 'SG', name: 'Singapore' },
+      { code: 'HK', name: 'Hong Kong' },
+      { code: 'AE', name: 'United Arab Emirates' },
+      { code: 'SA', name: 'Saudi Arabia' },
+      { code: 'EG', name: 'Egypt' },
+      { code: 'ZA', name: 'South Africa' },
+      { code: 'NG', name: 'Nigeria' },
+      { code: 'KE', name: 'Kenya' },
+      { code: 'BR', name: 'Brazil' },
+      { code: 'MX', name: 'Mexico' },
+      { code: 'AR', name: 'Argentina' },
+      { code: 'CL', name: 'Chile' },
+      { code: 'CO', name: 'Colombia' }
+    ].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async getAvailableCities(countryCode: string) {
+    // Return cities for specific countries
+    const citiesByCountry: Record<string, Array<{ name: string; code: string }>> = {
+      'US': [
+        { name: 'New York', code: 'NYC' },
+        { name: 'Los Angeles', code: 'LAX' },
+        { name: 'Chicago', code: 'CHI' },
+        { name: 'Houston', code: 'HOU' },
+        { name: 'Phoenix', code: 'PHX' },
+        { name: 'Philadelphia', code: 'PHL' },
+        { name: 'San Antonio', code: 'SAT' },
+        { name: 'San Diego', code: 'SAN' },
+        { name: 'Dallas', code: 'DFW' },
+        { name: 'San Jose', code: 'SJC' },
+        { name: 'Austin', code: 'AUS' },
+        { name: 'Jacksonville', code: 'JAX' },
+        { name: 'San Francisco', code: 'SFO' },
+        { name: 'Columbus', code: 'CMH' },
+        { name: 'Charlotte', code: 'CLT' },
+        { name: 'Fort Worth', code: 'FTW' },
+        { name: 'Indianapolis', code: 'IND' },
+        { name: 'Seattle', code: 'SEA' },
+        { name: 'Denver', code: 'DEN' },
+        { name: 'Boston', code: 'BOS' }
+      ],
+      'GB': [
+        { name: 'London', code: 'LON' },
+        { name: 'Birmingham', code: 'BHX' },
+        { name: 'Manchester', code: 'MAN' },
+        { name: 'Glasgow', code: 'GLA' },
+        { name: 'Liverpool', code: 'LPL' },
+        { name: 'Leeds', code: 'LDS' },
+        { name: 'Sheffield', code: 'SHF' },
+        { name: 'Edinburgh', code: 'EDI' },
+        { name: 'Bristol', code: 'BRS' },
+        { name: 'Leicester', code: 'LEI' }
+      ],
+      'DE': [
+        { name: 'Berlin', code: 'BER' },
+        { name: 'Hamburg', code: 'HAM' },
+        { name: 'Munich', code: 'MUC' },
+        { name: 'Cologne', code: 'CGN' },
+        { name: 'Frankfurt', code: 'FRA' },
+        { name: 'Stuttgart', code: 'STR' },
+        { name: 'Düsseldorf', code: 'DUS' },
+        { name: 'Dortmund', code: 'DTM' },
+        { name: 'Essen', code: 'ESS' },
+        { name: 'Leipzig', code: 'LEJ' }
+      ],
+      'FR': [
+        { name: 'Paris', code: 'PAR' },
+        { name: 'Marseille', code: 'MRS' },
+        { name: 'Lyon', code: 'LYS' },
+        { name: 'Toulouse', code: 'TLS' },
+        { name: 'Nice', code: 'NCE' },
+        { name: 'Nantes', code: 'NTE' },
+        { name: 'Strasbourg', code: 'SXB' },
+        { name: 'Montpellier', code: 'MPL' },
+        { name: 'Bordeaux', code: 'BOD' },
+        { name: 'Lille', code: 'LIL' }
+      ],
+      'AE': [
+        { name: 'Dubai', code: 'DXB' },
+        { name: 'Abu Dhabi', code: 'AUH' },
+        { name: 'Sharjah', code: 'SHJ' },
+        { name: 'Al Ain', code: 'AAN' },
+        { name: 'Ajman', code: 'AJM' },
+        { name: 'Ras Al Khaimah', code: 'RKT' },
+        { name: 'Fujairah', code: 'FJR' }
+      ],
+      'SG': [
+        { name: 'Singapore', code: 'SIN' }
+      ],
+      'AU': [
+        { name: 'Sydney', code: 'SYD' },
+        { name: 'Melbourne', code: 'MEL' },
+        { name: 'Brisbane', code: 'BNE' },
+        { name: 'Perth', code: 'PER' },
+        { name: 'Adelaide', code: 'ADL' },
+        { name: 'Gold Coast', code: 'OOL' },
+        { name: 'Newcastle', code: 'NTL' },
+        { name: 'Canberra', code: 'CBR' },
+        { name: 'Sunshine Coast', code: 'MCY' },
+        { name: 'Wollongong', code: 'WOL' }
+      ]
+    };
+
+    return citiesByCountry[countryCode] || [];
+  }
+
+  async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string) {
+    try {
+      const result = await pool.query(`
+        INSERT INTO locations (organization_id, type, name, code, parent_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        RETURNING id, name, type, code, parent_id
+      `, [orgId, type, name.trim(), code || null, parentId || null]);
+
+      return {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        type: result.rows[0].type,
+        code: result.rows[0].code,
+        parentId: result.rows[0].parent_id,
+        memberCount: 0
+      };
+    } catch (error) {
+      console.error('Error creating location:', error);
+      throw new Error('Failed to create location');
+    }
+  }
+
+  async updateLocation(id: string, orgId: string, name: string, code?: string) {
+    try {
+      const result = await pool.query(`
+        UPDATE locations 
+        SET name = $1, code = $2, updated_at = NOW()
+        WHERE id = $3 AND organization_id = $4
+        RETURNING id, name, type, code, parent_id
+      `, [name.trim(), code || null, id, orgId]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Location not found or access denied');
+      }
+
+      return {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        type: result.rows[0].type,
+        code: result.rows[0].code,
+        parentId: result.rows[0].parent_id
+      };
+    } catch (error) {
+      console.error('Error updating location:', error);
+      throw error;
+    }
+  }
+
+  async deleteLocation(id: string, orgId: string) {
+    try {
+      // Check if location has employees assigned
+      const employeeCheck = await pool.query(`
+        SELECT COUNT(*) as employee_count
+        FROM users u
+        INNER JOIN org_membership om ON u.id = om.user_id
+        WHERE om.org_unit_id = $1 AND u.organization_id = $2
+      `, [id, orgId]);
+
+      const employeeCount = parseInt(employeeCheck.rows[0].employee_count, 10);
+      if (employeeCount > 0) {
+        throw new Error(`Cannot delete location with ${employeeCount} employees. Please reassign employees first.`);
+      }
+
+      // Check if location has child locations
+      const childCheck = await pool.query(`
+        SELECT COUNT(*) as child_count
+        FROM locations
+        WHERE parent_id = $1 AND organization_id = $2
+      `, [id, orgId]);
+
+      const childCount = parseInt(childCheck.rows[0].child_count, 10);
+      if (childCount > 0) {
+        throw new Error(`Cannot delete location with ${childCount} child locations. Please remove child locations first.`);
+      }
+
+      const result = await pool.query(`
+        DELETE FROM locations 
+        WHERE id = $1 AND organization_id = $2
+        RETURNING id
+      `, [id, orgId]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Location not found or access denied');
+      }
+
+      return { success: true, id: id };
+    } catch (error) {
+      console.error('Error deleting location:', error);
+      throw error;
+    }
+  }
 }

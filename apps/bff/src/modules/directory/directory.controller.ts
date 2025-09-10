@@ -65,6 +65,53 @@ export class DirectoryController {
     return this.svc.deleteDepartment(id, orgId);
   }
 
+  // Location Management Endpoints
+  @UseGuards(JwtAuthGuard)
+  @Get('locations')
+  async getLocations(@Query('orgId') orgId: string) {
+    if (!orgId) throw new BadRequestException('orgId is required');
+    
+    return this.svc.getOrganizationLocations(orgId);
+  }
+
+  @Get('countries')
+  async getCountries() {
+    return this.svc.getAvailableCountries();
+  }
+
+  @Get('cities')
+  async getCities(@Query('countryCode') countryCode: string) {
+    if (!countryCode) throw new BadRequestException('countryCode is required');
+    
+    return this.svc.getAvailableCities(countryCode);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('locations')
+  async createLocation(@Body() dto: { type: string; name: string; code?: string; parentId?: string }, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    if (!dto.type || !dto.name) throw new BadRequestException('type and name are required');
+    
+    return this.svc.createLocation(orgId, dto.type, dto.name, dto.code, dto.parentId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('locations/:id')
+  async updateLocation(@Param('id') id: string, @Body() dto: { name: string; code?: string }, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    if (!dto.name) throw new BadRequestException('name is required');
+    
+    return this.svc.updateLocation(id, orgId, dto.name, dto.code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('locations/:id')
+  async deleteLocation(@Param('id') id: string, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    
+    return this.svc.deleteLocation(id, orgId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('import/validate')
   validate(@Body() dto: ImportValidateDto) {
