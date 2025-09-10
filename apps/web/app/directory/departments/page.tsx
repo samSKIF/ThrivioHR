@@ -28,7 +28,8 @@ export default function DepartmentManagementPage() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalEmployees, setTotalEmployees] = useState(403);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -55,34 +56,30 @@ export default function DepartmentManagementPage() {
       await loadDepartments(orgId);
     } catch (error) {
       console.error('Error loading data:', error);
+      setError('Authentication required. Please log in to continue.');
     } finally {
       setLoading(false);
     }
   }
 
   async function loadOrgId() {
-    try {
-      const res = await fetch("/api/bff/auth/me", { credentials: "include" });
-      if (!res.ok) return "demo-org";
-      const me = await res.json();
-      return me.organizationId || me.organization_id || me.orgId || "demo-org";
-    } catch (error) {
-      return "demo-org";
+    const res = await fetch("/api/bff/auth/me", { credentials: "include" });
+    if (!res.ok) {
+      throw new Error('Authentication required');
     }
+    const me = await res.json();
+    return me.organizationId || me.organization_id || me.orgId;
   }
 
   async function loadDepartments(orgId: string) {
-    try {
-      const res = await fetch(`/api/bff/directory/departments?orgId=${orgId}`, { 
-        credentials: "include" 
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(data);
-      }
-    } catch (error) {
-      console.error('Error loading departments:', error);
+    const res = await fetch(`/api/bff/directory/departments?orgId=${orgId}`, { 
+      credentials: "include" 
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load departments');
     }
+    const data = await res.json();
+    setDepartments(data);
   }
 
   const checkDuplicateName = (name: string, excludeId?: string) => {
@@ -121,22 +118,9 @@ export default function DepartmentManagementPage() {
         setShowCreateModal(false);
         setDepartmentName("");
         setSelectedColor(PREDEFINED_COLORS[0]);
-      } else if (res.status === 401) {
-        // Handle authentication error in demo mode - create mock department
-        const mockDepartment = {
-          id: Date.now().toString(),
-          name: departmentName.trim(),
-          color: selectedColor,
-          memberCount: 0,
-          status: 'Active'
-        };
-        setDepartments(prev => [...prev, mockDepartment]);
-        setShowCreateModal(false);
-        setDepartmentName("");
-        setSelectedColor(PREDEFINED_COLORS[0]);
-        console.log('Created mock department for demo mode:', mockDepartment);
       } else {
-        console.error('Failed to create department');
+        const errorText = await res.text();
+        console.error('Failed to create department:', errorText);
         alert('Failed to create department. Please try again.');
       }
     } catch (error) {
@@ -176,19 +160,9 @@ export default function DepartmentManagementPage() {
         setEditingDepartment(null);
         setDepartmentName("");
         setSelectedColor(PREDEFINED_COLORS[0]);
-      } else if (res.status === 401) {
-        // Handle demo mode
-        setDepartments(prev => prev.map(dept => 
-          dept.id === editingDepartment.id 
-            ? { ...dept, name: departmentName.trim(), color: selectedColor }
-            : dept
-        ));
-        setShowEditModal(false);
-        setEditingDepartment(null);
-        setDepartmentName("");
-        setSelectedColor(PREDEFINED_COLORS[0]);
       } else {
-        console.error('Failed to update department');
+        const errorText = await res.text();
+        console.error('Failed to update department:', errorText);
         alert('Failed to update department. Please try again.');
       }
     } catch (error) {
@@ -216,11 +190,6 @@ export default function DepartmentManagementPage() {
 
       if (res.ok) {
         await loadDepartments(orgId);
-        setShowDeleteModal(false);
-        setDeletingDepartment(null);
-      } else if (res.status === 401) {
-        // Handle demo mode
-        setDepartments(prev => prev.filter(dept => dept.id !== deletingDepartment.id));
         setShowDeleteModal(false);
         setDeletingDepartment(null);
       } else {
@@ -258,6 +227,31 @@ export default function DepartmentManagementPage() {
         <Header />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-gray-500">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.96-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Authentication Required</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.href = '/login'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go to Login
+            </button>
+          </div>
         </div>
       </div>
     );
