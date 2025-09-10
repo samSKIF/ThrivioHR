@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import type { UserPublic } from '@thrivio/contracts';
 import { DRIZZLE_DB } from '../db/db.module';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { hashPassword } from '../auth/password.util';
 
 // helper: display name
 function makeDisplayName(firstName: string|null, lastName: string|null): string|null {
@@ -98,7 +99,11 @@ export class IdentityRepository {
 
   async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null, jobTitle: string, department: string, location: string, hireDate: string): Promise<UserPublic> {
     const displayName = makeDisplayName(firstName, lastName);
-    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name, job_title, department, location, hire_date) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}, ${jobTitle}, ${department}, ${location}, ${hireDate}) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"`);
+    
+    // Generate password hash for the default password "password123"
+    const passwordHash = await hashPassword('password123');
+    
+    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name, job_title, department, location, hire_date, password_hash, password_reset_required) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}, ${jobTitle}, ${department}, ${location}, ${hireDate}, ${passwordHash}, true) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"`);
     return (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 
