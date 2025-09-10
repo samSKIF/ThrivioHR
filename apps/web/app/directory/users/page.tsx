@@ -877,19 +877,6 @@ export default function EmployeeDirectoryPage() {
                   />
                 </div>
 
-                <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Temporary Password <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Enter temporary password"
-                    value={newEmployee.tempPassword}
-                    onChange={(e) => setNewEmployee({...newEmployee, tempPassword: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Employee will be prompted to change password on first login</p>
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
