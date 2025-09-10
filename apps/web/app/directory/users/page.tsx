@@ -475,7 +475,10 @@ export default function EmployeeDirectoryPage() {
               <Upload className="w-4 h-4" />
               Mass Upload
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors opacity-50 cursor-not-allowed">
+            <button 
+              onClick={() => window.location.href = '/directory/departments'}
+              className="flex items-center gap-2 px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+            >
               <Settings className="w-4 h-4" />
               Manage Departments
             </button>
