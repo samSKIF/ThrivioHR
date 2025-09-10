@@ -11,6 +11,7 @@ export const orgUnits = pgTable('org_units', {
   type: text('type', { enum: orgUnitTypeEnum }).notNull(),
   name: text('name').notNull(),
   description: text('description'),
+  color: text('color'), // Color for departments
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

@@ -527,11 +527,12 @@ export class DirectoryService {
           ou.id, 
           ou.name,
           ou.description,
+          ou.color,
           COUNT(u.id) as member_count
         FROM org_units ou
         LEFT JOIN users u ON u.organization_id = ou.organization_id
         WHERE ou.organization_id = $1 AND ou.type = 'department'
-        GROUP BY ou.id, ou.name, ou.description
+        GROUP BY ou.id, ou.name, ou.description, ou.color
         ORDER BY ou.name ASC
       `, [orgId]);
 
@@ -539,12 +540,92 @@ export class DirectoryService {
         id: row.id,
         name: row.name,
         description: row.description,
-        memberCount: parseInt(row.member_count, 10) || 0
+        color: row.color || '#16A34A', // Default emerald color
+        memberCount: parseInt(row.member_count, 10) || 0,
+        status: 'Active' // All departments are active for now
       }));
     } catch (error) {
       console.error('Error fetching departments:', error);
       // Return empty array on error - will trigger mock data fallback
       return [];
+    }
+  }
+
+  async createDepartment(orgId: string, name: string, color: string) {
+    try {
+      const result = await pool.query(`
+        INSERT INTO org_units (organization_id, type, name, color, created_at, updated_at)
+        VALUES ($1, 'department', $2, $3, NOW(), NOW())
+        RETURNING id, name, color
+      `, [orgId, name.trim(), color]);
+
+      return {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        color: result.rows[0].color,
+        memberCount: 0,
+        status: 'Active'
+      };
+    } catch (error) {
+      console.error('Error creating department:', error);
+      throw new Error('Failed to create department');
+    }
+  }
+
+  async updateDepartment(departmentId: string, orgId: string, name: string, color: string) {
+    try {
+      const result = await pool.query(`
+        UPDATE org_units 
+        SET name = $1, color = $2, updated_at = NOW()
+        WHERE id = $3 AND organization_id = $4 AND type = 'department'
+        RETURNING id, name, color
+      `, [name.trim(), color, departmentId, orgId]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Department not found or access denied');
+      }
+
+      return {
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        color: result.rows[0].color,
+        status: 'Active'
+      };
+    } catch (error) {
+      console.error('Error updating department:', error);
+      throw new Error('Failed to update department');
+    }
+  }
+
+  async deleteDepartment(departmentId: string, orgId: string) {
+    try {
+      // Check if department has employees
+      const employeeCheck = await pool.query(`
+        SELECT COUNT(*) as employee_count
+        FROM users u
+        INNER JOIN org_membership om ON u.id = om.user_id
+        WHERE om.org_unit_id = $1 AND u.organization_id = $2
+      `, [departmentId, orgId]);
+
+      const employeeCount = parseInt(employeeCheck.rows[0].employee_count, 10);
+      if (employeeCount > 0) {
+        throw new Error(`Cannot delete department with ${employeeCount} employees. Please reassign employees first.`);
+      }
+
+      const result = await pool.query(`
+        DELETE FROM org_units 
+        WHERE id = $1 AND organization_id = $2 AND type = 'department'
+        RETURNING id
+      `, [departmentId, orgId]);
+
+      if (result.rows.length === 0) {
+        throw new Error('Department not found or access denied');
+      }
+
+      return { success: true, id: departmentId };
+    } catch (error) {
+      console.error('Error deleting department:', error);
+      throw error;
     }
   }
 }

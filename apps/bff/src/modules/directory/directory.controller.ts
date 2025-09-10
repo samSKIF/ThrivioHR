@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards, BadRequestException, Inject } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Delete, Query, Req, UseGuards, BadRequestException, Inject, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { DirectoryService } from './directory.service';
 import { IdentityService } from '../identity/identity.service';
@@ -37,6 +37,32 @@ export class DirectoryController {
     if (!orgId) throw new BadRequestException('orgId is required');
     
     return this.svc.getOrganizationDepartments(orgId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('departments')
+  async createDepartment(@Body() dto: { name: string; color: string }, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    if (!dto.name || !dto.color) throw new BadRequestException('name and color are required');
+    
+    return this.svc.createDepartment(orgId, dto.name, dto.color);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('departments/:id')
+  async updateDepartment(@Param('id') id: string, @Body() dto: { name: string; color: string }, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    if (!dto.name || !dto.color) throw new BadRequestException('name and color are required');
+    
+    return this.svc.updateDepartment(id, orgId, dto.name, dto.color);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('departments/:id')
+  async deleteDepartment(@Param('id') id: string, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string;
+    
+    return this.svc.deleteDepartment(id, orgId);
   }
 
   @UseGuards(JwtAuthGuard)
