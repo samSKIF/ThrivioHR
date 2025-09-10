@@ -530,7 +530,8 @@ export class DirectoryService {
           ou.color,
           COUNT(u.id) as member_count
         FROM org_units ou
-        LEFT JOIN users u ON u.organization_id = ou.organization_id
+        LEFT JOIN org_membership om ON om.org_unit_id = ou.id
+        LEFT JOIN users u ON u.id = om.user_id AND u.is_active = true
         WHERE ou.organization_id = $1 AND ou.type = 'department'
         GROUP BY ou.id, ou.name, ou.description, ou.color
         ORDER BY ou.name ASC
