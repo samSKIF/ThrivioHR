@@ -13582,7 +13582,13 @@
   },
   "dependencies": {
     "recognition": [],
-    "contracts": [],
+    "contracts": [
+      {
+        "source": "contracts",
+        "target": "npm:zod",
+        "type": "static"
+      }
+    ],
     "identity": [
       {
         "source": "identity",
@@ -13705,6 +13711,11 @@
       {
         "source": "bff",
         "target": "npm:csv-parse",
+        "type": "static"
+      },
+      {
+        "source": "bff",
+        "target": "npm:class-validator",
         "type": "static"
       },
       {
@@ -30178,5 +30189,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757506289619
+  "computedAt": 1757512497718
 }
