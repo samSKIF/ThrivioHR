@@ -270,6 +270,30 @@ export default function EmployeeDirectoryPage() {
 
   const handleAddEmployee = async () => {
     try {
+      // Validate mandatory fields
+      const missingFields = [];
+      if (!newEmployee.firstName.trim()) missingFields.push("First Name");
+      if (!newEmployee.lastName.trim()) missingFields.push("Last Name");
+      if (!newEmployee.email.trim()) missingFields.push("Email Address");
+      if (!newEmployee.jobTitle.trim()) missingFields.push("Job Title");
+      if (!newEmployee.department.trim()) missingFields.push("Department");
+      if (!newEmployee.location.trim()) missingFields.push("Location");
+      if (!newEmployee.hireDate.trim()) missingFields.push("Hire Date");
+
+      if (missingFields.length > 0) {
+        alert(`The following mandatory fields are missing:\n\n• ${missingFields.join('\n• ')}\n\nPlease fill in all required fields before creating the employee.`);
+        return;
+      }
+
+      // Check for duplicate email
+      const existingEmployee = employees.find(emp => 
+        emp.email.toLowerCase() === newEmployee.email.toLowerCase()
+      );
+      if (existingEmployee) {
+        alert(`An employee with the email address "${newEmployee.email}" already exists.\n\nEmployee: ${existingEmployee.displayName || existingEmployee.firstName + ' ' + existingEmployee.lastName}\n\nPlease use a different email address.`);
+        return;
+      }
+
       console.log('Creating employee:', newEmployee);
       
       if (orgId === "demo-org") {
@@ -317,11 +341,20 @@ export default function EmployeeDirectoryPage() {
             orgId: orgId,
             email: newEmployee.email,
             givenName: newEmployee.firstName,
-            familyName: newEmployee.lastName
+            familyName: newEmployee.lastName,
+            jobTitle: newEmployee.jobTitle,
+            department: newEmployee.department,
+            location: newEmployee.location,
+            hireDate: newEmployee.hireDate
           })
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          if (response.status === 400 && errorText.includes('duplicate') || errorText.includes('unique')) {
+            alert(`An employee with the email address "${newEmployee.email}" already exists in the system.\n\nPlease use a different email address.`);
+            return;
+          }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
@@ -340,10 +373,13 @@ export default function EmployeeDirectoryPage() {
         jobTitle: "", department: "", location: "", managerEmail: "", hireDate: "",
         gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
       });
+
+      // Show success popup
+      alert(`✅ Employee Created Successfully!\n\n${newEmployee.firstName} ${newEmployee.lastName} has been added to the system.\n\nEmail: ${newEmployee.email}\nJob Title: ${newEmployee.jobTitle}\nDepartment: ${newEmployee.department}\nLocation: ${newEmployee.location}\nHire Date: ${newEmployee.hireDate}`);
       
     } catch (error: unknown) {
       console.error('Failed to create employee:', error);
-      alert(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`❌ Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -739,7 +775,7 @@ export default function EmployeeDirectoryPage() {
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Job Title
+                      Job Title <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -751,7 +787,7 @@ export default function EmployeeDirectoryPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Department
+                      Department <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newEmployee.department}
@@ -769,7 +805,7 @@ export default function EmployeeDirectoryPage() {
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Location
+                      Location <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newEmployee.location}
@@ -798,7 +834,7 @@ export default function EmployeeDirectoryPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Hire Date
+                    Hire Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
