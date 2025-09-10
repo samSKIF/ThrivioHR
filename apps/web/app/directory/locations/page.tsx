@@ -24,6 +24,70 @@ interface City {
   code: string;
 }
 
+// Floating Action Dropdown Component
+interface ActionDropdownProps {
+  locationId: string;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}
+
+function ActionDropdown({ locationId, onEdit, onDelete, onClose }: ActionDropdownProps) {
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    const button = document.querySelector(`[data-location-id="${locationId}"]`);
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  }, [locationId]);
+
+  return (
+    <>
+      {/* Backdrop to close menu */}
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={onClose}
+      />
+      {/* Floating Dropdown Menu */}
+      <div 
+        className="fixed z-50 w-48 bg-white rounded-md shadow-xl border border-gray-200"
+        style={{
+          top: `${position.top}px`,
+          right: `${position.right}px`
+        }}
+      >
+        <div className="py-1">
+          <button
+            onClick={() => {
+              onEdit();
+              onClose();
+            }}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Location
+          </button>
+          <button
+            onClick={() => {
+              onDelete();
+              onClose();
+            }}
+            className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Location
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 const LocationTypeIcon = ({ type }: { type: string }) => {
   switch (type) {
     case 'country':
@@ -565,32 +629,12 @@ export default function LocationManagementPage() {
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {showActionMenu === location.id && (
-                          <>
-                            {/* Backdrop to close menu */}
-                            <div 
-                              className="fixed inset-0 z-10" 
-                              onClick={() => setShowActionMenu(null)}
-                            />
-                            {/* Dropdown Menu - using absolute positioning to avoid overflow issues */}
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => openEditModal(location)}
-                                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                >
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Edit Location
-                                </button>
-                                <button
-                                  onClick={() => openDeleteModal(location)}
-                                  className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete Location
-                                </button>
-                              </div>
-                            </div>
-                          </>
+                          <ActionDropdown 
+                            locationId={location.id}
+                            onEdit={() => openEditModal(location)}
+                            onDelete={() => openDeleteModal(location)}
+                            onClose={() => setShowActionMenu(null)}
+                          />
                         )}
                       </div>
                     </td>
