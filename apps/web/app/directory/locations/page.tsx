@@ -8,9 +8,8 @@ interface Location {
   name: string;
   type: 'country' | 'city' | 'site';
   code?: string;
-  parentId?: string;
-  parentName?: string;
-  parentType?: string;
+  countryName?: string;
+  cityName?: string;
   memberCount: number;
 }
 
@@ -217,47 +216,30 @@ export default function LocationManagementPage() {
       
       let name = "";
       let code = "";
-      let parentId = undefined;
+      let country = "";
+      let city = "";
       
       if (locationType === 'country') {
-        const country = countries.find(c => c.code === selectedCountry);
-        if (!country) {
+        const countryData = countries.find(c => c.code === selectedCountry);
+        if (!countryData) {
           setNameError("Please select a country");
           return;
         }
-        name = country.name;
-        code = country.code;
+        name = countryData.name;
+        code = countryData.code;
+        country = countryData.name;
       } else if (locationType === 'city') {
-        const country = countries.find(c => c.code === selectedCountry);
-        const city = cities.find(c => c.name === selectedCity);
-        if (!country || !city) {
+        const countryData = countries.find(c => c.code === selectedCountry);
+        const cityData = cities.find(c => c.name === selectedCity);
+        if (!countryData || !cityData) {
           setNameError("Please select both country and city");
           return;
         }
         
-        // Find or create the parent country first
-        let parentCountry = locations.find(l => l.type === 'country' && l.code === selectedCountry);
-        if (!parentCountry) {
-          const countryRes = await fetch('/api/bff/directory/locations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              type: 'country',
-              name: country.name,
-              code: country.code
-            })
-          });
-          if (countryRes.ok) {
-            const newCountry = await countryRes.json();
-            parentCountry = newCountry;
-            await loadLocations(orgId); // Refresh to get the new country
-          }
-        }
-        
-        name = city.name;
-        code = city.code;
-        parentId = parentCountry?.id;
+        name = cityData.name;
+        code = cityData.code;
+        country = countryData.name;
+        city = cityData.name;
       } else if (locationType === 'site') {
         if (!customLocationName.trim()) {
           setNameError("Please enter a site name");
@@ -268,32 +250,12 @@ export default function LocationManagementPage() {
           return;
         }
         
-        // Find or create the parent country first (sites can be associated with country directly)
-        const country = countries.find(c => c.code === selectedCountry);
-        let parentCountry = locations.find(l => l.type === 'country' && l.code === selectedCountry);
-        
-        if (!parentCountry && country) {
-          // Create the country if it doesn't exist
-          const countryRes = await fetch('/api/bff/directory/locations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              type: 'country',
-              name: country.name,
-              code: country.code
-            })
-          });
-          if (countryRes.ok) {
-            const newCountry = await countryRes.json();
-            parentCountry = newCountry;
-            await loadLocations(orgId); // Refresh to get the new country
-          }
-        }
+        const countryData = countries.find(c => c.code === selectedCountry);
+        const cityData = cities.find(c => c.name === selectedCity);
         
         name = customLocationName.trim();
-        // Associate site with country for tracking (city info will be stored separately)
-        parentId = parentCountry?.id;
+        country = countryData?.name || "";
+        city = cityData?.name || selectedCity;
       }
 
       const res = await fetch('/api/bff/directory/locations', {
@@ -304,9 +266,8 @@ export default function LocationManagementPage() {
           type: locationType,
           name,
           code,
-          parentId,
-          // For sites, include city information for tracking
-          ...(locationType === 'site' && selectedCity && { city: selectedCity })
+          country,
+          city
         })
       });
 
@@ -600,7 +561,7 @@ export default function LocationManagementPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employees</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -621,10 +582,10 @@ export default function LocationManagementPage() {
                       <LocationTypeBadge type={location.type} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {location.parentName ? (
+                      {location.countryName ? (
                         <div className="flex items-center">
-                          <LocationTypeIcon type={location.parentType || ''} />
-                          <span className="ml-1">{location.parentName}</span>
+                          <Globe className="w-4 h-4 text-blue-600" />
+                          <span className="ml-1">{location.countryName}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400">None</span>
