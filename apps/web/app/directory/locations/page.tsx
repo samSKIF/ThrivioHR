@@ -564,24 +564,32 @@ export default function LocationManagementPage() {
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                         {showActionMenu === location.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                            <div className="py-1">
-                              <button
-                                onClick={() => openEditModal(location)}
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Location
-                              </button>
-                              <button
-                                onClick={() => openDeleteModal(location)}
-                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Location
-                              </button>
+                          <>
+                            {/* Backdrop to close menu */}
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setShowActionMenu(null)}
+                            />
+                            {/* Dropdown Menu */}
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200 overflow-visible">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => openEditModal(location)}
+                                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Location
+                                </button>
+                                <button
+                                  onClick={() => openDeleteModal(location)}
+                                  className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Location
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          </>
                         )}
                       </div>
                     </td>
