@@ -88,11 +88,11 @@ export class DirectoryController {
 
   @UseGuards(JwtAuthGuard)
   @Post('locations')
-  async createLocation(@Body() dto: { type: string; name: string; code?: string; parentId?: string; city?: string }, @Req() req: { user: Record<string, unknown> }) {
+  async createLocation(@Body() dto: { type: string; name: string; code?: string; city?: string; country?: string }, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
     if (!dto.type || !dto.name) throw new BadRequestException('type and name are required');
     
-    return this.svc.createLocation(orgId, dto.type, dto.name, dto.code, dto.parentId, dto.city);
+    return this.svc.createLocation(orgId, dto.type, dto.name, dto.code, undefined, dto.city, dto.country);
   }
 
   @UseGuards(JwtAuthGuard)

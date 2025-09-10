@@ -1816,23 +1816,25 @@ export class DirectoryService {
     return cities;
   }
 
-  async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string, city?: string) {
+  async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string, city?: string, country?: string) {
     try {
-      // For sites, store city information in the address field for tracking
-      const address = type === 'site' && city ? city : null;
+      // Store country and city as soft references for organizational purposes
+      const countryName = country || null;
+      const cityName = city || null;
       
       const result = await pool.query(`
-        INSERT INTO locations (organization_id, type, name, code, parent_id, address, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-        RETURNING id, name, type, code, parent_id, address
-      `, [orgId, type, name.trim(), code || null, parentId || null, address]);
+        INSERT INTO locations (organization_id, type, name, code, country_name, city_name, address, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        RETURNING id, name, type, code, country_name, city_name, address
+      `, [orgId, type, name.trim(), code || null, countryName, cityName, null]);
 
       return {
         id: result.rows[0].id,
         name: result.rows[0].name,
         type: result.rows[0].type,
         code: result.rows[0].code,
-        parentId: result.rows[0].parent_id,
+        countryName: result.rows[0].country_name,
+        cityName: result.rows[0].city_name,
         address: result.rows[0].address,
         memberCount: 0
       };
