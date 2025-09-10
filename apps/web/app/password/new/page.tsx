@@ -27,7 +27,7 @@ export default function FirstPasswordPage() {
       return;
     }
     setOk(true);
-    setTimeout(()=>{ window.location.href='/me'; }, 700);
+    setTimeout(()=>{ window.location.href='/feed'; }, 700);
   }
 
   return (

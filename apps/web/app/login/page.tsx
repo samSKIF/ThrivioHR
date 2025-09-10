@@ -31,8 +31,14 @@ export default function LoginPage() {
       if (!res.ok) {
         throw new Error(data?.message || "Invalid email or password");
       }
-      // After successful login, send users to the feed instead of /me
-      window.location.href = "/feed";
+      
+      // Check if user needs to change password on first login
+      if (data.passwordResetRequired) {
+        window.location.href = "/password/new";
+      } else {
+        // After successful login, send users to the feed
+        window.location.href = "/feed";
+      }
     } catch (err: any) {
       setError(err.message || "Failed to login");
     } finally {
