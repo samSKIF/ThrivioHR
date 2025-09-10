@@ -1354,6 +1354,51 @@ export class DirectoryService {
         { name: 'Kaposvár', code: 'KAP' }, { name: 'Békéscsaba', code: 'BEK' }, { name: 'Zalaegerszeg', code: 'ZAL' },
         { name: 'Sopron', code: 'SOP' }, { name: 'Eger', code: 'EGE' }, { name: 'Nagykanizsa', code: 'NAG' },
         { name: 'Dunaújváros', code: 'DUN' }, { name: 'Hódmezővásárhely', code: 'HOD' }, { name: 'Szolnok', code: 'SZL' }
+      ],
+      'HK': [
+        { name: 'Hong Kong', code: 'HKG' }, { name: 'Kowloon', code: 'KLN' }, { name: 'New Territories', code: 'NTE' },
+        { name: 'Central', code: 'CEN' }, { name: 'Tsim Sha Tsui', code: 'TST' }, { name: 'Causeway Bay', code: 'CWB' },
+        { name: 'Mong Kok', code: 'MKK' }, { name: 'Admiralty', code: 'ADM' }, { name: 'Wan Chai', code: 'WAN' },
+        { name: 'Sheung Wan', code: 'SHW' }, { name: 'North Point', code: 'NPT' }, { name: 'Quarry Bay', code: 'QBY' },
+        { name: 'Tai Koo', code: 'TKO' }, { name: 'Fortress Hill', code: 'FTH' }, { name: 'Tin Hau', code: 'THA' },
+        { name: 'Chai Wan', code: 'CHW' }, { name: 'Shau Kei Wan', code: 'SKW' }, { name: 'Sai Wan Ho', code: 'SWH' },
+        { name: 'Tai Po', code: 'TPO' }, { name: 'Sha Tin', code: 'SHT' }, { name: 'Tuen Mun', code: 'TMN' }
+      ],
+      'TW': [
+        { name: 'Taipei', code: 'TPE' }, { name: 'Kaohsiung', code: 'KHH' }, { name: 'Taichung', code: 'TXG' },
+        { name: 'Tainan', code: 'TNN' }, { name: 'Taoyuan', code: 'TAY' }, { name: 'New Taipei', code: 'NTP' },
+        { name: 'Hsinchu', code: 'HSZ' }, { name: 'Keelung', code: 'KEL' }, { name: 'Chiayi', code: 'CYI' },
+        { name: 'Changhua', code: 'CHW' }, { name: 'Pingtung', code: 'PTG' }, { name: 'Yunlin', code: 'YLN' },
+        { name: 'Hualien', code: 'HUN' }, { name: 'Nantou', code: 'NTO' }, { name: 'Miaoli', code: 'MLE' },
+        { name: 'Yilan', code: 'ILN' }, { name: 'Taitung', code: 'TTT' }, { name: 'Penghu', code: 'MZG' },
+        { name: 'Kinmen', code: 'KNH' }, { name: 'Lienchiang', code: 'LCG' }, { name: 'Hsinchu County', code: 'HSC' }
+      ],
+      'PK': [
+        { name: 'Karachi', code: 'KHI' }, { name: 'Lahore', code: 'LHE' }, { name: 'Islamabad', code: 'ISB' },
+        { name: 'Rawalpindi', code: 'RWP' }, { name: 'Faisalabad', code: 'LYP' }, { name: 'Multan', code: 'MUX' },
+        { name: 'Peshawar', code: 'PEW' }, { name: 'Quetta', code: 'UET' }, { name: 'Sialkot', code: 'SKT' },
+        { name: 'Gujranwala', code: 'GJR' }, { name: 'Hyderabad', code: 'HDD' }, { name: 'Sargodha', code: 'SGI' },
+        { name: 'Bahawalpur', code: 'BHV' }, { name: 'Sukkur', code: 'SKZ' }, { name: 'Larkana', code: 'LRK' },
+        { name: 'Sheikhupura', code: 'SHK' }, { name: 'Jhang', code: 'JHG' }, { name: 'Rahim Yar Khan', code: 'RYK' },
+        { name: 'Gujrat', code: 'GRT' }, { name: 'Kasur', code: 'KSR' }, { name: 'Mardan', code: 'MRD' }
+      ],
+      'BD': [
+        { name: 'Dhaka', code: 'DAC' }, { name: 'Chittagong', code: 'CGP' }, { name: 'Sylhet', code: 'ZYL' },
+        { name: 'Rajshahi', code: 'RJH' }, { name: 'Khulna', code: 'KHL' }, { name: 'Barisal', code: 'BZL' },
+        { name: 'Rangpur', code: 'RGR' }, { name: 'Mymensingh', code: 'MYM' }, { name: 'Comilla', code: 'CML' },
+        { name: 'Narayanganj', code: 'NRG' }, { name: 'Gazipur', code: 'GZP' }, { name: 'Tongi', code: 'TNG' },
+        { name: 'Jessore', code: 'JSR' }, { name: 'Bogra', code: 'BGR' }, { name: 'Dinajpur', code: 'DNJ' },
+        { name: 'Pabna', code: 'PBN' }, { name: 'Tangail', code: 'TGL' }, { name: 'Jamalpur', code: 'JML' },
+        { name: 'Faridpur', code: 'FDP' }, { name: 'Kushtia', code: 'KST' }, { name: 'Brahmanbaria', code: 'BRB' }
+      ],
+      'LK': [
+        { name: 'Colombo', code: 'CMB' }, { name: 'Kandy', code: 'KDY' }, { name: 'Galle', code: 'GLE' },
+        { name: 'Jaffna', code: 'JAF' }, { name: 'Negombo', code: 'NGB' }, { name: 'Anuradhapura', code: 'ANP' },
+        { name: 'Polonnaruwa', code: 'PLN' }, { name: 'Batticaloa', code: 'BTC' }, { name: 'Matara', code: 'MTR' },
+        { name: 'Trincomalee', code: 'TRN' }, { name: 'Kurunegala', code: 'KRN' }, { name: 'Ratnapura', code: 'RTN' },
+        { name: 'Badulla', code: 'BDL' }, { name: 'Kalutara', code: 'KLT' }, { name: 'Gampaha', code: 'GMP' },
+        { name: 'Monaragala', code: 'MNR' }, { name: 'Hambantota', code: 'HMB' }, { name: 'Vavuniya', code: 'VVN' },
+        { name: 'Kegalle', code: 'KGL' }, { name: 'Puttalam', code: 'PUT' }, { name: 'Ampara', code: 'AMP' }
       ]
     };
 
