@@ -640,16 +640,14 @@ export class DirectoryService {
           l.type,
           l.code,
           l.address,
-          l.parent_id,
-          COUNT(u.id) as member_count,
-          p.name as parent_name,
-          p.type as parent_type
+          l.country_name,
+          l.city_name,
+          COUNT(u.id) as member_count
         FROM locations l
         LEFT JOIN org_membership om ON om.org_unit_id = l.id
         LEFT JOIN users u ON u.id = om.user_id AND u.is_active = true
-        LEFT JOIN locations p ON p.id = l.parent_id
         WHERE l.organization_id = $1
-        GROUP BY l.id, l.name, l.type, l.code, l.address, l.parent_id, p.name, p.type
+        GROUP BY l.id, l.name, l.type, l.code, l.address, l.country_name, l.city_name
         ORDER BY l.type, l.name ASC
       `, [orgId]);
 
@@ -659,9 +657,8 @@ export class DirectoryService {
         type: row.type,
         code: row.code,
         address: row.address,
-        parentId: row.parent_id,
-        parentName: row.parent_name,
-        parentType: row.parent_type,
+        countryName: row.country_name,
+        cityName: row.city_name,
         memberCount: parseInt(row.member_count, 10) || 0,
       }));
     } catch (error) {
