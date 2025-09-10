@@ -1776,6 +1776,33 @@ export class DirectoryService {
         { name: 'Saint Pierre', code: 'STP' }, { name: 'Bambous', code: 'BAM' }, { name: 'Surinam', code: 'SUR' },
         { name: 'Tamarin', code: 'TAM' }, { name: 'Arsenal', code: 'ARS' }, { name: 'Pamplemousses', code: 'PAM' },
         { name: 'Grand Baie', code: 'GRB' }, { name: 'Rivière du Rempart', code: 'RDR' }, { name: 'Souillac', code: 'SOU' }
+      ],
+      'DZ': [
+        { name: 'Algiers', code: 'ALG' }, { name: 'Oran', code: 'ORN' }, { name: 'Constantine', code: 'CZL' },
+        { name: 'Annaba', code: 'AAE' }, { name: 'Blida', code: 'BLD' }, { name: 'Batna', code: 'BTN' },
+        { name: 'Djelfa', code: 'DJF' }, { name: 'Sétif', code: 'STF' }, { name: 'Sidi Bel Abbès', code: 'SBA' },
+        { name: 'Biskra', code: 'BSK' }, { name: 'Tébessa', code: 'TBS' }, { name: 'El Oued', code: 'ELD' },
+        { name: 'Skikda', code: 'SKI' }, { name: 'Tiaret', code: 'TIA' }, { name: 'Béjaïa', code: 'BJA' },
+        { name: 'Tlemcen', code: 'TLM' }, { name: 'Ouargla', code: 'OGX' }, { name: 'Béchar', code: 'CBH' },
+        { name: 'Mostaganem', code: 'MOS' }, { name: 'Bordj Bou Arréridj', code: 'BBA' }, { name: 'Chlef', code: 'CHL' }
+      ],
+      'TN': [
+        { name: 'Tunis', code: 'TUN' }, { name: 'Sfax', code: 'SFA' }, { name: 'Sousse', code: 'SUS' },
+        { name: 'Ettadhamen', code: 'ETD' }, { name: 'Kairouan', code: 'KAI' }, { name: 'Gabès', code: 'GAB' },
+        { name: 'Bizerte', code: 'BIZ' }, { name: 'Ariana', code: 'ARI' }, { name: 'Gafsa', code: 'GAF' },
+        { name: 'El Mourouj', code: 'EMR' }, { name: 'Ben Arous', code: 'BEN' }, { name: 'La Soukra', code: 'SOK' },
+        { name: 'Monastir', code: 'MIR' }, { name: 'Nabeul', code: 'NAB' }, { name: 'Médenine', code: 'MED' },
+        { name: 'Tozeur', code: 'TOZ' }, { name: 'Mahdia', code: 'MAH' }, { name: 'El Kef', code: 'KEF' },
+        { name: 'Kasserine', code: 'KAS' }, { name: 'Tataouine', code: 'TAT' }, { name: 'Jendouba', code: 'JEN' }
+      ],
+      'LY': [
+        { name: 'Tripoli', code: 'TIP' }, { name: 'Benghazi', code: 'BEN' }, { name: 'Misrata', code: 'MRA' },
+        { name: 'Bayda', code: 'LAQ' }, { name: 'Zawiya', code: 'ZAW' }, { name: 'Zliten', code: 'ZLI' },
+        { name: 'Ajdabiya', code: 'AJD' }, { name: 'Tobruk', code: 'TOB' }, { name: 'Sabha', code: 'SEB' },
+        { name: 'Al Khums', code: 'KMS' }, { name: 'Sirte', code: 'SRT' }, { name: 'Gharyan', code: 'GHR' },
+        { name: 'Derna', code: 'DER' }, { name: 'Marj', code: 'MRJ' }, { name: 'Tarhuna', code: 'TAR' },
+        { name: 'Bani Walid', code: 'BWL' }, { name: 'Sabratha', code: 'SAB' }, { name: 'Sorman', code: 'SOR' },
+        { name: 'Nalut', code: 'NAL' }, { name: 'Yafran', code: 'YAF' }, { name: 'Ghat', code: 'GHT' }
       ]
     };
 
