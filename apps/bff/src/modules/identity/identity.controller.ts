@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Query, Param, Inject, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, Param, Inject, UseGuards, Req, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -39,7 +39,7 @@ export class IdentityController {
   async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Req() req: { user: Record<string, unknown> }) {
     const orgId = req.user?.orgId as string;
     if (!orgId) {
-      throw new BadRequestException('Organization ID is required');
+      throw new ForbiddenException('Organization ID is required for this operation');
     }
     return this.identityService.updateUser(id, updateUserDto, orgId);
   }
