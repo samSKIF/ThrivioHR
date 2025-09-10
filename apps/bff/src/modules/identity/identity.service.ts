@@ -23,8 +23,8 @@ export class IdentityService {
     return this.repository.createUser(
       createUserDto.orgId,
       createUserDto.email,
-      createUserDto.givenName,
-      createUserDto.familyName,
+      createUserDto.givenName ?? null,
+      createUserDto.familyName ?? null,
       createUserDto.jobTitle,
       createUserDto.department,
       createUserDto.location,
