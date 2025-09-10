@@ -76,199 +76,51 @@ export default function EmployeeDirectoryPage() {
   });
 
   async function loadOrgId() {
-    try {
-      const res = await fetch("/api/bff/auth/me", { credentials: "include", headers: { Accept: "application/json" } });
-      if (!res.ok) {
-        // Return fallback org ID for development when auth is not available
-        return "demo-org";
-      }
-      const me = await res.json();
-      return me.organizationId || me.organization_id || me.orgId || "demo-org";
-    } catch (error) {
-      // Fallback for development when auth service is not available
-      return "demo-org";
+    const res = await fetch("/api/bff/auth/me", { credentials: "include", headers: { Accept: "application/json" } });
+    if (!res.ok) {
+      throw new Error('Authentication required');
     }
+    const me = await res.json();
+    return me.organizationId || me.organization_id || me.orgId;
   }
 
   async function fetchEmployees(id: string) {
-    try {
-      const res = await fetch(`/api/bff/directory/users?orgId=${id}&limit=100`, { credentials: "include" });
-      if (!res.ok) {
-        // Return mock data when API is not available
-        return generateMockEmployeeData();
-      }
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      // Fallback to mock data when API is not available
-      return generateMockEmployeeData();
+    const res = await fetch(`/api/bff/directory/users?orgId=${id}&limit=100`, { credentials: "include" });
+    if (!res.ok) {
+      throw new Error('Failed to fetch employees');
     }
+    const data = await res.json();
+    return data;
   }
 
   async function fetchSubscription(orgId: string) {
-    try {
-      const response = await fetch(`/api/bff/directory/subscription?orgId=${orgId}`, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.warn('Failed to fetch subscription from API:', error);
-      // For demo mode, create a realistic demo subscription
-      if (orgId === "demo-org") {
-        return await fetchDemoSubscription();
-      }
-      return { seatsLimit: null, subscribedUsers: 0, status: 'no_subscription' }; // No subscription fallback
+    const response = await fetch(`/api/bff/directory/subscription?orgId=${orgId}`, { credentials: "include" });
+    if (!response.ok) {
+      return { seatsLimit: null, subscribedUsers: 0, status: 'no_subscription' };
     }
+    return await response.json();
   }
 
-  async function fetchDemoSubscription() {
-    // Create realistic demo subscription data for demo mode
-    const employeesData = await fetchEmployees("demo-org");
-    const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
-    const currentEmployeeCount = users.length;
-    
-    // Demo subscription: Small business plan with 50 seats, current usage based on employees
-    return { 
-      seatsLimit: 50, 
-      subscribedUsers: currentEmployeeCount,
-      planCode: 'small_business',
-      status: 'active'
-    };
-  }
 
   async function fetchDepartments(orgId: string) {
-    try {
-      const response = await fetch(`/api/bff/directory/departments?orgId=${orgId}`, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.warn('Failed to fetch departments from API, calculating from employees:', error);
-      // For demo mode, calculate departments based on actual employee data
-      if (orgId === "demo-org") {
-        return await fetchDemoDepartments();
-      }
-      return await fetchMockDepartments(); // Fallback to mock data for other cases
+    const response = await fetch(`/api/bff/directory/departments?orgId=${orgId}`, { credentials: "include" });
+    if (!response.ok) {
+      throw new Error('Failed to fetch departments');
     }
+    return await response.json();
   }
 
-  async function fetchDemoDepartments() {
-    // Get departments dynamically from employees instead of hardcoded mock
-    const employeesData = await fetchEmployees("demo-org");
-    const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
-    
-    // Extract unique departments from actual employees
-    const uniqueDepartments = new Set<string>();
-    users.forEach((user: any) => {
-      // Use transform function to get employee department
-      const emailHash = user.email ? user.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
-      const mockDepts = ["Human Resources", "Sales", "Marketing", "Information Technology", "Finance", "Operations"];
-      const deptName = mockDepts[Math.abs(emailHash) % mockDepts.length];
-      uniqueDepartments.add(deptName);
-    });
-    
-    // Convert to department objects
-    const departmentsArray = Array.from(uniqueDepartments).map((name, index) => ({
-      id: name.toLowerCase().replace(/\s+/g, '-'),
-      name: name
-    }));
-    
-    console.log('Demo departments calculated from employees:', departmentsArray);
-    return departmentsArray;
+
+
+
+  async function fetchLocations(orgId: string) {
+    const res = await fetch(`/api/bff/directory/locations?orgId=${orgId}`, { credentials: "include" });
+    if (!res.ok) {
+      return [];
+    }
+    return await res.json();
   }
 
-  function generateMockEmployeeData() {
-    // Load demo employees from localStorage first
-    const storedEmployees = JSON.parse(localStorage.getItem('demo-employees') || '[]');
-    
-    // Generate realistic mock employee data for demonstration
-    const mockEmployees = [
-      {
-        id: "1",
-        email: "sarah.johnson@company.com",
-        firstName: "Sarah",
-        lastName: "Johnson",
-        displayName: "Sarah Johnson"
-      },
-      {
-        id: "2", 
-        email: "mike.chen@company.com",
-        firstName: "Mike",
-        lastName: "Chen",
-        displayName: "Mike Chen"
-      },
-      {
-        id: "3",
-        email: "emma.wilson@company.com", 
-        firstName: "Emma",
-        lastName: "Wilson",
-        displayName: "Emma Wilson"
-      },
-      {
-        id: "4",
-        email: "david.brown@company.com",
-        firstName: "David", 
-        lastName: "Brown",
-        displayName: "David Brown"
-      },
-      {
-        id: "5",
-        email: "lisa.garcia@company.com",
-        firstName: "Lisa",
-        lastName: "Garcia", 
-        displayName: "Lisa Garcia"
-      }
-    ];
-    
-    // Combine mock employees with stored demo employees
-    const allEmployees = [...mockEmployees, ...storedEmployees];
-    return { users: allEmployees };
-  }
-
-  async function fetchMockDepartments() {
-    // Reduced mock departments - only commonly used ones
-    return [
-      { id: "hr", name: "Human Resources" },
-      { id: "tech", name: "Information Technology" },
-      { id: "sales", name: "Sales" },
-      { id: "marketing", name: "Marketing" },
-      { id: "finance", name: "Finance" },
-      { id: "operations", name: "Operations" }
-    ];
-  }
-
-  async function fetchMockLocations() {
-    // Mock locations until we have real API  
-    return [
-      { id: "ny", name: "New York" },
-      { id: "dubai", name: "Dubai" },
-      { id: "london", name: "London" },
-      { id: "paris", name: "Paris" },
-      { id: "singapore", name: "Singapore" },
-    ];
-  }
-
-  // Transform basic user data to employee data with mock additional fields
-  function transformToEmployee(user: any): Employee {
-    const mockJobTitles = ["Software Engineer", "Product Manager", "Designer", "Sales Manager", "HR Specialist", "Marketing Coordinator", "Finance Analyst", "Operations Manager"];
-    const mockStatuses = ["active", "active", "active", "active", "pending", "inactive"] as const;
-    const mockDepartments = ["Human Resources", "Sales", "Marketing", "Information Technology", "Finance", "Operations"];
-    
-    // Use email hash to consistently assign mock data
-    const emailHash = user.email ? user.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0) : 0;
-    
-    return {
-      ...user,
-      jobTitle: mockJobTitles[Math.abs(emailHash) % mockJobTitles.length],
-      department: mockDepartments[Math.abs(emailHash) % mockDepartments.length],
-      location: locations[Math.abs(emailHash) % locations.length]?.name || "New York", 
-      status: mockStatuses[Math.abs(emailHash) % mockStatuses.length],
-      hireDate: new Date(2020 + (Math.abs(emailHash) % 5), Math.abs(emailHash) % 12, 1).toISOString().split('T')[0],
-      lastConnected: `${Math.abs(emailHash) % 30} days ago`
-    };
-  }
 
   const loadInitialData = async () => {
     try {
@@ -280,7 +132,7 @@ export default function EmployeeDirectoryPage() {
       const [employeesData, departmentsData, locationsData, subscriptionData] = await Promise.all([
         fetchEmployees(id),
         fetchDepartments(id),
-        fetchMockLocations(),
+        fetchLocations(id),
         fetchSubscription(id)
       ]);
       
@@ -288,11 +140,10 @@ export default function EmployeeDirectoryPage() {
       setLocations(locationsData);
       
       const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
-      const transformedEmployees = users.map(transformToEmployee);
-      setEmployees(transformedEmployees);
+      setEmployees(users);
       
       // Calculate stats
-      const activeEmployees = transformedEmployees.filter((u: Employee) => u.status !== 'inactive').length;
+      const activeEmployees = users.filter((u: Employee) => u.status !== 'inactive').length;
       setOrgStats({
         totalEmployees: activeEmployees,
         subscriptionLimit: subscriptionData?.seatsLimit,
