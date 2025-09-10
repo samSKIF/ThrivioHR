@@ -33,7 +33,9 @@ export default function DepartmentManagementPage() {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+  const [deletingDepartment, setDeletingDepartment] = useState<Department | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   
   // Form states
@@ -197,20 +199,30 @@ export default function DepartmentManagementPage() {
     }
   };
 
-  const handleDeleteDepartment = async (department: Department) => {
-    if (!confirm(`Are you sure you want to delete "${department.name}"?`)) return;
+  const openDeleteModal = (department: Department) => {
+    setDeletingDepartment(department);
+    setShowDeleteModal(true);
+    setShowActionMenu(null);
+  };
+
+  const handleDeleteDepartment = async () => {
+    if (!deletingDepartment || !orgId) return;
     
     try {
-      const res = await fetch(`/api/bff/directory/departments/${department.id}`, {
+      const res = await fetch(`/api/bff/directory/departments/${deletingDepartment.id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
       if (res.ok) {
-        await loadDepartments(orgId!);
+        await loadDepartments(orgId);
+        setShowDeleteModal(false);
+        setDeletingDepartment(null);
       } else if (res.status === 401) {
         // Handle demo mode
-        setDepartments(prev => prev.filter(dept => dept.id !== department.id));
+        setDepartments(prev => prev.filter(dept => dept.id !== deletingDepartment.id));
+        setShowDeleteModal(false);
+        setDeletingDepartment(null);
       } else {
         const error = await res.text();
         alert(error || 'Failed to delete department');
@@ -219,8 +231,6 @@ export default function DepartmentManagementPage() {
       console.error('Error deleting department:', error);
       alert('Failed to delete department');
     }
-    
-    setShowActionMenu(null);
   };
 
   const openEditModal = (department: Department) => {
@@ -422,20 +432,20 @@ export default function DepartmentManagementPage() {
                                   className="fixed inset-0 z-10" 
                                   onClick={() => setShowActionMenu(null)}
                                 ></div>
-                                <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                                <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                                   <button 
                                     onClick={() => openEditModal(department)}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
                                   >
-                                    <Edit className="w-4 h-4" />
-                                    Edit
+                                    <Edit className="w-4 h-4 text-gray-500" />
+                                    <span>Edit</span>
                                   </button>
                                   <button 
-                                    onClick={() => handleDeleteDepartment(department)}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                    onClick={() => openDeleteModal(department)}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                                   >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                    <span>Delete</span>
                                   </button>
                                 </div>
                               </>
@@ -593,6 +603,72 @@ export default function DepartmentManagementPage() {
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Updating...' : 'Update Department'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Department Modal */}
+      {showDeleteModal && deletingDepartment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Delete Department</h3>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.96-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-base font-medium text-gray-900 mb-2">
+                    Are you sure you want to delete "{deletingDepartment.name}"?
+                  </h4>
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <p>This action cannot be undone. Once deleted:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-500">
+                      <li><strong>{deletingDepartment.memberCount} employees</strong> will have no department assigned</li>
+                      <li>All department-related data and history will be permanently removed</li>
+                      <li>Any reports or analytics tied to this department will be affected</li>
+                    </ul>
+                  </div>
+                  
+                  {deletingDepartment.memberCount > 0 && (
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.96-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <span className="text-sm font-medium text-amber-800">Warning</span>
+                      </div>
+                      <p className="text-sm text-amber-700 mt-1">
+                        {deletingDepartment.memberCount} team member{deletingDepartment.memberCount !== 1 ? 's' : ''} will need to be reassigned to other departments.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-gray-50 rounded-b-lg flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletingDepartment(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteDepartment}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Delete Department
               </button>
             </div>
           </div>
