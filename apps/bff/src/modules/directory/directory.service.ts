@@ -1444,6 +1444,105 @@ export class DirectoryService {
         { name: 'Bint Jbeil', code: 'BJL' }, { name: 'Marjayoun', code: 'MRJ' }, { name: 'Jezzine', code: 'JZN' },
         { name: 'Hasbaya', code: 'HSB' }, { name: 'Rashaya', code: 'RSH' }, { name: 'Hermel', code: 'HRM' },
         { name: 'Akkar', code: 'AKK' }, { name: 'Miniyeh-Danniyeh', code: 'MND' }, { name: 'Zgharta', code: 'ZGH' }
+      ],
+      'GH': [
+        { name: 'Accra', code: 'ACC' }, { name: 'Kumasi', code: 'KMS' }, { name: 'Tamale', code: 'TML' },
+        { name: 'Takoradi', code: 'TKD' }, { name: 'Cape Coast', code: 'CCT' }, { name: 'Tema', code: 'TEM' },
+        { name: 'Ho', code: 'HOE' }, { name: 'Koforidua', code: 'KFR' }, { name: 'Sunyani', code: 'SUN' },
+        { name: 'Wa', code: 'WAA' }, { name: 'Bolgatanga', code: 'BOL' }, { name: 'Techiman', code: 'TEC' },
+        { name: 'Obuasi', code: 'OBU' }, { name: 'Tarkwa', code: 'TAR' }, { name: 'Nkawkaw', code: 'NKW' },
+        { name: 'Winneba', code: 'WIN' }, { name: 'Elmina', code: 'ELM' }, { name: 'Kintampo', code: 'KIN' },
+        { name: 'Berekum', code: 'BER' }, { name: 'Yendi', code: 'YEN' }, { name: 'Salaga', code: 'SAL' }
+      ],
+      'SN': [
+        { name: 'Dakar', code: 'DKR' }, { name: 'Touba', code: 'TBA' }, { name: 'Thiès', code: 'THS' },
+        { name: 'Kaolack', code: 'KLC' }, { name: 'Saint-Louis', code: 'XLS' }, { name: 'Ziguinchor', code: 'ZIG' },
+        { name: 'Diourbel', code: 'DRB' }, { name: 'Louga', code: 'LGA' }, { name: 'Tambacounda', code: 'TBD' },
+        { name: 'Mbour', code: 'MBR' }, { name: 'Kolda', code: 'KDA' }, { name: 'Fatick', code: 'FTK' },
+        { name: 'Kédougou', code: 'KDG' }, { name: 'Matam', code: 'MAM' }, { name: 'Sédhiou', code: 'SDH' },
+        { name: 'Rufisque', code: 'RUF' }, { name: 'Richard Toll', code: 'RTO' }, { name: 'Pikine', code: 'PIK' },
+        { name: 'Guédiawaye', code: 'GDW' }, { name: 'Kaffrine', code: 'KAF' }, { name: 'Bambey', code: 'BAM' }
+      ],
+      'CI': [
+        { name: 'Abidjan', code: 'ABJ' }, { name: 'Yamoussoukro', code: 'YAM' }, { name: 'Bouaké', code: 'BKE' },
+        { name: 'Daloa', code: 'DLA' }, { name: 'San Pedro', code: 'SPY' }, { name: 'Korhogo', code: 'KHG' },
+        { name: 'Man', code: 'MAN' }, { name: 'Divo', code: 'DIV' }, { name: 'Gagnoa', code: 'GNA' },
+        { name: 'Abengourou', code: 'ABG' }, { name: 'Agboville', code: 'AGV' }, { name: 'Grand-Bassam', code: 'GBS' },
+        { name: 'Anyama', code: 'ANY' }, { name: 'Dabou', code: 'DBO' }, { name: 'Dimbokro', code: 'DMB' },
+        { name: 'Issia', code: 'ISS' }, { name: 'Soubré', code: 'SOB' }, { name: 'Adzopé', code: 'ADZ' },
+        { name: 'Bongouanou', code: 'BGN' }, { name: 'Sassandra', code: 'SAS' }, { name: 'Bondoukou', code: 'BDK' }
+      ],
+      'ML': [
+        { name: 'Bamako', code: 'BKO' }, { name: 'Sikasso', code: 'SKS' }, { name: 'Mopti', code: 'MOP' },
+        { name: 'Koutiala', code: 'KTL' }, { name: 'Ségou', code: 'SEG' }, { name: 'Kayes', code: 'KYS' },
+        { name: 'Gao', code: 'GAO' }, { name: 'Tombouctou', code: 'TOM' }, { name: 'Kidal', code: 'KDL' },
+        { name: 'San', code: 'SAN' }, { name: 'Marka', code: 'MRK' }, { name: 'Djenné', code: 'DJE' },
+        { name: 'Bandiagara', code: 'BND' }, { name: 'Kita', code: 'KIT' }, { name: 'Kolokani', code: 'KLK' },
+        { name: 'Bafoulabé', code: 'BAF' }, { name: 'Nioro du Sahel', code: 'NIO' }, { name: 'Yanfolila', code: 'YAN' },
+        { name: 'Bougouni', code: 'BOU' }, { name: 'Yorosso', code: 'YOR' }, { name: 'Douentza', code: 'DOU' }
+      ],
+      'BF': [
+        { name: 'Ouagadougou', code: 'OUA' }, { name: 'Bobo-Dioulasso', code: 'BOB' }, { name: 'Koudougou', code: 'KDG' },
+        { name: 'Ouahigouya', code: 'OHG' }, { name: 'Banfora', code: 'BAN' }, { name: 'Kaya', code: 'KAY' },
+        { name: 'Tenkodogo', code: 'TKD' }, { name: 'Orodara', code: 'ORO' }, { name: 'Fada N\'Gourma', code: 'FAD' },
+        { name: 'Gaoua', code: 'GAO' }, { name: 'Dori', code: 'DOR' }, { name: 'Bogandé', code: 'BOG' },
+        { name: 'Diapaga', code: 'DIA' }, { name: 'Manga', code: 'MNG' }, { name: 'Réo', code: 'REO' },
+        { name: 'Ziniaré', code: 'ZIN' }, { name: 'Gourcy', code: 'GOU' }, { name: 'Djibo', code: 'DJI' },
+        { name: 'Tougan', code: 'TOU' }, { name: 'Nouna', code: 'NOU' }, { name: 'Boromo', code: 'BOR' }
+      ],
+      'GN': [
+        { name: 'Conakry', code: 'CKY' }, { name: 'Nzérékoré', code: 'NZE' }, { name: 'Kankan', code: 'KNN' },
+        { name: 'Kindia', code: 'KND' }, { name: 'Labé', code: 'LAB' }, { name: 'Mamou', code: 'MAM' },
+        { name: 'Boké', code: 'BKE' }, { name: 'Faranah', code: 'FAR' }, { name: 'Kissidougou', code: 'KIS' },
+        { name: 'Dabola', code: 'DAB' }, { name: 'Siguiri', code: 'SIG' }, { name: 'Kouroussa', code: 'KOU' },
+        { name: 'Macenta', code: 'MAC' }, { name: 'Guéckédou', code: 'GUE' }, { name: 'Beyla', code: 'BEY' },
+        { name: 'Yomou', code: 'YOM' }, { name: 'Dalaba', code: 'DAL' }, { name: 'Pita', code: 'PIT' },
+        { name: 'Télimélé', code: 'TEL' }, { name: 'Gaoual', code: 'GAO' }, { name: 'Koundara', code: 'KND' }
+      ],
+      'SL': [
+        { name: 'Freetown', code: 'FNA' }, { name: 'Bo', code: 'BOO' }, { name: 'Kenema', code: 'KEN' },
+        { name: 'Koidu', code: 'KOI' }, { name: 'Makeni', code: 'MAK' }, { name: 'Lunsar', code: 'LUN' },
+        { name: 'Port Loko', code: 'PLK' }, { name: 'Waterloo', code: 'WAT' }, { name: 'Kabala', code: 'KAB' },
+        { name: 'Koindu', code: 'KON' }, { name: 'Magburaka', code: 'MAG' }, { name: 'Moyamba', code: 'MOY' },
+        { name: 'Bonthe', code: 'BON' }, { name: 'Kambia', code: 'KAM' }, { name: 'Pujehun', code: 'PUJ' },
+        { name: 'Segbwema', code: 'SEG' }, { name: 'Mile 91', code: 'MIL' }, { name: 'Yengema', code: 'YEN' },
+        { name: 'Panguma', code: 'PAN' }, { name: 'Daru', code: 'DAR' }, { name: 'Mattru Jong', code: 'MAT' }
+      ],
+      'LR': [
+        { name: 'Monrovia', code: 'ROB' }, { name: 'Gbarnga', code: 'GBA' }, { name: 'Kakata', code: 'KAK' },
+        { name: 'Voinjama', code: 'VOI' }, { name: 'Harper', code: 'HAR' }, { name: 'Tubmanburg', code: 'TUB' },
+        { name: 'Ganta', code: 'GAN' }, { name: 'Buchanan', code: 'BUC' }, { name: 'Zwedru', code: 'ZWE' },
+        { name: 'New Kru Town', code: 'NKT' }, { name: 'Harbel', code: 'HBL' }, { name: 'Pleebo', code: 'PLE' },
+        { name: 'Greenville', code: 'GRE' }, { name: 'Barclayville', code: 'BAR' }, { name: 'Robertsport', code: 'ROB' },
+        { name: 'Sanniquellie', code: 'SAN' }, { name: 'Tappita', code: 'TAP' }, { name: 'Palala', code: 'PAL' },
+        { name: 'Saclepea', code: 'SAC' }, { name: 'Bensonville', code: 'BEN' }, { name: 'Red Light', code: 'RED' }
+      ],
+      'NE': [
+        { name: 'Niamey', code: 'NIM' }, { name: 'Zinder', code: 'ZIN' }, { name: 'Maradi', code: 'MFQ' },
+        { name: 'Agadez', code: 'AJY' }, { name: 'Tahoua', code: 'THZ' }, { name: 'Dosso', code: 'DOS' },
+        { name: 'Tillabéri', code: 'TIL' }, { name: 'Diffa', code: 'DIF' }, { name: 'Arlit', code: 'ARL' },
+        { name: 'Tessaoua', code: 'TES' }, { name: 'Madaoua', code: 'MAD' }, { name: 'Dakoro', code: 'DAK' },
+        { name: 'Tera', code: 'TER' }, { name: 'Birni N\'Konni', code: 'BIR' }, { name: 'Gaya', code: 'GAY' },
+        { name: 'Say', code: 'SAY' }, { name: 'Dogondoutchi', code: 'DOG' }, { name: 'Mayahi', code: 'MAY' },
+        { name: 'Mirriah', code: 'MIR' }, { name: 'Gouré', code: 'GOU' }, { name: 'Bilma', code: 'BIL' }
+      ],
+      'BJ': [
+        { name: 'Cotonou', code: 'COO' }, { name: 'Porto-Novo', code: 'PNO' }, { name: 'Parakou', code: 'PKO' },
+        { name: 'Djougou', code: 'DJO' }, { name: 'Bohicon', code: 'BOH' }, { name: 'Kandi', code: 'KAN' },
+        { name: 'Lokossa', code: 'LOK' }, { name: 'Ouidah', code: 'OUI' }, { name: 'Abomey', code: 'ABO' },
+        { name: 'Natitingou', code: 'NAT' }, { name: 'Nikki', code: 'NIK' }, { name: 'Savalou', code: 'SAV' },
+        { name: 'Pobé', code: 'POB' }, { name: 'Kétou', code: 'KET' }, { name: 'Malanville', code: 'MAL' },
+        { name: 'Ségbana', code: 'SEG' }, { name: 'Aplahoué', code: 'APL' }, { name: 'Dogbo', code: 'DOG' },
+        { name: 'Come', code: 'COM' }, { name: 'Bassila', code: 'BAS' }, { name: 'Tanguiéta', code: 'TAN' }
+      ],
+      'TG': [
+        { name: 'Lomé', code: 'LFW' }, { name: 'Sokodé', code: 'SOK' }, { name: 'Kara', code: 'KAR' },
+        { name: 'Kpalimé', code: 'KPA' }, { name: 'Atakpamé', code: 'ATA' }, { name: 'Dapaong', code: 'DAP' },
+        { name: 'Tsévié', code: 'TSE' }, { name: 'Aného', code: 'ANE' }, { name: 'Mango', code: 'MAN' },
+        { name: 'Bassar', code: 'BAS' }, { name: 'Tchamba', code: 'TCH' }, { name: 'Vogan', code: 'VOG' },
+        { name: 'Badou', code: 'BAD' }, { name: 'Niamtougou', code: 'NIA' }, { name: 'Glidji', code: 'GLI' },
+        { name: 'Tabligbo', code: 'TAB' }, { name: 'Notse', code: 'NOT' }, { name: 'Blitta', code: 'BLI' },
+        { name: 'Kandé', code: 'KAN' }, { name: 'Amlamé', code: 'AML' }, { name: 'Agou', code: 'AGO' }
       ]
     };
 
