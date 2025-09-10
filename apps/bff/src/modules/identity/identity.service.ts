@@ -132,11 +132,7 @@ export class IdentityService {
 
   /** Update password_hash and optionally clear password_reset_required (best-effort). */
   async setUserPassword(userId: string, newHash: string, clearReset = false) {
-    // Try repo helpers if they exist
-    const repo: any = (this as any).repository;
-    if (repo?.updateUserFields) return await repo.updateUserFields(userId, { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
-    if (repo?.updateUser)       return await repo.updateUser(userId,       { password_hash: newHash, ...(clearReset ? { password_reset_required: false } : {}) });
-    // Fallback: direct SQL
+    // Use direct SQL for password updates to avoid complex repository dependencies
     return await this.withPg(async (c) => {
       const sets: string[] = ['password_hash = $1'];
       const args: any[] = [newHash];
