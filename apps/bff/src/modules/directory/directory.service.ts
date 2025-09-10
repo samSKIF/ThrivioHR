@@ -1273,6 +1273,87 @@ export class DirectoryService {
         { name: 'Valledupar', code: 'VUP' }, { name: 'Montería', code: 'MTR' }, { name: 'Pereira', code: 'PEI' },
         { name: 'Manizales', code: 'MZL' }, { name: 'Pasto', code: 'PSO' }, { name: 'Neiva', code: 'NVA' },
         { name: 'Armenia', code: 'AXM' }, { name: 'Sincelejo', code: 'SIN' }, { name: 'Popayán', code: 'PPN' }
+      ],
+      'CH': [
+        { name: 'Zurich', code: 'ZUR' }, { name: 'Geneva', code: 'GVA' }, { name: 'Basel', code: 'BSL' },
+        { name: 'Bern', code: 'BRN' }, { name: 'Lausanne', code: 'LSN' }, { name: 'Winterthur', code: 'WTH' },
+        { name: 'Lucerne', code: 'LCN' }, { name: 'St. Gallen', code: 'SGL' }, { name: 'Lugano', code: 'LUG' },
+        { name: 'Biel/Bienne', code: 'BIL' }, { name: 'Thun', code: 'THN' }, { name: 'Köniz', code: 'KNZ' },
+        { name: 'La Chaux-de-Fonds', code: 'CDF' }, { name: 'Schaffhausen', code: 'SHF' }, { name: 'Fribourg', code: 'FRB' },
+        { name: 'Vernier', code: 'VER' }, { name: 'Chur', code: 'CHR' }, { name: 'Neuchâtel', code: 'NCH' },
+        { name: 'Uster', code: 'UST' }, { name: 'Sion', code: 'SIO' }, { name: 'Emmen', code: 'EMM' }
+      ],
+      'SE': [
+        { name: 'Stockholm', code: 'STO' }, { name: 'Gothenburg', code: 'GOT' }, { name: 'Malmö', code: 'MMX' },
+        { name: 'Uppsala', code: 'UPS' }, { name: 'Västerås', code: 'VST' }, { name: 'Örebro', code: 'ORB' },
+        { name: 'Linköping', code: 'LNK' }, { name: 'Helsingborg', code: 'HLB' }, { name: 'Jönköping', code: 'JKP' },
+        { name: 'Norrköping', code: 'NRK' }, { name: 'Lund', code: 'LND' }, { name: 'Umeå', code: 'UME' },
+        { name: 'Gävle', code: 'GVL' }, { name: 'Borås', code: 'BOR' }, { name: 'Södertälje', code: 'SOD' },
+        { name: 'Eskilstuna', code: 'ESK' }, { name: 'Halmstad', code: 'HAL' }, { name: 'Växjö', code: 'VXJ' },
+        { name: 'Karlstad', code: 'KSD' }, { name: 'Sundsvall', code: 'SDL' }, { name: 'Trollhättan', code: 'TRL' }
+      ],
+      'NO': [
+        { name: 'Oslo', code: 'OSL' }, { name: 'Bergen', code: 'BGO' }, { name: 'Stavanger', code: 'SVG' },
+        { name: 'Trondheim', code: 'TRD' }, { name: 'Drammen', code: 'DRM' }, { name: 'Fredrikstad', code: 'FRD' },
+        { name: 'Kristiansand', code: 'KRS' }, { name: 'Sandnes', code: 'SAN' }, { name: 'Tromsø', code: 'TOS' },
+        { name: 'Sarpsborg', code: 'SAR' }, { name: 'Skien', code: 'SKI' }, { name: 'Ålesund', code: 'ALS' },
+        { name: 'Sandefjord', code: 'SDF' }, { name: 'Haugesund', code: 'HAU' }, { name: 'Tønsberg', code: 'TON' },
+        { name: 'Moss', code: 'MOS' }, { name: 'Bodø', code: 'BOO' }, { name: 'Arendal', code: 'ARE' },
+        { name: 'Hamar', code: 'HAM' }, { name: 'Ytrebygda', code: 'YTR' }, { name: 'Larvik', code: 'LAR' }
+      ],
+      'DK': [
+        { name: 'Copenhagen', code: 'CPH' }, { name: 'Aarhus', code: 'AAR' }, { name: 'Odense', code: 'ODE' },
+        { name: 'Aalborg', code: 'AAL' }, { name: 'Esbjerg', code: 'EBJ' }, { name: 'Randers', code: 'RAN' },
+        { name: 'Kolding', code: 'KOL' }, { name: 'Horsens', code: 'HOR' }, { name: 'Vejle', code: 'VEJ' },
+        { name: 'Roskilde', code: 'ROS' }, { name: 'Herning', code: 'HER' }, { name: 'Silkeborg', code: 'SIL' },
+        { name: 'Næstved', code: 'NAS' }, { name: 'Fredericia', code: 'FRE' }, { name: 'Viborg', code: 'VIB' },
+        { name: 'Køge', code: 'KOG' }, { name: 'Holstebro', code: 'HOL' }, { name: 'Taastrup', code: 'TAA' },
+        { name: 'Slagelse', code: 'SLA' }, { name: 'Hillerød', code: 'HIL' }, { name: 'Sønderborg', code: 'SON' }
+      ],
+      'FI': [
+        { name: 'Helsinki', code: 'HEL' }, { name: 'Espoo', code: 'ESP' }, { name: 'Tampere', code: 'TMP' },
+        { name: 'Vantaa', code: 'VAN' }, { name: 'Oulu', code: 'OUL' }, { name: 'Turku', code: 'TKU' },
+        { name: 'Jyväskylä', code: 'JYV' }, { name: 'Lahti', code: 'LAH' }, { name: 'Kuopio', code: 'KUO' },
+        { name: 'Pori', code: 'POR' }, { name: 'Joensuu', code: 'JOE' }, { name: 'Lappeenranta', code: 'LAP' },
+        { name: 'Hämeenlinna', code: 'HAM' }, { name: 'Vaasa', code: 'VAA' }, { name: 'Seinäjoki', code: 'SEI' },
+        { name: 'Rovaniemi', code: 'ROV' }, { name: 'Mikkeli', code: 'MIK' }, { name: 'Kotka', code: 'KOT' },
+        { name: 'Salo', code: 'SAL' }, { name: 'Porvoo', code: 'POO' }, { name: 'Kouvola', code: 'KOV' }
+      ],
+      'BE': [
+        { name: 'Brussels', code: 'BRU' }, { name: 'Antwerp', code: 'ANR' }, { name: 'Ghent', code: 'GNT' },
+        { name: 'Charleroi', code: 'CRL' }, { name: 'Liège', code: 'LGG' }, { name: 'Bruges', code: 'BRG' },
+        { name: 'Namur', code: 'NAM' }, { name: 'Leuven', code: 'LEU' }, { name: 'Mons', code: 'MON' },
+        { name: 'Aalst', code: 'AAL' }, { name: 'Mechelen', code: 'MEC' }, { name: 'La Louvière', code: 'LLV' },
+        { name: 'Kortrijk', code: 'KOR' }, { name: 'Hasselt', code: 'HAS' }, { name: 'Sint-Niklaas', code: 'SNK' },
+        { name: 'Ostend', code: 'OST' }, { name: 'Genk', code: 'GEN' }, { name: 'Seraing', code: 'SER' },
+        { name: 'Roeselare', code: 'ROE' }, { name: 'Mouscron', code: 'MOU' }, { name: 'Verviers', code: 'VER' }
+      ],
+      'AT': [
+        { name: 'Vienna', code: 'VIE' }, { name: 'Graz', code: 'GRZ' }, { name: 'Linz', code: 'LNZ' },
+        { name: 'Salzburg', code: 'SZG' }, { name: 'Innsbruck', code: 'INN' }, { name: 'Klagenfurt', code: 'KLA' },
+        { name: 'Villach', code: 'VIL' }, { name: 'Wels', code: 'WEL' }, { name: 'Sankt Pölten', code: 'STP' },
+        { name: 'Dornbirn', code: 'DOR' }, { name: 'Wiener Neustadt', code: 'WNS' }, { name: 'Steyr', code: 'STY' },
+        { name: 'Feldkirch', code: 'FEL' }, { name: 'Bregenz', code: 'BRE' }, { name: 'Leonding', code: 'LEO' },
+        { name: 'Klosterneuburg', code: 'KLO' }, { name: 'Baden bei Wien', code: 'BAD' }, { name: 'Wolfsberg', code: 'WOL' },
+        { name: 'Leoben', code: 'LEB' }, { name: 'Krems', code: 'KRE' }, { name: 'Traun', code: 'TRA' }
+      ],
+      'CZ': [
+        { name: 'Prague', code: 'PRG' }, { name: 'Brno', code: 'BRN' }, { name: 'Ostrava', code: 'OSR' },
+        { name: 'Plzen', code: 'PLZ' }, { name: 'Liberec', code: 'LIB' }, { name: 'Olomouc', code: 'OLO' },
+        { name: 'České Budějovice', code: 'BUD' }, { name: 'Hradec Králové', code: 'HKR' }, { name: 'Ústí nad Labem', code: 'UNL' },
+        { name: 'Pardubice', code: 'PAR' }, { name: 'Zlín', code: 'ZLN' }, { name: 'Kladno', code: 'KLA' },
+        { name: 'Most', code: 'MOS' }, { name: 'Opava', code: 'OPA' }, { name: 'Frýdek-Místek', code: 'FRY' },
+        { name: 'Jihlava', code: 'JIH' }, { name: 'Teplice', code: 'TEP' }, { name: 'Děčín', code: 'DEC' },
+        { name: 'Karlovy Vary', code: 'KAR' }, { name: 'Jablonec nad Nisou', code: 'JAB' }, { name: 'Mladá Boleslav', code: 'MLB' }
+      ],
+      'HU': [
+        { name: 'Budapest', code: 'BUD' }, { name: 'Debrecen', code: 'DEB' }, { name: 'Szeged', code: 'SZE' },
+        { name: 'Miskolc', code: 'MIS' }, { name: 'Pécs', code: 'PEC' }, { name: 'Győr', code: 'GYO' },
+        { name: 'Nyíregyháza', code: 'NYI' }, { name: 'Kecskemét', code: 'KEC' }, { name: 'Székesfehérvár', code: 'SZF' },
+        { name: 'Szombathely', code: 'SZO' }, { name: 'Érd', code: 'ERD' }, { name: 'Tatabánya', code: 'TAT' },
+        { name: 'Kaposvár', code: 'KAP' }, { name: 'Békéscsaba', code: 'BEK' }, { name: 'Zalaegerszeg', code: 'ZAL' },
+        { name: 'Sopron', code: 'SOP' }, { name: 'Eger', code: 'EGE' }, { name: 'Nagykanizsa', code: 'NAG' },
+        { name: 'Dunaújváros', code: 'DUN' }, { name: 'Hódmezővásárhely', code: 'HOD' }, { name: 'Szolnok', code: 'SZL' }
       ]
     };
 
