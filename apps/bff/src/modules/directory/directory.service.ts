@@ -1399,6 +1399,51 @@ export class DirectoryService {
         { name: 'Badulla', code: 'BDL' }, { name: 'Kalutara', code: 'KLT' }, { name: 'Gampaha', code: 'GMP' },
         { name: 'Monaragala', code: 'MNR' }, { name: 'Hambantota', code: 'HMB' }, { name: 'Vavuniya', code: 'VVN' },
         { name: 'Kegalle', code: 'KGL' }, { name: 'Puttalam', code: 'PUT' }, { name: 'Ampara', code: 'AMP' }
+      ],
+      'IL': [
+        { name: 'Jerusalem', code: 'JRS' }, { name: 'Tel Aviv', code: 'TLV' }, { name: 'Haifa', code: 'HFA' },
+        { name: 'Rishon LeZion', code: 'RSL' }, { name: 'Petah Tikva', code: 'PTK' }, { name: 'Ashdod', code: 'ASD' },
+        { name: 'Netanya', code: 'NTY' }, { name: 'Beer Sheva', code: 'BEV' }, { name: 'Holon', code: 'HLN' },
+        { name: 'Bnei Brak', code: 'BBK' }, { name: 'Ramat Gan', code: 'RMG' }, { name: 'Ashkelon', code: 'ASK' },
+        { name: 'Rehovot', code: 'RHT' }, { name: 'Bat Yam', code: 'BTY' }, { name: 'Beit Shemesh', code: 'BSH' },
+        { name: 'Kfar Saba', code: 'KFS' }, { name: 'Herzliya', code: 'HRZ' }, { name: 'Hadera', code: 'HDR' },
+        { name: 'Modiin', code: 'MDN' }, { name: 'Nazareth', code: 'NZR' }, { name: 'Lod', code: 'LOD' }
+      ],
+      'QA': [
+        { name: 'Doha', code: 'DOH' }, { name: 'Al Rayyan', code: 'ALR' }, { name: 'Umm Salal', code: 'UMS' },
+        { name: 'Al Khor', code: 'ALK' }, { name: 'Al Wakrah', code: 'ALW' }, { name: 'Madinat ash Shamal', code: 'MSL' },
+        { name: 'Al Daayen', code: 'ALD' }, { name: 'Al Shahaniya', code: 'ALS' }, { name: 'Lusail', code: 'LSL' },
+        { name: 'Al Gharrafa', code: 'AGR' }, { name: 'Al Sadd', code: 'ASD' }, { name: 'West Bay', code: 'WBY' },
+        { name: 'Al Thumama', code: 'ATH' }, { name: 'Education City', code: 'EDC' }, { name: 'Katara', code: 'KTR' },
+        { name: 'The Pearl', code: 'PRL' }, { name: 'Al Markhiya', code: 'AMK' }, { name: 'Al Waab', code: 'AWB' },
+        { name: 'Al Aziziyah', code: 'AAZ' }, { name: 'Al Mansoura', code: 'AMN' }, { name: 'Bin Mahmoud', code: 'BMD' }
+      ],
+      'KW': [
+        { name: 'Kuwait City', code: 'KWI' }, { name: 'Hawalli', code: 'HWL' }, { name: 'As Salimiyah', code: 'SLM' },
+        { name: 'Sabah as Salem', code: 'SAS' }, { name: 'Al Farwaniyah', code: 'FRW' }, { name: 'Al Ahmadi', code: 'AHM' },
+        { name: 'Al Jahra', code: 'JHR' }, { name: 'Mubarak al Kabeer', code: 'MKB' }, { name: 'Ar Riqqah', code: 'RQH' },
+        { name: 'Al Fahaheel', code: 'FHH' }, { name: 'Mangaf', code: 'MNG' }, { name: 'Mahboula', code: 'MHB' },
+        { name: 'Salmiya', code: 'SAL' }, { name: 'Abraq Khaitan', code: 'ABK' }, { name: 'Al Fintas', code: 'FNT' },
+        { name: 'Bayan', code: 'BYN' }, { name: 'Mishref', code: 'MSH' }, { name: 'Salwa', code: 'SLW' },
+        { name: 'Surra', code: 'SUR' }, { name: 'Jleeb Al Shuyoukh', code: 'JLS' }, { name: 'Khaitan', code: 'KHT' }
+      ],
+      'JO': [
+        { name: 'Amman', code: 'AMM' }, { name: 'Zarqa', code: 'ZRQ' }, { name: 'Irbid', code: 'IRB' },
+        { name: 'Russeifa', code: 'RSF' }, { name: 'Wadi as-Sir', code: 'WAS' }, { name: 'Aqaba', code: 'AQJ' },
+        { name: 'Madaba', code: 'MDB' }, { name: 'As Salt', code: 'SLT' }, { name: 'Ma\'an', code: 'MAN' },
+        { name: 'Jerash', code: 'JRS' }, { name: 'Karak', code: 'KRK' }, { name: 'Ajloun', code: 'AJL' },
+        { name: 'Tafilah', code: 'TFL' }, { name: 'Mafraq', code: 'MFQ' }, { name: 'Sahab', code: 'SHB' },
+        { name: 'Fuheis', code: 'FHS' }, { name: 'Jubeiha', code: 'JBH' }, { name: 'Sweileh', code: 'SWL' },
+        { name: 'Tla al Ali', code: 'TLA' }, { name: 'Marj al Hamam', code: 'MHM' }, { name: 'Ain al Basha', code: 'AIB' }
+      ],
+      'LB': [
+        { name: 'Beirut', code: 'BEY' }, { name: 'Tripoli', code: 'TRP' }, { name: 'Sidon', code: 'SID' },
+        { name: 'Tyre', code: 'TYR' }, { name: 'Nabatieh', code: 'NBT' }, { name: 'Jounieh', code: 'JNH' },
+        { name: 'Zahle', code: 'ZHL' }, { name: 'Baalbek', code: 'BAL' }, { name: 'Aley', code: 'ALY' },
+        { name: 'Byblos', code: 'BYB' }, { name: 'Anjar', code: 'ANJ' }, { name: 'Bcharre', code: 'BCH' },
+        { name: 'Bint Jbeil', code: 'BJL' }, { name: 'Marjayoun', code: 'MRJ' }, { name: 'Jezzine', code: 'JZN' },
+        { name: 'Hasbaya', code: 'HSB' }, { name: 'Rashaya', code: 'RSH' }, { name: 'Hermel', code: 'HRM' },
+        { name: 'Akkar', code: 'AKK' }, { name: 'Miniyeh-Danniyeh', code: 'MND' }, { name: 'Zgharta', code: 'ZGH' }
       ]
     };
 
