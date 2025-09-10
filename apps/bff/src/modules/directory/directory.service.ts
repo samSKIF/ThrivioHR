@@ -1543,6 +1543,81 @@ export class DirectoryService {
         { name: 'Badou', code: 'BAD' }, { name: 'Niamtougou', code: 'NIA' }, { name: 'Glidji', code: 'GLI' },
         { name: 'Tabligbo', code: 'TAB' }, { name: 'Notse', code: 'NOT' }, { name: 'Blitta', code: 'BLI' },
         { name: 'Kandé', code: 'KAN' }, { name: 'Amlamé', code: 'AML' }, { name: 'Agou', code: 'AGO' }
+      ],
+      'ET': [
+        { name: 'Addis Ababa', code: 'ADD' }, { name: 'Dire Dawa', code: 'DIR' }, { name: 'Mekelle', code: 'MQX' },
+        { name: 'Gondar', code: 'GDQ' }, { name: 'Awasa', code: 'AWA' }, { name: 'Bahir Dar', code: 'BJR' },
+        { name: 'Dessie', code: 'DSE' }, { name: 'Jimma', code: 'JIM' }, { name: 'Jijiga', code: 'JIJ' },
+        { name: 'Shashamane', code: 'SHC' }, { name: 'Nekemte', code: 'NEK' }, { name: 'Bishoftu', code: 'BIS' },
+        { name: 'Kombolcha', code: 'KMB' }, { name: 'Hosaena', code: 'HOS' }, { name: 'Harar', code: 'HRR' },
+        { name: 'Dilla', code: 'DLL' }, { name: 'Sodo', code: 'SOD' }, { name: 'Arba Minch', code: 'AMH' },
+        { name: 'Sebeta', code: 'SBT' }, { name: 'Adama', code: 'ADA' }, { name: 'Debre Markos', code: 'DBM' }
+      ],
+      'TZ': [
+        { name: 'Dar es Salaam', code: 'DAR' }, { name: 'Mwanza', code: 'MWZ' }, { name: 'Arusha', code: 'ARK' },
+        { name: 'Dodoma', code: 'DOD' }, { name: 'Mbeya', code: 'MBI' }, { name: 'Morogoro', code: 'MRG' },
+        { name: 'Tanga', code: 'TGT' }, { name: 'Kahama', code: 'KHM' }, { name: 'Tabora', code: 'TBO' },
+        { name: 'Zanzibar City', code: 'ZNZ' }, { name: 'Kigoma', code: 'TKQ' }, { name: 'Sumbawanga', code: 'SUT' },
+        { name: 'Kasulu', code: 'KAS' }, { name: 'Musoma', code: 'MUZ' }, { name: 'Shinyanga', code: 'SHY' },
+        { name: 'Iringa', code: 'IRI' }, { name: 'Singida', code: 'SGX' }, { name: 'Njombe', code: 'NJE' },
+        { name: 'Bukoba', code: 'BKZ' }, { name: 'Mtwara', code: 'MYW' }, { name: 'Lindi', code: 'LDI' }
+      ],
+      'UG': [
+        { name: 'Kampala', code: 'EBB' }, { name: 'Gulu', code: 'ULU' }, { name: 'Lira', code: 'LRA' },
+        { name: 'Mbarara', code: 'MBQ' }, { name: 'Jinja', code: 'JIN' }, { name: 'Bwizibwera', code: 'BWI' },
+        { name: 'Mbale', code: 'MBL' }, { name: 'Mukono', code: 'MUK' }, { name: 'Kasese', code: 'KSE' },
+        { name: 'Masaka', code: 'MSK' }, { name: 'Entebbe', code: 'ENT' }, { name: 'Njeru', code: 'NJE' },
+        { name: 'Kitgum', code: 'KTG' }, { name: 'Koboko', code: 'KBK' }, { name: 'Moroto', code: 'MRT' },
+        { name: 'Yumbe', code: 'YMB' }, { name: 'Lugazi', code: 'LGZ' }, { name: 'Wobulenzi', code: 'WOB' },
+        { name: 'Pader', code: 'PAD' }, { name: 'Iganga', code: 'IGA' }, { name: 'Soroti', code: 'SRT' }
+      ],
+      'RW': [
+        { name: 'Kigali', code: 'KGL' }, { name: 'Butare', code: 'BUT' }, { name: 'Gitarama', code: 'GIT' },
+        { name: 'Ruhengeri', code: 'RHG' }, { name: 'Gisenyi', code: 'GIS' }, { name: 'Byumba', code: 'BYU' },
+        { name: 'Cyangugu', code: 'CYG' }, { name: 'Kibungo', code: 'KBG' }, { name: 'Kibuye', code: 'KBY' },
+        { name: 'Gikongoro', code: 'GKR' }, { name: 'Umutara', code: 'UMT' }, { name: 'Kigoma', code: 'KIG' },
+        { name: 'Nyanza', code: 'NYZ' }, { name: 'Musanze', code: 'MSZ' }, { name: 'Muhanga', code: 'MHG' },
+        { name: 'Rubavu', code: 'RBV' }, { name: 'Huye', code: 'HUY' }, { name: 'Nyagatare', code: 'NYG' },
+        { name: 'Kayonza', code: 'KYZ' }, { name: 'Rusizi', code: 'RSZ' }, { name: 'Burera', code: 'BUR' }
+      ],
+      'BI': [
+        { name: 'Bujumbura', code: 'BJM' }, { name: 'Gitega', code: 'GTG' }, { name: 'Muyinga', code: 'MYG' },
+        { name: 'Ngozi', code: 'NGZ' }, { name: 'Ruyigi', code: 'RYG' }, { name: 'Kayanza', code: 'KYZ' },
+        { name: 'Muramvya', code: 'MRV' }, { name: 'Makamba', code: 'MKB' }, { name: 'Bururi', code: 'BRR' },
+        { name: 'Cibitoke', code: 'CBT' }, { name: 'Karuzi', code: 'KRZ' }, { name: 'Bubanza', code: 'BBZ' },
+        { name: 'Cankuzo', code: 'CNK' }, { name: 'Kirundo', code: 'KRD' }, { name: 'Rutana', code: 'RTN' },
+        { name: 'Mwaro', code: 'MWR' }, { name: 'Rumonge', code: 'RMG' }, { name: 'Isale', code: 'ISL' }
+      ],
+      'DJ': [
+        { name: 'Djibouti', code: 'JIB' }, { name: 'Ali Sabieh', code: 'AIS' }, { name: 'Dikhil', code: 'DIK' },
+        { name: 'Tadjoura', code: 'TAD' }, { name: 'Obock', code: 'OBC' }, { name: 'Arta', code: 'ART' },
+        { name: 'Holhol', code: 'HOL' }, { name: 'Yoboki', code: 'YOB' }, { name: 'Galafi', code: 'GAL' },
+        { name: 'Loyada', code: 'LOY' }, { name: 'Randa', code: 'RAN' }, { name: 'Balho', code: 'BAL' }
+      ],
+      'ER': [
+        { name: 'Asmara', code: 'ASM' }, { name: 'Assab', code: 'ASB' }, { name: 'Massawa', code: 'MSW' },
+        { name: 'Keren', code: 'KER' }, { name: 'Mendefera', code: 'MDF' }, { name: 'Barentu', code: 'BAR' },
+        { name: 'Dekemhare', code: 'DEK' }, { name: 'Ak\'ordat', code: 'AKO' }, { name: 'Adi Keyh', code: 'ADK' },
+        { name: 'Adi Quala', code: 'ADQ' }, { name: 'Senafe', code: 'SEN' }, { name: 'Tessaney', code: 'TES' },
+        { name: 'Afabet', code: 'AFB' }, { name: 'Nakfa', code: 'NAK' }, { name: 'Ghinda', code: 'GHI' }
+      ],
+      'SO': [
+        { name: 'Mogadishu', code: 'MGQ' }, { name: 'Hargeisa', code: 'HGA' }, { name: 'Bosaso', code: 'BSA' },
+        { name: 'Kismayo', code: 'KMU' }, { name: 'Merca', code: 'MRC' }, { name: 'Berbera', code: 'BBO' },
+        { name: 'Baidoa', code: 'BIB' }, { name: 'Galkayo', code: 'GLK' }, { name: 'Garowe', code: 'GGR' },
+        { name: 'Burao', code: 'BUO' }, { name: 'Borama', code: 'BRM' }, { name: 'Las Anod', code: 'LAS' },
+        { name: 'Erigavo', code: 'ERG' }, { name: 'Qardho', code: 'QRD' }, { name: 'Luuq', code: 'LUQ' },
+        { name: 'Jowhar', code: 'JOW' }, { name: 'Beledweyne', code: 'BLD' }, { name: 'Dhusamareb', code: 'DHU' },
+        { name: 'Hudur', code: 'HUD' }, { name: 'Wajid', code: 'WAJ' }, { name: 'Bardera', code: 'BSY' }
+      ],
+      'SD': [
+        { name: 'Khartoum', code: 'KRT' }, { name: 'Omdurman', code: 'OMD' }, { name: 'Khartoum North', code: 'KTN' },
+        { name: 'Port Sudan', code: 'PZU' }, { name: 'Kassala', code: 'KSL' }, { name: 'El Obeid', code: 'EBD' },
+        { name: 'Nyala', code: 'UYL' }, { name: 'Wad Medani', code: 'WDM' }, { name: 'El Fasher', code: 'ELF' },
+        { name: 'El Gadarif', code: 'ELG' }, { name: 'Atbara', code: 'ATB' }, { name: 'Dongola', code: 'DOG' },
+        { name: 'Madani', code: 'MDN' }, { name: 'Sennar', code: 'SNR' }, { name: 'Rabak', code: 'RBK' },
+        { name: 'Geneina', code: 'EGN' }, { name: 'Damazin', code: 'DMZ' }, { name: 'Kadugli', code: 'KDG' },
+        { name: 'El Roseires', code: 'ELR' }, { name: 'Zalingei', code: 'ZLG' }, { name: 'Kosti', code: 'KOT' }
       ]
     };
 
