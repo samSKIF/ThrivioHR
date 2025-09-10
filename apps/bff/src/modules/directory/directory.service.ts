@@ -1618,6 +1618,68 @@ export class DirectoryService {
         { name: 'Madani', code: 'MDN' }, { name: 'Sennar', code: 'SNR' }, { name: 'Rabak', code: 'RBK' },
         { name: 'Geneina', code: 'EGN' }, { name: 'Damazin', code: 'DMZ' }, { name: 'Kadugli', code: 'KDG' },
         { name: 'El Roseires', code: 'ELR' }, { name: 'Zalingei', code: 'ZLG' }, { name: 'Kosti', code: 'KOT' }
+      ],
+      'CD': [
+        { name: 'Kinshasa', code: 'FIH' }, { name: 'Lubumbashi', code: 'FBM' }, { name: 'Mbuji-Mayi', code: 'MJM' },
+        { name: 'Kananga', code: 'KGA' }, { name: 'Kisangani', code: 'FKI' }, { name: 'Bukavu', code: 'BKY' },
+        { name: 'Tshikapa', code: 'TSH' }, { name: 'Kolwezi', code: 'KWZ' }, { name: 'Likasi', code: 'LIK' },
+        { name: 'Goma', code: 'GOM' }, { name: 'Uvira', code: 'UVR' }, { name: 'Bunia', code: 'BUX' },
+        { name: 'Mbandaka', code: 'MDK' }, { name: 'Matadi', code: 'MAT' }, { name: 'Kabinda', code: 'KAB' },
+        { name: 'Mwene-Ditu', code: 'MWK' }, { name: 'Kikwit', code: 'KKW' }, { name: 'Isiro', code: 'IRP' },
+        { name: 'Bandundu', code: 'BAN' }, { name: 'Gemena', code: 'GMA' }, { name: 'Ilebo', code: 'PFR' }
+      ],
+      'CM': [
+        { name: 'Douala', code: 'DLA' }, { name: 'Yaoundé', code: 'NSI' }, { name: 'Garoua', code: 'GOU' },
+        { name: 'Kousseri', code: 'KOS' }, { name: 'Bamenda', code: 'BPC' }, { name: 'Maroua', code: 'MVR' },
+        { name: 'Nkongsamba', code: 'NKS' }, { name: 'Bafoussam', code: 'BFX' }, { name: 'Kumbo', code: 'KMB' },
+        { name: 'Okola', code: 'OKL' }, { name: 'Kribi', code: 'KBI' }, { name: 'Tiko', code: 'TKC' },
+        { name: 'Limbé', code: 'LMB' }, { name: 'Edéa', code: 'EDE' }, { name: 'Loum', code: 'LOU' },
+        { name: 'Kumba', code: 'KBA' }, { name: 'Foumban', code: 'FBN' }, { name: 'Mbouda', code: 'MBD' },
+        { name: 'Dschang', code: 'DSC' }, { name: 'Wum', code: 'WUM' }, { name: 'Ebolowa', code: 'EBW' }
+      ],
+      'CF': [
+        { name: 'Bangui', code: 'BGF' }, { name: 'Bimbo', code: 'BIM' }, { name: 'Berbérati', code: 'BBT' },
+        { name: 'Carnot', code: 'CRN' }, { name: 'Bambari', code: 'BBR' }, { name: 'Bouar', code: 'BOU' },
+        { name: 'Bossangoa', code: 'BSG' }, { name: 'Bria', code: 'BRI' }, { name: 'Bangassou', code: 'BGS' },
+        { name: 'Nola', code: 'NOL' }, { name: 'Mbaiki', code: 'MBK' }, { name: 'Kaga-Bandoro', code: 'KGB' },
+        { name: 'Obo', code: 'OBO' }, { name: 'Sibut', code: 'SBT' }, { name: 'Zemio', code: 'ZEM' },
+        { name: 'Rafai', code: 'RAF' }, { name: 'Bozoum', code: 'BZM' }, { name: 'Batangafo', code: 'BTG' },
+        { name: 'Ndélé', code: 'NDE' }, { name: 'Paoua', code: 'PAO' }, { name: 'Gamboula', code: 'GMB' }
+      ],
+      'TD': [
+        { name: 'N\'Djamena', code: 'NDJ' }, { name: 'Moundou', code: 'MOU' }, { name: 'Sarh', code: 'SRH' },
+        { name: 'Abéché', code: 'AEH' }, { name: 'Kélo', code: 'KEL' }, { name: 'Koumra', code: 'KMR' },
+        { name: 'Pala', code: 'PAL' }, { name: 'Am Timan', code: 'AMT' }, { name: 'Bongor', code: 'BON' },
+        { name: 'Mongo', code: 'MON' }, { name: 'Doba', code: 'DOB' }, { name: 'Ati', code: 'ATI' },
+        { name: 'Laï', code: 'LAI' }, { name: 'Fianga', code: 'FIA' }, { name: 'Massenya', code: 'MAS' },
+        { name: 'Moïssala', code: 'MOI' }, { name: 'Goz Beida', code: 'GOZ' }, { name: 'Mao', code: 'MAO' },
+        { name: 'Bokoro', code: 'BOK' }, { name: 'Biltine', code: 'BIL' }, { name: 'Beinamar', code: 'BEI' }
+      ],
+      'CG': [
+        { name: 'Brazzaville', code: 'BZV' }, { name: 'Pointe-Noire', code: 'PNR' }, { name: 'Dolisie', code: 'NKY' },
+        { name: 'Nkayi', code: 'NKY' }, { name: 'Mossendjo', code: 'MSX' }, { name: 'Impfondo', code: 'IMP' },
+        { name: 'Ouesso', code: 'OUE' }, { name: 'Madingou', code: 'MDG' }, { name: 'Owando', code: 'FTX' },
+        { name: 'Sibiti', code: 'SIB' }, { name: 'Gamboma', code: 'GAM' }, { name: 'Divénié', code: 'DIV' },
+        { name: 'Makoua', code: 'MKJ' }, { name: 'Djambala', code: 'DJA' }, { name: 'Ewo', code: 'EWO' },
+        { name: 'Loandjili', code: 'LOA' }, { name: 'Kinkala', code: 'KIN' }, { name: 'Boundji', code: 'BDJ' },
+        { name: 'Mokeko', code: 'MOK' }, { name: 'Boko', code: 'BOK' }, { name: 'Zanaga', code: 'ZAN' }
+      ],
+      'GQ': [
+        { name: 'Malabo', code: 'SSG' }, { name: 'Bata', code: 'BSG' }, { name: 'Ebebiyín', code: 'EBE' },
+        { name: 'Aconibe', code: 'ACO' }, { name: 'Añisoc', code: 'ANI' }, { name: 'Luba', code: 'LUB' },
+        { name: 'Evinayong', code: 'EVI' }, { name: 'Mongomo', code: 'MON' }, { name: 'Mengomeyén', code: 'MEN' },
+        { name: 'Acurenam', code: 'ACU' }, { name: 'Cogo', code: 'COG' }, { name: 'Micomeseng', code: 'MIC' },
+        { name: 'Nsoc', code: 'NSO' }, { name: 'Ayene', code: 'AYE' }, { name: 'Machinda', code: 'MAC' },
+        { name: 'Niefang', code: 'NIE' }, { name: 'Nsok', code: 'NSK' }, { name: 'Corisco', code: 'COR' }
+      ],
+      'GA': [
+        { name: 'Libreville', code: 'LBV' }, { name: 'Port-Gentil', code: 'POG' }, { name: 'Franceville', code: 'MVB' },
+        { name: 'Oyem', code: 'OYE' }, { name: 'Moanda', code: 'MFF' }, { name: 'Mouila', code: 'MJL' },
+        { name: 'Lambaréné', code: 'LBR' }, { name: 'Tchibanga', code: 'TCH' }, { name: 'Koulamoutou', code: 'KOU' },
+        { name: 'Makokou', code: 'MKU' }, { name: 'Bitam', code: 'BTB' }, { name: 'Gamba', code: 'GAX' },
+        { name: 'Mayumba', code: 'MYB' }, { name: 'Mitzic', code: 'MIT' }, { name: 'Ndjolé', code: 'NDJ' },
+        { name: 'Booué', code: 'BOO' }, { name: 'Lastoursville', code: 'LAS' }, { name: 'Fougamou', code: 'FOU' },
+        { name: 'Okondja', code: 'OKO' }, { name: 'Ndendé', code: 'NDE' }, { name: 'Mékambo', code: 'MEK' }
       ]
     };
 
