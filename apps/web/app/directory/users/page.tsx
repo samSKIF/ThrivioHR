@@ -28,6 +28,81 @@ type Location = {
   name: string;
 };
 
+// Floating Action Dropdown Component for Users
+interface UserActionDropdownProps {
+  employeeId: string;
+  onViewProfile: () => void;
+  onEditUser: () => void;
+  onDeleteUser: () => void;
+  onClose: () => void;
+}
+
+function UserActionDropdown({ employeeId, onViewProfile, onEditUser, onDeleteUser, onClose }: UserActionDropdownProps) {
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    const button = document.querySelector(`[data-employee-id="${employeeId}"]`);
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  }, [employeeId]);
+
+  return (
+    <>
+      {/* Backdrop to close menu */}
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={onClose}
+      />
+      {/* Floating Dropdown Menu */}
+      <div 
+        className="fixed z-50 w-48 bg-white rounded-md shadow-xl border border-gray-200"
+        style={{
+          top: `${position.top}px`,
+          right: `${position.right}px`
+        }}
+      >
+        <div className="py-1">
+          <button
+            onClick={() => {
+              onViewProfile();
+              onClose();
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
+          >
+            <User className="w-4 h-4" />
+            View Profile
+          </button>
+          <button
+            onClick={() => {
+              onEditUser();
+              onClose();
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
+          >
+            <Settings className="w-4 h-4" />
+            Edit Employee
+          </button>
+          <button
+            onClick={() => {
+              onDeleteUser();
+              onClose();
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
+          >
+            <span className="w-4 h-4 flex items-center justify-center text-red-500">✕</span>
+            Delete Employee
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 type OrgStats = {
   totalEmployees: number;
   subscriptionLimit: number | null;
@@ -520,25 +595,25 @@ export default function EmployeeDirectoryPage() {
                           <button 
                             onClick={() => setShowActionMenu(showActionMenu === employee.id ? null : employee.id)}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            data-employee-id={employee.id}
                           >
                             <MoreVertical className="w-4 h-4 text-gray-500" />
                           </button>
                           
                           {showActionMenu === employee.id && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200/60 py-1 z-10">
-                              <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left">
-                                <User className="w-4 h-4" />
-                                View Profile
-                              </button>
-                              <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left">
-                                <Settings className="w-4 h-4" />
-                                Edit Employee
-                              </button>
-                              <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left">
-                                <span className="w-4 h-4 flex items-center justify-center text-red-500">✕</span>
-                                Delete Employee
-                              </button>
-                            </div>
+                            <UserActionDropdown 
+                              employeeId={employee.id}
+                              onViewProfile={() => {
+                                console.log('View profile for:', employee.displayName || employee.email);
+                              }}
+                              onEditUser={() => {
+                                console.log('Edit user for:', employee.displayName || employee.email);
+                              }}
+                              onDeleteUser={() => {
+                                console.log('Delete user for:', employee.displayName || employee.email);
+                              }}
+                              onClose={() => setShowActionMenu(null)}
+                            />
                           )}
                         </div>
                       </td>

@@ -24,6 +24,70 @@ const PREDEFINED_COLORS = [
   '#84CC16'  // Lime
 ];
 
+// Floating Action Dropdown Component for Departments
+interface DepartmentActionDropdownProps {
+  departmentId: string;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}
+
+function DepartmentActionDropdown({ departmentId, onEdit, onDelete, onClose }: DepartmentActionDropdownProps) {
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    const button = document.querySelector(`[data-department-id="${departmentId}"]`);
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  }, [departmentId]);
+
+  return (
+    <>
+      {/* Backdrop to close menu */}
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={onClose}
+      />
+      {/* Floating Dropdown Menu */}
+      <div 
+        className="fixed z-50 w-40 bg-white rounded-md shadow-xl border border-gray-200"
+        style={{
+          top: `${position.top}px`,
+          right: `${position.right}px`
+        }}
+      >
+        <div className="py-1">
+          <button
+            onClick={() => {
+              onEdit();
+              onClose();
+            }}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Department
+          </button>
+          <button
+            onClick={() => {
+              onDelete();
+              onClose();
+            }}
+            className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Department
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function DepartmentManagementPage() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -416,33 +480,18 @@ export default function DepartmentManagementPage() {
                             <button 
                               onClick={() => setShowActionMenu(showActionMenu === department.id ? null : department.id)}
                               className="text-gray-400 hover:text-gray-600"
+                              data-department-id={department.id}
                             >
                               <MoreHorizontal className="w-5 h-5" />
                             </button>
                             
                             {showActionMenu === department.id && (
-                              <>
-                                <div 
-                                  className="fixed inset-0 z-10" 
-                                  onClick={() => setShowActionMenu(null)}
-                                ></div>
-                                <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                                  <button 
-                                    onClick={() => openEditModal(department)}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
-                                  >
-                                    <Edit className="w-4 h-4 text-gray-500" />
-                                    <span>Edit</span>
-                                  </button>
-                                  <button 
-                                    onClick={() => openDeleteModal(department)}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
-                                  >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                    <span>Delete</span>
-                                  </button>
-                                </div>
-                              </>
+                              <DepartmentActionDropdown 
+                                departmentId={department.id}
+                                onEdit={() => openEditModal(department)}
+                                onDelete={() => openDeleteModal(department)}
+                                onClose={() => setShowActionMenu(null)}
+                              />
                             )}
                           </div>
                         </td>
