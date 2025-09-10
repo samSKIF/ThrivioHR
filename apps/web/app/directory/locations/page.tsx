@@ -381,27 +381,8 @@ export default function LocationManagementPage() {
         setShowDeleteModal(false);
         setDeletingLocation(null);
       } else {
-        // Handle different error types
-        let errorMessage = 'Failed to delete location';
-        
-        try {
-          const errorData = await res.json();
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-        } catch {
-          // If JSON parsing fails, try to get text
-          try {
-            const errorText = await res.text();
-            if (errorText) {
-              errorMessage = errorText;
-            }
-          } catch {
-            // Use default message if both fail
-          }
-        }
-        
-        alert(errorMessage);
+        const error = await res.text();
+        alert(error || 'Failed to delete location');
       }
     } catch (error) {
       console.error('Error deleting location:', error);
