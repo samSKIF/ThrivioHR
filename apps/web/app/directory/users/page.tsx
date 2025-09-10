@@ -334,6 +334,13 @@ export default function EmployeeDirectoryPage() {
               Manage Departments
             </button>
             <button 
+              onClick={() => window.location.href = '/directory/locations'}
+              className="flex items-center gap-2 px-4 py-2 border border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              <Building2 className="w-4 h-4" />
+              Manage Locations
+            </button>
+            <button 
               onClick={() => setShowAddEmployee(true)}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
