@@ -1165,10 +1165,125 @@ export class DirectoryService {
         { name: 'Nyeri', code: 'NYE' }, { name: 'Machakos', code: 'MAC' }, { name: 'Meru', code: 'MRU' },
         { name: 'Kericho', code: 'KRC' }, { name: 'Migori', code: 'MIG' }, { name: 'Uasin Gishu', code: 'UGS' },
         { name: 'Nanyuki', code: 'NYK' }, { name: 'Voi', code: 'VOI' }, { name: 'Wajir', code: 'WJR' }
+      ],
+      'MA': [
+        { name: 'Casablanca', code: 'CMN' }, { name: 'Rabat', code: 'RBA' }, { name: 'Fes', code: 'FEZ' },
+        { name: 'Marrakech', code: 'RAK' }, { name: 'Tangier', code: 'TNG' }, { name: 'Agadir', code: 'AGA' },
+        { name: 'Meknes', code: 'MEK' }, { name: 'Oujda', code: 'OUD' }, { name: 'Kenitra', code: 'KNT' },
+        { name: 'Tetouan', code: 'TTU' }, { name: 'Safi', code: 'SFI' }, { name: 'Mohammedia', code: 'MOH' },
+        { name: 'Khouribga', code: 'KHG' }, { name: 'Beni Mellal', code: 'BNI' }, { name: 'El Jadida', code: 'EJD' },
+        { name: 'Taza', code: 'TAZ' }, { name: 'Nador', code: 'NDR' }, { name: 'Settat', code: 'SET' },
+        { name: 'Larache', code: 'LRC' }, { name: 'Khenifra', code: 'KHN' }, { name: 'Guelmim', code: 'GLM' }
+      ],
+      'RU': [
+        { name: 'Moscow', code: 'MOW' }, { name: 'Saint Petersburg', code: 'LED' }, { name: 'Novosibirsk', code: 'OVB' },
+        { name: 'Yekaterinburg', code: 'SVX' }, { name: 'Kazan', code: 'KZN' }, { name: 'Nizhny Novgorod', code: 'GOJ' },
+        { name: 'Chelyabinsk', code: 'CEK' }, { name: 'Samara', code: 'KUF' }, { name: 'Omsk', code: 'OMS' },
+        { name: 'Rostov-on-Don', code: 'ROV' }, { name: 'Ufa', code: 'UFA' }, { name: 'Krasnoyarsk', code: 'KJA' },
+        { name: 'Perm', code: 'PEE' }, { name: 'Voronezh', code: 'VOZ' }, { name: 'Volgograd', code: 'VOG' },
+        { name: 'Krasnodar', code: 'KRR' }, { name: 'Saratov', code: 'GSV' }, { name: 'Tyumen', code: 'TJM' },
+        { name: 'Tolyatti', code: 'TOL' }, { name: 'Izhevsk', code: 'IJK' }, { name: 'Barnaul', code: 'BAX' }
+      ],
+      'TR': [
+        { name: 'Istanbul', code: 'IST' }, { name: 'Ankara', code: 'ANK' }, { name: 'Izmir', code: 'ADB' },
+        { name: 'Bursa', code: 'YEI' }, { name: 'Adana', code: 'ADA' }, { name: 'Gaziantep', code: 'GZT' },
+        { name: 'Konya', code: 'KYA' }, { name: 'Antalya', code: 'AYT' }, { name: 'Kayseri', code: 'ASR' },
+        { name: 'Mersin', code: 'MER' }, { name: 'Eskisehir', code: 'ESK' }, { name: 'Diyarbakir', code: 'DIY' },
+        { name: 'Samsun', code: 'SZF' }, { name: 'Denizli', code: 'DNZ' }, { name: 'Adapazari', code: 'ADP' },
+        { name: 'Malatya', code: 'MLX' }, { name: 'Kahramanmaras', code: 'KCM' }, { name: 'Erzurum', code: 'ERZ' },
+        { name: 'Van', code: 'VAN' }, { name: 'Batman', code: 'BAL' }, { name: 'Elazig', code: 'EZS' }
+      ],
+      'PL': [
+        { name: 'Warsaw', code: 'WAW' }, { name: 'Krakow', code: 'KRK' }, { name: 'Lodz', code: 'LCJ' },
+        { name: 'Wroclaw', code: 'WRO' }, { name: 'Poznan', code: 'POZ' }, { name: 'Gdansk', code: 'GDN' },
+        { name: 'Szczecin', code: 'SZZ' }, { name: 'Bydgoszcz', code: 'BYD' }, { name: 'Lublin', code: 'LUZ' },
+        { name: 'Katowice', code: 'KTW' }, { name: 'Bialystok', code: 'BJL' }, { name: 'Gdynia', code: 'GDY' },
+        { name: 'Czestochowa', code: 'CZE' }, { name: 'Radom', code: 'RDM' }, { name: 'Sosnowiec', code: 'SOS' },
+        { name: 'Torun', code: 'TRN' }, { name: 'Kielce', code: 'KLC' }, { name: 'Gliwice', code: 'GLI' },
+        { name: 'Zabrze', code: 'ZAB' }, { name: 'Bytom', code: 'BYT' }, { name: 'Olsztyn', code: 'SZY' }
+      ],
+      'TH': [
+        { name: 'Bangkok', code: 'BKK' }, { name: 'Nonthaburi', code: 'NTB' }, { name: 'Nakhon Ratchasima', code: 'NAK' },
+        { name: 'Chiang Mai', code: 'CNX' }, { name: 'Hat Yai', code: 'HDY' }, { name: 'Udon Thani', code: 'UTH' },
+        { name: 'Pak Kret', code: 'PKR' }, { name: 'Khon Kaen', code: 'KKC' }, { name: 'Chiang Rai', code: 'CEI' },
+        { name: 'Thon Buri', code: 'THB' }, { name: 'Nakhon Si Thammarat', code: 'NST' }, { name: 'Rayong', code: 'RYG' },
+        { name: 'Lampang', code: 'LPT' }, { name: 'Ubon Ratchathani', code: 'UBP' }, { name: 'Roi Et', code: 'ROI' },
+        { name: 'Kanchanaburi', code: 'KAN' }, { name: 'Surat Thani', code: 'URT' }, { name: 'Surin', code: 'SRI' },
+        { name: 'Sisaket', code: 'SSK' }, { name: 'Phitsanulok', code: 'PHS' }, { name: 'Nong Khai', code: 'NKI' }
+      ],
+      'PH': [
+        { name: 'Manila', code: 'MNL' }, { name: 'Quezon City', code: 'QZN' }, { name: 'Davao', code: 'DVO' },
+        { name: 'Caloocan', code: 'CAL' }, { name: 'Cebu City', code: 'CEB' }, { name: 'Zamboanga', code: 'ZAM' },
+        { name: 'Antipolo', code: 'ANT' }, { name: 'Pasig', code: 'PSG' }, { name: 'Taguig', code: 'TGG' },
+        { name: 'Valenzuela', code: 'VAL' }, { name: 'Dasmariñas', code: 'DAS' }, { name: 'Calamba', code: 'CLB' },
+        { name: 'Makati', code: 'MKT' }, { name: 'Marikina', code: 'MRK' }, { name: 'Muntinlupa', code: 'MNT' },
+        { name: 'Baguio', code: 'BAG' }, { name: 'Bacolod', code: 'BCD' }, { name: 'Iloilo City', code: 'ILO' },
+        { name: 'Cagayan de Oro', code: 'CGY' }, { name: 'Parañaque', code: 'PRQ' }, { name: 'Las Piñas', code: 'LPS' }
+      ],
+      'VN': [
+        { name: 'Ho Chi Minh City', code: 'SGN' }, { name: 'Hanoi', code: 'HAN' }, { name: 'Da Nang', code: 'DAD' },
+        { name: 'Hai Phong', code: 'HPH' }, { name: 'Can Tho', code: 'VCA' }, { name: 'Bien Hoa', code: 'BHH' },
+        { name: 'Hue', code: 'HUI' }, { name: 'Nha Trang', code: 'CXR' }, { name: 'Buon Ma Thuot', code: 'BMV' },
+        { name: 'Quy Nhon', code: 'UIH' }, { name: 'Vung Tau', code: 'VTG' }, { name: 'Nam Dinh', code: 'NMD' },
+        { name: 'Phan Thiet', code: 'PHA' }, { name: 'Long Xuyen', code: 'LXG' }, { name: 'Ha Long', code: 'HLG' },
+        { name: 'Thai Nguyen', code: 'THN' }, { name: 'Thanh Hoa', code: 'THH' }, { name: 'Rach Gia', code: 'RCH' },
+        { name: 'Cam Ranh', code: 'CRH' }, { name: 'Vinh', code: 'VII' }, { name: 'My Tho', code: 'MTH' }
+      ],
+      'MY': [
+        { name: 'Kuala Lumpur', code: 'KUL' }, { name: 'George Town', code: 'PEN' }, { name: 'Ipoh', code: 'IPH' },
+        { name: 'Shah Alam', code: 'SZB' }, { name: 'Petaling Jaya', code: 'PJY' }, { name: 'Klang', code: 'KLG' },
+        { name: 'Johor Bahru', code: 'JHB' }, { name: 'Subang Jaya', code: 'SBJ' }, { name: 'Kuching', code: 'KCH' },
+        { name: 'Kota Kinabalu', code: 'BKI' }, { name: 'Seremban', code: 'SRM' }, { name: 'Kuantan', code: 'KUA' },
+        { name: 'Iskandar Puteri', code: 'ISK' }, { name: 'Ampang Jaya', code: 'APG' }, { name: 'Malacca City', code: 'MLC' },
+        { name: 'Aruah', code: 'ARU' }, { name: 'Sungai Petani', code: 'SPT' }, { name: 'Miri', code: 'MYY' },
+        { name: 'Sandakan', code: 'SDK' }, { name: 'Alor Setar', code: 'AOR' }, { name: 'Tawau', code: 'TWU' }
+      ],
+      'ID': [
+        { name: 'Jakarta', code: 'JKT' }, { name: 'Surabaya', code: 'SUB' }, { name: 'Bandung', code: 'BDO' },
+        { name: 'Bekasi', code: 'BKS' }, { name: 'Medan', code: 'MES' }, { name: 'Tangerang', code: 'TNG' },
+        { name: 'Depok', code: 'DPK' }, { name: 'Semarang', code: 'SRG' }, { name: 'Palembang', code: 'PLM' },
+        { name: 'Makassar', code: 'UPG' }, { name: 'Batam', code: 'BTH' }, { name: 'Bogor', code: 'BGR' },
+        { name: 'Pekanbaru', code: 'PKU' }, { name: 'Bandar Lampung', code: 'TKG' }, { name: 'Padang', code: 'PDG' },
+        { name: 'Malang', code: 'MLG' }, { name: 'Denpasar', code: 'DPS' }, { name: 'Samarinda', code: 'SRI' },
+        { name: 'Tasikmalaya', code: 'TSK' }, { name: 'Serang', code: 'SRN' }, { name: 'Banjarmasin', code: 'BDJ' }
+      ],
+      'AR': [
+        { name: 'Buenos Aires', code: 'BUE' }, { name: 'Córdoba', code: 'COR' }, { name: 'Rosario', code: 'ROS' },
+        { name: 'Mendoza', code: 'MDZ' }, { name: 'Tucumán', code: 'TUC' }, { name: 'La Plata', code: 'LPL' },
+        { name: 'Mar del Plata', code: 'MDQ' }, { name: 'Salta', code: 'SLA' }, { name: 'Santa Fe', code: 'SFN' },
+        { name: 'San Juan', code: 'UAQ' }, { name: 'Resistencia', code: 'RES' }, { name: 'Santiago del Estero', code: 'SDE' },
+        { name: 'Corrientes', code: 'CNQ' }, { name: 'Posadas', code: 'PSS' }, { name: 'Bahía Blanca', code: 'BHI' },
+        { name: 'Paraná', code: 'PRA' }, { name: 'Neuquén', code: 'NQN' }, { name: 'Formosa', code: 'FMA' },
+        { name: 'San Luis', code: 'LUQ' }, { name: 'Catamarca', code: 'CTC' }, { name: 'La Rioja', code: 'IRJ' }
+      ],
+      'CL': [
+        { name: 'Santiago', code: 'SCL' }, { name: 'Valparaíso', code: 'VAP' }, { name: 'Concepción', code: 'CCP' },
+        { name: 'La Serena', code: 'LSC' }, { name: 'Antofagasta', code: 'ANF' }, { name: 'Temuco', code: 'TEM' },
+        { name: 'Rancagua', code: 'RAN' }, { name: 'Talca', code: 'TLC' }, { name: 'Arica', code: 'ARI' },
+        { name: 'Chillán', code: 'CHL' }, { name: 'Iquique', code: 'IQQ' }, { name: 'Los Ángeles', code: 'LSA' },
+        { name: 'Puerto Montt', code: 'PMC' }, { name: 'Valdivia', code: 'VLD' }, { name: 'Osorno', code: 'OSO' },
+        { name: 'Copiapó', code: 'CPO' }, { name: 'Quillota', code: 'QUI' }, { name: 'Curicó', code: 'CUR' },
+        { name: 'Punta Arenas', code: 'PUQ' }, { name: 'San Antonio', code: 'SAN' }, { name: 'Calama', code: 'CJC' }
+      ],
+      'CO': [
+        { name: 'Bogotá', code: 'BOG' }, { name: 'Medellín', code: 'MDE' }, { name: 'Cali', code: 'CLO' },
+        { name: 'Barranquilla', code: 'BAQ' }, { name: 'Cartagena', code: 'CTG' }, { name: 'Cúcuta', code: 'CUC' },
+        { name: 'Soledad', code: 'SOL' }, { name: 'Ibagué', code: 'IBE' }, { name: 'Bucaramanga', code: 'BGA' },
+        { name: 'Soacha', code: 'SOA' }, { name: 'Santa Marta', code: 'SMR' }, { name: 'Villavicencio', code: 'VVC' },
+        { name: 'Valledupar', code: 'VUP' }, { name: 'Montería', code: 'MTR' }, { name: 'Pereira', code: 'PEI' },
+        { name: 'Manizales', code: 'MZL' }, { name: 'Pasto', code: 'PSO' }, { name: 'Neiva', code: 'NVA' },
+        { name: 'Armenia', code: 'AXM' }, { name: 'Sincelejo', code: 'SIN' }, { name: 'Popayán', code: 'PPN' }
       ]
     };
 
-    return citiesByCountry[countryCode] || [];
+    const cities = citiesByCountry[countryCode] || [];
+    
+    // If no cities found for the country, return a helpful message in the logs
+    if (cities.length === 0) {
+      console.log(`No cities data available for country code: ${countryCode}`);
+    }
+    
+    return cities;
   }
 
   async createLocation(orgId: string, type: string, name: string, code?: string, parentId?: string) {
