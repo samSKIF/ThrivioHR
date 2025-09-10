@@ -511,7 +511,7 @@ export default function LocationManagementPage() {
             <p className="text-sm text-gray-500">Manage and organize your company locations</p>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -560,6 +560,7 @@ export default function LocationManagementPage() {
                         <button 
                           onClick={() => setShowActionMenu(showActionMenu === location.id ? null : location.id)}
                           className="text-gray-400 hover:text-gray-600"
+                          data-location-id={location.id}
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
@@ -570,8 +571,8 @@ export default function LocationManagementPage() {
                               className="fixed inset-0 z-10" 
                               onClick={() => setShowActionMenu(null)}
                             />
-                            {/* Dropdown Menu */}
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200 overflow-visible">
+                            {/* Dropdown Menu - using absolute positioning to avoid overflow issues */}
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                               <div className="py-1">
                                 <button
                                   onClick={() => openEditModal(location)}
