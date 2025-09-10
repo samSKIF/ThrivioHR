@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, uuid, uniqueIndex, timestamp, index, date } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, uuid, uniqueIndex, timestamp, index, date, integer } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { organizations } from './organizations';
 
@@ -13,6 +13,12 @@ export const users = pgTable('users', {
   department: text('department'),
   location: text('location'),
   hireDate: date('hire_date'),
+  passwordHash: text('password_hash'),
+  passwordResetRequired: boolean('password_reset_required').notNull().default(false),
+  passwordChangedAt: timestamp('password_changed_at', { withTimezone: true }),
+  failedAttempts: integer('failed_attempts').notNull().default(0),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
