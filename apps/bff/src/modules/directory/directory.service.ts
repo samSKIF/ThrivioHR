@@ -1883,17 +1883,8 @@ export class DirectoryService {
         throw new Error(`Cannot delete location with ${employeeCount} employees. Please reassign employees first.`);
       }
 
-      // Check if location has child locations
-      const childCheck = await pool.query(`
-        SELECT COUNT(*) as child_count
-        FROM locations
-        WHERE parent_id = $1 AND organization_id = $2
-      `, [id, orgId]);
-
-      const childCount = parseInt(childCheck.rows[0].child_count, 10);
-      if (childCount > 0) {
-        throw new Error(`Cannot delete location with ${childCount} child locations. Please remove child locations first.`);
-      }
+      // Removed child location check - all locations are now independent
+      // Users can delete any location without checking for children
 
       const result = await pool.query(`
         DELETE FROM locations 
