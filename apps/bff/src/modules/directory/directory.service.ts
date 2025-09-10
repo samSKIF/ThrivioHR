@@ -1880,7 +1880,7 @@ export class DirectoryService {
 
       const employeeCount = parseInt(employeeCheck.rows[0].employee_count, 10);
       if (employeeCount > 0) {
-        throw new Error(`Cannot delete location with ${employeeCount} employees. Please reassign employees first.`);
+        throw new BadRequestException(`Cannot delete location with ${employeeCount} employees. Please reassign employees first.`);
       }
 
       // Check if location has child locations
@@ -1892,7 +1892,7 @@ export class DirectoryService {
 
       const childCount = parseInt(childCheck.rows[0].child_count, 10);
       if (childCount > 0) {
-        throw new Error(`Cannot delete location with ${childCount} child locations. Please remove child locations first.`);
+        throw new BadRequestException(`Cannot delete location with ${childCount} child locations. Please remove child locations first.`);
       }
 
       const result = await pool.query(`
@@ -1902,7 +1902,7 @@ export class DirectoryService {
       `, [id, orgId]);
 
       if (result.rows.length === 0) {
-        throw new Error('Location not found or access denied');
+        throw new BadRequestException('Location not found or access denied');
       }
 
       return { success: true, id: id };
