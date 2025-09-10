@@ -46,10 +46,11 @@ export default function LoginPage() {
       <div className="md:w-1/2 bg-white p-8 flex flex-col justify-center items-center">
         <div className="max-w-md mx-auto w-full">
           {/* Branding Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-lg bg-blue-500 text-white flex items-center justify-center text-xl font-bold">
-              T
-            </div>
+          <div className="flex items-center gap-4 mb-8">
+            <svg className="w-12 h-12" viewBox="0 0 24 24" aria-label="ThrivioHR mark" role="img">
+              <path fill="#16A34A" d="M7 3h10a5 5 0 0 1 5 5v4.5a5 5 0 0 1-5 5H13l-4.2 3.15A.8.8 0 0 1 8 19.9V17H7a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5Z"/>
+              <path fill="#FFFFFF" d="M12 8.2c1.9 0 3.7.9 4.8 2.4a.9.9 0 0 1-1.2 1.2c-1-.7-2.1-1.1-3.3-1.1-.3 0-.6 0-.8.1v3.1c0 .5-.4.9-.9.9s-.9-.4-.9-.9V10c-1 .2-2 .7-2.7 1.5a.9.9 0 1 1-1.3-1.1C6.9 9 9.3 8.2 12 8.2Z"/>
+            </svg>
             <div>
               <h1 className="text-xl font-bold text-gray-800">
                 ThrivioHR
