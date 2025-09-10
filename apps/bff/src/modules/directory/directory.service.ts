@@ -1680,6 +1680,102 @@ export class DirectoryService {
         { name: 'Mayumba', code: 'MYB' }, { name: 'Mitzic', code: 'MIT' }, { name: 'Ndjolé', code: 'NDJ' },
         { name: 'Booué', code: 'BOO' }, { name: 'Lastoursville', code: 'LAS' }, { name: 'Fougamou', code: 'FOU' },
         { name: 'Okondja', code: 'OKO' }, { name: 'Ndendé', code: 'NDE' }, { name: 'Mékambo', code: 'MEK' }
+      ],
+      'AO': [
+        { name: 'Luanda', code: 'LAD' }, { name: 'Huambo', code: 'NOV' }, { name: 'Lobito', code: 'LUO' },
+        { name: 'Benguela', code: 'BUG' }, { name: 'Kuito', code: 'SVP' }, { name: 'Lubango', code: 'SDD' },
+        { name: 'Malanje', code: 'MEG' }, { name: 'Namibe', code: 'MSZ' }, { name: 'Soyo', code: 'SZA' },
+        { name: 'Cabinda', code: 'CAB' }, { name: 'Uíge', code: 'UGE' }, { name: 'Saurimo', code: 'VHC' },
+        { name: 'Sumbe', code: 'NDD' }, { name: 'Menongue', code: 'SPP' }, { name: 'Mbanza-Kongo', code: 'SSY' },
+        { name: 'Luena', code: 'LUE' }, { name: 'Caxito', code: 'CXT' }, { name: 'Caala', code: 'CAA' },
+        { name: 'Ondjiva', code: 'VPE' }, { name: 'Dondo', code: 'DRC' }, { name: 'Ndalatando', code: 'NDD' }
+      ],
+      'ZM': [
+        { name: 'Lusaka', code: 'LUN' }, { name: 'Kitwe', code: 'KIW' }, { name: 'Ndola', code: 'NLA' },
+        { name: 'Kabwe', code: 'KAB' }, { name: 'Chingola', code: 'CGJ' }, { name: 'Mufulira', code: 'MUF' },
+        { name: 'Livingstone', code: 'LVI' }, { name: 'Luanshya', code: 'LNS' }, { name: 'Kasama', code: 'KAM' },
+        { name: 'Chipata', code: 'CIP' }, { name: 'Mazabuka', code: 'MZU' }, { name: 'Kafue', code: 'KAF' },
+        { name: 'Choma', code: 'CHM' }, { name: 'Mongu', code: 'MNR' }, { name: 'Solwezi', code: 'SLI' },
+        { name: 'Mansa', code: 'MNS' }, { name: 'Kapiri Mposhi', code: 'KMP' }, { name: 'Kalulushi', code: 'KLS' },
+        { name: 'Chililabombwe', code: 'CLB' }, { name: 'Petauke', code: 'PTK' }, { name: 'Nchelenge', code: 'NCH' }
+      ],
+      'ZW': [
+        { name: 'Harare', code: 'HRE' }, { name: 'Bulawayo', code: 'BUQ' }, { name: 'Chitungwiza', code: 'CHT' },
+        { name: 'Mutare', code: 'UTA' }, { name: 'Gweru', code: 'GWE' }, { name: 'Kwekwe', code: 'KWE' },
+        { name: 'Kadoma', code: 'KAD' }, { name: 'Masvingo', code: 'MVZ' }, { name: 'Chinhoyi', code: 'CHI' },
+        { name: 'Norton', code: 'NOR' }, { name: 'Marondera', code: 'MAR' }, { name: 'Ruwa', code: 'RUW' },
+        { name: 'Chegutu', code: 'CHE' }, { name: 'Zvishavane', code: 'ZVI' }, { name: 'Bindura', code: 'BIN' },
+        { name: 'Beitbridge', code: 'BEI' }, { name: 'Redcliff', code: 'RED' }, { name: 'Victoria Falls', code: 'VFA' },
+        { name: 'Hwange', code: 'HWN' }, { name: 'Chiredzi', code: 'CHR' }, { name: 'Kariba', code: 'KAR' }
+      ],
+      'BW': [
+        { name: 'Gaborone', code: 'GBE' }, { name: 'Francistown', code: 'FRW' }, { name: 'Molepolole', code: 'MOL' },
+        { name: 'Maun', code: 'MUB' }, { name: 'Serowe', code: 'SER' }, { name: 'Selibe Phikwe', code: 'PKW' },
+        { name: 'Kanye', code: 'KAN' }, { name: 'Mochudi', code: 'MOC' }, { name: 'Mahalapye', code: 'MHP' },
+        { name: 'Palapye', code: 'PAL' }, { name: 'Tlokweng', code: 'TLO' }, { name: 'Lobatse', code: 'LOB' },
+        { name: 'Ramotswa', code: 'RAM' }, { name: 'Letlhakane', code: 'LET' }, { name: 'Tonota', code: 'TON' },
+        { name: 'Moshupa', code: 'MOS' }, { name: 'Thamaga', code: 'THA' }, { name: 'Bobonong', code: 'BOB' },
+        { name: 'Tutume', code: 'TUT' }, { name: 'Gweta', code: 'GWE' }, { name: 'Kasane', code: 'KAS' }
+      ],
+      'NA': [
+        { name: 'Windhoek', code: 'WDH' }, { name: 'Rundu', code: 'NDU' }, { name: 'Walvis Bay', code: 'WVB' },
+        { name: 'Swakopmund', code: 'SWP' }, { name: 'Oshakati', code: 'OSH' }, { name: 'Rehoboth', code: 'REB' },
+        { name: 'Katima Mulilo', code: 'MPA' }, { name: 'Otjiwarongo', code: 'OTJ' }, { name: 'Okahandja', code: 'OKA' },
+        { name: 'Ondangwa', code: 'OND' }, { name: 'Oshikango', code: 'OSK' }, { name: 'Keetmanshoop', code: 'KMP' },
+        { name: 'Tsumeb', code: 'TSB' }, { name: 'Grootfontein', code: 'GFI' }, { name: 'Mariental', code: 'MRI' },
+        { name: 'Gobabis', code: 'GOG' }, { name: 'Henties Bay', code: 'HTB' }, { name: 'Outapi', code: 'OUT' },
+        { name: 'Lüderitz', code: 'LUD' }, { name: 'Aranos', code: 'ARA' }, { name: 'Usakos', code: 'USA' }
+      ],
+      'LS': [
+        { name: 'Maseru', code: 'MSU' }, { name: 'Teyateyaneng', code: 'TYT' }, { name: 'Leribe', code: 'LRB' },
+        { name: 'Mafeteng', code: 'MFT' }, { name: 'Hlotse', code: 'HLT' }, { name: 'Mohale\'s Hoek', code: 'MHH' },
+        { name: 'Maputsoe', code: 'MPT' }, { name: 'Qacha\'s Nek', code: 'QCH' }, { name: 'Quthing', code: 'QUT' },
+        { name: 'Butha-Buthe', code: 'BTB' }, { name: 'Mokhotlong', code: 'MKH' }, { name: 'Thaba-Tseka', code: 'TBT' },
+        { name: 'Peka', code: 'PEK' }, { name: 'Roma', code: 'ROM' }, { name: 'Morija', code: 'MOR' },
+        { name: 'Kolonyama', code: 'KOL' }, { name: 'Mapoteng', code: 'MPG' }, { name: 'Semonkong', code: 'SMK' }
+      ],
+      'SZ': [
+        { name: 'Mbabane', code: 'MTS' }, { name: 'Manzini', code: 'MAN' }, { name: 'Big Bend', code: 'BGB' },
+        { name: 'Malkerns', code: 'MAL' }, { name: 'Nhlangano', code: 'NHL' }, { name: 'Siteki', code: 'SIT' },
+        { name: 'Piggs Peak', code: 'PGS' }, { name: 'Lobamba', code: 'LOB' }, { name: 'Hluti', code: 'HLU' },
+        { name: 'Lavumisa', code: 'LAV' }, { name: 'Mankayane', code: 'MNK' }, { name: 'Hlatikulu', code: 'HLA' },
+        { name: 'Nsoko', code: 'NSO' }, { name: 'Kubuta', code: 'KUB' }, { name: 'Bulembu', code: 'BUL' },
+        { name: 'Ngwenya', code: 'NGW' }, { name: 'Matsapha', code: 'MAT' }, { name: 'Simunye', code: 'SIM' }
+      ],
+      'MW': [
+        { name: 'Lilongwe', code: 'LLW' }, { name: 'Blantyre', code: 'BLZ' }, { name: 'Mzuzu', code: 'ZZU' },
+        { name: 'Zomba', code: 'ZOM' }, { name: 'Kasungu', code: 'KSU' }, { name: 'Mangochi', code: 'MAI' },
+        { name: 'Karonga', code: 'KGJ' }, { name: 'Salima', code: 'SLM' }, { name: 'Liwonde', code: 'LIW' },
+        { name: 'Nkhotakota', code: 'NKH' }, { name: 'Chiradzulu', code: 'CHI' }, { name: 'Thyolo', code: 'THY' },
+        { name: 'Dedza', code: 'DED' }, { name: 'Ntcheu', code: 'NTC' }, { name: 'Dowa', code: 'DOW' },
+        { name: 'Rumphi', code: 'RMP' }, { name: 'Chitipa', code: 'CTP' }, { name: 'Nsanje', code: 'NSJ' },
+        { name: 'Balaka', code: 'BAL' }, { name: 'Luchenza', code: 'LUC' }, { name: 'Monkey Bay', code: 'MNK' }
+      ],
+      'MZ': [
+        { name: 'Maputo', code: 'MPM' }, { name: 'Matola', code: 'MTL' }, { name: 'Beira', code: 'BEW' },
+        { name: 'Nampula', code: 'APL' }, { name: 'Chimoio', code: 'VPY' }, { name: 'Nacala', code: 'MNC' },
+        { name: 'Quelimane', code: 'UEL' }, { name: 'Tete', code: 'TET' }, { name: 'Xai-Xai', code: 'VJB' },
+        { name: 'Lichinga', code: 'VXC' }, { name: 'Pemba', code: 'POL' }, { name: 'Inhambane', code: 'INH' },
+        { name: 'Maxixe', code: 'MXI' }, { name: 'Angoche', code: 'ANO' }, { name: 'Montepuez', code: 'MPZ' },
+        { name: 'Cuamba', code: 'FXO' }, { name: 'Gurué', code: 'GUE' }, { name: 'Dondo', code: 'DON' },
+        { name: 'Chibuto', code: 'CHB' }, { name: 'Chokwé', code: 'TGS' }, { name: 'Manhiça', code: 'MAN' }
+      ],
+      'MG': [
+        { name: 'Antananarivo', code: 'TNR' }, { name: 'Toamasina', code: 'TMM' }, { name: 'Antsirabe', code: 'ATJ' },
+        { name: 'Fianarantsoa', code: 'FTU' }, { name: 'Mahajanga', code: 'MJN' }, { name: 'Toliara', code: 'TLE' },
+        { name: 'Antsiranana', code: 'DIE' }, { name: 'Ambovombe', code: 'AMB' }, { name: 'Morondava', code: 'MOQ' },
+        { name: 'Manakara', code: 'WVK' }, { name: 'Sambava', code: 'SVB' }, { name: 'Nosy Be', code: 'NOS' },
+        { name: 'Farafangana', code: 'RVA' }, { name: 'Vohémar', code: 'VOH' }, { name: 'Ambatondrazaka', code: 'AMN' },
+        { name: 'Maintirano', code: 'MXT' }, { name: 'Mananara', code: 'WMR' }, { name: 'Ihosy', code: 'IHO' },
+        { name: 'Tsiroanomandidy', code: 'WTS' }, { name: 'Antalaha', code: 'ANM' }, { name: 'Vangaindrano', code: 'VVB' }
+      ],
+      'MU': [
+        { name: 'Port Louis', code: 'MRU' }, { name: 'Beau Bassin-Rose Hill', code: 'BBR' }, { name: 'Vacoas-Phoenix', code: 'VAC' },
+        { name: 'Curepipe', code: 'CUR' }, { name: 'Quatre Bornes', code: 'QTB' }, { name: 'Triolet', code: 'TRI' },
+        { name: 'Goodlands', code: 'GOO' }, { name: 'Centre de Flacq', code: 'CDF' }, { name: 'Mahébourg', code: 'MAH' },
+        { name: 'Saint Pierre', code: 'STP' }, { name: 'Bambous', code: 'BAM' }, { name: 'Surinam', code: 'SUR' },
+        { name: 'Tamarin', code: 'TAM' }, { name: 'Arsenal', code: 'ARS' }, { name: 'Pamplemousses', code: 'PAM' },
+        { name: 'Grand Baie', code: 'GRB' }, { name: 'Rivière du Rempart', code: 'RDR' }, { name: 'Souillac', code: 'SOU' }
       ]
     };
 
