@@ -600,17 +600,27 @@ export default function EmployeeDirectoryPage() {
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1 pr-4">
                 <p className="text-sm text-gray-600">Subscribed Users</p>
                 {orgStats.subscriptionLimit ? (
                   <>
                     <p className="text-3xl font-semibold text-gray-900">{orgStats.subscribedUsers}/{orgStats.subscriptionLimit}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-3 mt-3">
                       <div 
-                        className="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+                        className={`h-3 rounded-full transition-all duration-500 ${
+                          (() => {
+                            const percentage = (orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100;
+                            if (percentage < 30) return 'bg-gradient-to-r from-red-300 to-red-400';
+                            if (percentage < 70) return 'bg-gradient-to-r from-orange-300 to-orange-400';
+                            return 'bg-gradient-to-r from-green-400 to-green-500';
+                          })()
+                        }`}
                         style={{ width: `${Math.min((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100, 100)}%` }}
                       ></div>
                     </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100).toFixed(1)}% of subscription used
+                    </p>
                   </>
                 ) : (
                   <>
@@ -626,20 +636,22 @@ export default function EmployeeDirectoryPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-700">Organization Structure</h3>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Organization Structure</p>
+                <div className="flex items-center gap-6 mt-2">
+                  <div className="text-center">
+                    <p className="text-2xl font-semibold text-blue-600">{orgStats.departmentCount}</p>
+                    <p className="text-xs text-gray-500">Departments</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-semibold text-green-600">{locations.length}</p>
+                    <p className="text-xs text-gray-500">Locations</p>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{orgStats.departmentCount}</p>
-                <p className="text-xs text-blue-700 font-medium">Departments</p>
-              </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{locations.length}</p>
-                <p className="text-xs text-green-700 font-medium">Locations</p>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
