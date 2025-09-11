@@ -128,6 +128,8 @@ export default function EmployeeDirectoryPage() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -1154,7 +1156,8 @@ export default function EmployeeDirectoryPage() {
                       const updatedStoredEmployees = storedEmployees.filter((emp: Employee) => emp.id !== employeeToDelete.id);
                       localStorage.setItem('demo-employees', JSON.stringify(updatedStoredEmployees));
                       
-                      alert(`✅ Employee Deleted Successfully!\n\n${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                      setSuccessMessage(`${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                      setShowSuccessDialog(true);
                     } else {
                       // Real mode - call API to delete
                       const response = await fetch(`/api/bff/users/${employeeToDelete.id}`, {
@@ -1173,7 +1176,8 @@ export default function EmployeeDirectoryPage() {
                       // Refresh employee list
                       await loadInitialData();
                       
-                      alert(`✅ Employee Deleted Successfully!\n\n${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                      setSuccessMessage(`${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                      setShowSuccessDialog(true);
                     }
                     
                     setShowDeleteConfirm(false);
@@ -1181,12 +1185,71 @@ export default function EmployeeDirectoryPage() {
                     setShowActionMenu(null);
                   } catch (error: unknown) {
                     console.error('Failed to delete employee:', error);
-                    alert(`❌ Failed to delete employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    setSuccessMessage(`Failed to delete employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    setShowSuccessDialog(true);
                   }
                 }}
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Dialog */}
+      {showSuccessDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {successMessage.includes('Failed') ? 'Error' : 'Success'}
+              </h3>
+            </div>
+            
+            {/* Content */}
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  successMessage.includes('Failed') 
+                    ? 'bg-red-100' 
+                    : 'bg-green-100'
+                }`}>
+                  <span className={`text-lg ${
+                    successMessage.includes('Failed') 
+                      ? 'text-red-600' 
+                      : 'text-green-600'
+                  }`}>
+                    {successMessage.includes('Failed') ? '✕' : '✓'}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {successMessage.includes('Failed') ? 'Operation Failed' : 'Employee Deleted Successfully!'}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {successMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  setSuccessMessage("");
+                }}
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                  successMessage.includes('Failed')
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                OK
               </button>
             </div>
           </div>

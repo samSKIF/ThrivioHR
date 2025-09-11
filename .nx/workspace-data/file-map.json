@@ -24,6 +24,28 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
       "bff": [
         {
           "file": "apps/bff/.env.example",
@@ -764,7 +786,7 @@
         },
         {
           "file": "apps/web/app/directory/users/page.tsx",
-          "hash": "12063199182812017562",
+          "hash": "8561340121823776541",
           "deps": [
             "npm:react",
             "npm:lucide-react"
@@ -1261,50 +1283,6 @@
           "hash": "63426151987760438"
         }
       ],
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
-        },
-        {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
-        },
-        {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "contracts": [
         {
           "file": "packages/contracts/events/.gitkeep",
@@ -1364,6 +1342,28 @@
         {
           "file": "packages/contracts/tsconfig.json",
           "hash": "14800935771102366691"
+        }
+      ],
+      "recognition": [
+        {
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
+        },
+        {
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
+        },
+        {
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ]
     },
@@ -241941,6 +241941,10 @@
         "hash": "4140940971167473150"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_845389ce3196a11c00683855d1cb7e6488748d71.bin",
+        "hash": "1297687490829383273"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_84b40af132ac68c21908ecbe0b47951c905be5e9.bin",
         "hash": "3747604915954205559"
       },
@@ -243182,7 +243186,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "7552286305334949427"
+        "hash": "7601490897488323740"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -243190,7 +243194,7 @@
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
-        "hash": "6687558016708817273"
+        "hash": "699449713051771059"
       },
       {
         "file": ".local/state/replit/agent/rapid_build_started",
@@ -243202,7 +243206,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "4689816542227269333"
+        "hash": "581070507005512200"
       },
       {
         "file": ".prettierrc",
@@ -243210,7 +243214,7 @@
       },
       {
         "file": ".replit",
-        "hash": "7694032729504572136"
+        "hash": "5711929869100659295"
       },
       {
         "file": ".upm/store.json",
@@ -244533,6 +244537,10 @@
         "hash": "9824566766539711257"
       },
       {
+        "file": "attached_assets/image_1757571319568.png",
+        "hash": "9946763198716903343"
+      },
+      {
         "file": "attached_assets/screenshot-1754843656563.png",
         "hash": "12107125380658801558"
       },
@@ -244658,7 +244666,7 @@
       },
       {
         "file": "replit.md",
-        "hash": "7648897112705339899"
+        "hash": "13548481118614512127"
       },
       {
         "file": "scripts/cleanup-dev.sh",
