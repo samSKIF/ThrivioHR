@@ -7,7 +7,7 @@ export const users = pgTable('users', {
   organizationId: uuid('organization_id').notNull().references(() => organizations.id),
   email: text('email').$type<string>().notNull(),
   firstName: text('first_name').notNull(),
-  lastName: text('last_name').notNull(),
+  lastName: text('last_name'),
   displayName: text('display_name'),
   jobTitle: text('job_title').notNull(),
   department: text('department').notNull(),

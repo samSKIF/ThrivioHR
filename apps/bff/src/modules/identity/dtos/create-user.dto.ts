@@ -13,8 +13,8 @@ export class CreateUserDto {
   givenName: string;
 
   @IsString()
-  @IsNotEmpty()
-  familyName: string;
+  @IsOptional()
+  familyName?: string;
 
   @IsString()
   @IsNotEmpty()

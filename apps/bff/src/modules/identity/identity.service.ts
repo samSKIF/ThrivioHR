@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, BadRequestException } from '@nestjs/common';
 import { IdentityRepository } from './identity.repository';
 import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -23,7 +23,6 @@ export class IdentityService {
     // Safety net: validate required fields before repository call
     const requiredFields = {
       givenName: createUserDto.givenName,
-      familyName: createUserDto.familyName,
       jobTitle: createUserDto.jobTitle,
       department: createUserDto.department,
       location: createUserDto.location,
@@ -35,14 +34,14 @@ export class IdentityService {
       .map(([field, _]) => field);
     
     if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      throw new BadRequestException(`Missing required fields: ${missingFields.join(', ')}`);
     }
     
     return this.repository.createUser(
       createUserDto.orgId,
       createUserDto.email,
       createUserDto.givenName,
-      createUserDto.familyName,
+      createUserDto.familyName ?? null,
       createUserDto.jobTitle,
       createUserDto.department,
       createUserDto.location,

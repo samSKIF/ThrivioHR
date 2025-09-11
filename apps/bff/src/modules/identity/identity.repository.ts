@@ -98,12 +98,20 @@ export class IdentityRepository {
   }
 
   async createUser(orgId: string, email: string, firstName: string|null, lastName: string|null, jobTitle: string, department: string, location: string, hireDate: string): Promise<UserPublic> {
-    const displayName = makeDisplayName(firstName, lastName);
+    // Ensure proper null handling for Drizzle SQL
+    const fn = firstName ?? null;
+    const ln = lastName ?? null;
+    const displayName = makeDisplayName(fn, ln);
     
     // Generate password hash for the default password "password123"
     const passwordHash = await hashPassword('password123');
     
-    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name, job_title, department, location, hire_date, password_hash, password_reset_required) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstName}, ${lastName}, ${displayName}, ${jobTitle}, ${department}, ${location}, ${hireDate}, ${passwordHash}, true) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"`);
+    // Force explicit NULL SQL fragments for nullable fields to prevent Drizzle from dropping placeholders
+    const firstNameSql = (fn == null) ? sql`NULL` : sql`${fn}`;
+    const lastNameSql = (ln == null) ? sql`NULL` : sql`${ln}`;
+    const displayNameSql = (displayName == null) ? sql`NULL` : sql`${displayName}`;
+    
+    const ins = await this.db.execute(sql`INSERT INTO users (id, organization_id, email, first_name, last_name, display_name, job_title, department, location, hire_date, password_hash, password_reset_required) VALUES (gen_random_uuid(), ${orgId}, ${email}, ${firstNameSql}, ${lastNameSql}, ${displayNameSql}, ${jobTitle}, ${department}, ${location}, ${hireDate}, ${passwordHash}, true) RETURNING id, organization_id AS "organizationId", email, first_name AS "firstName", last_name AS "lastName", display_name AS "displayName", job_title AS "jobTitle", department, location, hire_date AS "hireDate"`);
     return (ins as { rows?: Record<string, unknown>[] }).rows?.[0] as UserPublic;
   }
 

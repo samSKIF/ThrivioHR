@@ -130,6 +130,9 @@ export default function EmployeeDirectoryPage() {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationAction, setValidationAction] = useState("");
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -265,6 +268,12 @@ export default function EmployeeDirectoryPage() {
     setFilteredEmployees(filtered);
   }, [employees, searchQuery, selectedDepartment, selectedStatus, selectedLocation]);
 
+  const showValidationError = (missingFields: string[], action: string) => {
+    setValidationErrors(missingFields);
+    setValidationAction(action);
+    setShowValidationModal(true);
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200';
@@ -279,7 +288,6 @@ export default function EmployeeDirectoryPage() {
       // Validate mandatory fields
       const missingFields = [];
       if (!newEmployee.firstName.trim()) missingFields.push("First Name");
-      if (!newEmployee.lastName.trim()) missingFields.push("Last Name");
       if (!newEmployee.email.trim()) missingFields.push("Email Address");
       if (!newEmployee.jobTitle.trim()) missingFields.push("Job Title");
       if (!newEmployee.department.trim()) missingFields.push("Department");
@@ -287,7 +295,7 @@ export default function EmployeeDirectoryPage() {
       if (!newEmployee.hireDate.trim()) missingFields.push("Hire Date");
 
       if (missingFields.length > 0) {
-        alert(`The following mandatory fields are missing:\n\n• ${missingFields.join('\n• ')}\n\nPlease fill in all required fields before creating the employee.`);
+        showValidationError(missingFields, 'creating');
         return;
       }
 
@@ -399,7 +407,6 @@ export default function EmployeeDirectoryPage() {
       // Validate mandatory fields
       const missingFields = [];
       if (!newEmployee.firstName.trim()) missingFields.push("First Name");
-      if (!newEmployee.lastName.trim()) missingFields.push("Last Name");
       if (!newEmployee.email.trim()) missingFields.push("Email Address");
       if (!newEmployee.jobTitle.trim()) missingFields.push("Job Title");
       if (!newEmployee.department.trim()) missingFields.push("Department");
@@ -407,7 +414,7 @@ export default function EmployeeDirectoryPage() {
       if (!newEmployee.hireDate.trim()) missingFields.push("Hire Date");
 
       if (missingFields.length > 0) {
-        alert(`The following mandatory fields are missing:\n\n• ${missingFields.join('\n• ')}\n\nPlease fill in all required fields before updating the employee.`);
+        showValidationError(missingFields, 'updating');
         return;
       }
 
@@ -1201,6 +1208,48 @@ export default function EmployeeDirectoryPage() {
                 className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm">
+                  ⚠
+                </span>
+                Missing Required Fields
+              </h3>
+            </div>
+            
+            {/* Content */}
+            <div className="px-6 py-4">
+              <p className="text-gray-700 mb-4">
+                The following mandatory fields are missing:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600 mb-4">
+                {validationErrors.map((field, index) => (
+                  <li key={index}>{field}</li>
+                ))}
+              </ul>
+              <p className="text-sm text-gray-600">
+                Please fill in all required fields before {validationAction} the employee.
+              </p>
+            </div>
+            
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setShowValidationModal(false)}
+                className="px-4 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                OK
               </button>
             </div>
           </div>
