@@ -34,6 +34,7 @@ export type NormalizedRow = {
   jobTitle?: string | null;
   employeeId?: string | null;
   startDate?: string | null;
+  hireDate?: string | null;
   birthDate?: string | null;
   nationality?: string | null;
   gender?: string | null;

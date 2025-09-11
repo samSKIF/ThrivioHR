@@ -49,7 +49,7 @@ export function normalizeRow(input: Record<string, unknown>): NormalizedRow {
     location: input.location as string ?? null,
     jobTitle: (input.jobTitle || input.job_title) as string ?? null,
     employeeId: (input.employeeId || input.employee_id) as string ?? null,
-    startDate: (input.startDate || input.start_date || input.hire_date) as string ?? null,
+    hireDate: (input.hireDate || input.hire_date) as string ?? null,
     birthDate: (input.birthDate || input.birth_date) as string ?? null,
     nationality: input.nationality ? (input.nationality as string).toUpperCase() : null,
     gender: normalizeGender(input.gender || input.sex),

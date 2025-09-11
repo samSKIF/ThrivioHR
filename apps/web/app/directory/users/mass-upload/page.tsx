@@ -164,11 +164,11 @@ export default function MassUploadPage() {
       // Transform the preview data to match our UI expectations
       const transformedPreview: PreviewData = {
         statistics: {
-          newEmployees: preview.plan?.creates || 0,
-          willBeUpdated: preview.plan?.updates || 0,
-          newDepartments: preview.plan?.newDepartments?.length || 0
+          newEmployees: preview.overview?.creates || 0,
+          willBeUpdated: preview.overview?.updates || 0,
+          newDepartments: preview.overview?.newDepartments?.length || 0
         },
-        employees: preview.plan?.records?.slice(0, 10).map((record: any) => ({
+        employees: preview.records?.slice(0, 10).map((record: any) => ({
           email: record.incoming?.email || '',
           name: `${record.incoming?.givenName || ''} ${record.incoming?.familyName || ''}`.trim(),
           action: record.action === 'create' ? 'create' : 'update',
@@ -179,11 +179,11 @@ export default function MassUploadPage() {
       
       setPreviewData(transformedPreview);
       setUploadResult({
-        rows: preview.plan?.records?.length || 0,
-        valid: (preview.plan?.creates || 0) + (preview.plan?.updates || 0),
-        invalid: preview.plan?.invalid || 0,
+        rows: preview.records?.length || 0,
+        valid: (preview.overview?.creates || 0) + (preview.overview?.updates || 0),
+        invalid: preview.overview?.invalid || 0,
         preview: [],
-        sampleErrors: preview.plan?.sampleErrors || []
+        sampleErrors: preview.overview?.sampleErrors || []
       });
       setShowPreview(true);
       
@@ -237,13 +237,13 @@ export default function MassUploadPage() {
 
   const requiredFields = [
     "name (employee's first name)",
-    "email (unique email address)", 
-    "department (existing or new department)",
-    "job_title (employee's role)"
+    "email (unique email address)"
   ];
 
   const optionalFields = [
     "surname (last name)",
+    "department (existing or new department)",
+    "job_title (employee's role)",
     "location (office location)",
     "phone_number (contact number)",
     "manager_email (direct supervisor's email)",
