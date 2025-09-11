@@ -585,20 +585,7 @@ export default function EmployeeDirectoryPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Team Members</p>
-                <p className="text-3xl font-semibold text-gray-900">{orgStats.totalEmployees}</p>
-                <p className="text-xs text-gray-500">Not active & pending are hidden</p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60 md:col-span-2">
             <div className="flex items-center justify-between">
               <div className="flex-1 pr-4">
                 <p className="text-sm text-gray-600">Subscription Usage</p>
@@ -642,23 +629,20 @@ export default function EmployeeDirectoryPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Departments</p>
-                <p className="text-3xl font-semibold text-gray-900">{orgStats.departmentCount}</p>
+                <p className="text-sm text-gray-600">Organization Structure</p>
+                <div className="flex items-center gap-6 mt-2">
+                  <div className="text-center">
+                    <p className="text-2xl font-semibold text-blue-600">{orgStats.departmentCount}</p>
+                    <p className="text-xs text-gray-500">Departments</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-semibold text-green-600">{locations.length}</p>
+                    <p className="text-xs text-gray-500">Locations</p>
+                  </div>
+                </div>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Locations</p>
-                <p className="text-3xl font-semibold text-gray-900">{locations.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
