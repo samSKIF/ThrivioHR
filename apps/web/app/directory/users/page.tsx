@@ -626,13 +626,20 @@ export default function EmployeeDirectoryPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Departments & Sites</p>
-                <p className="text-3xl font-semibold text-gray-900">{orgStats.departmentCount}</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-700">Organization Structure</h3>
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{orgStats.departmentCount}</p>
+                <p className="text-xs text-blue-700 font-medium">Departments</p>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">{locations.length}</p>
+                <p className="text-xs text-green-700 font-medium">Locations</p>
               </div>
             </div>
           </div>
