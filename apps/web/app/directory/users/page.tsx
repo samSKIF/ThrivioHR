@@ -126,6 +126,8 @@ export default function EmployeeDirectoryPage() {
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -783,7 +785,8 @@ export default function EmployeeDirectoryPage() {
                                 setShowAddEmployee(true);
                               }}
                               onDeleteUser={() => {
-                                console.log('Delete user for:', employee.displayName || employee.email);
+                                setEmployeeToDelete(employee);
+                                setShowDeleteConfirm(true);
                               }}
                               onClose={() => setShowActionMenu(null)}
                             />
@@ -1078,6 +1081,112 @@ export default function EmployeeDirectoryPage() {
                 className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
               >
                 {isEditMode ? 'Update Employee' : 'Create Employee'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && employeeToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Delete Employee</h3>
+            </div>
+            
+            {/* Content */}
+            <div className="px-6 py-4">
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to delete this employee?
+              </p>
+              <p className="text-sm text-gray-600 mb-6">
+                You can deactivate the employee and it won't count in your credit.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-gray-700">
+                      {(employeeToDelete.firstName?.[0] || '') + (employeeToDelete.lastName?.[0] || '')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {employeeToDelete.displayName || `${employeeToDelete.firstName || ''} ${employeeToDelete.lastName || ''}`.trim()}
+                    </p>
+                    <p className="text-sm text-gray-500">{employeeToDelete.email}</p>
+                    <p className="text-sm text-gray-500">{employeeToDelete.jobTitle} • {employeeToDelete.department}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button 
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setEmployeeToDelete(null);
+                  setShowActionMenu(null);
+                }}
+                className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  try {
+                    if (orgId === "demo-org") {
+                      // Demo mode - remove from local storage
+                      setEmployees(prev => prev.filter(emp => emp.id !== employeeToDelete.id));
+                      setFilteredEmployees(prev => prev.filter(emp => emp.id !== employeeToDelete.id));
+                      
+                      // Update stats
+                      setOrgStats(prev => ({
+                        ...prev,
+                        totalEmployees: prev.totalEmployees - 1
+                      }));
+                      
+                      // Remove from localStorage
+                      const storedEmployees = JSON.parse(localStorage.getItem('demo-employees') || '[]');
+                      const updatedStoredEmployees = storedEmployees.filter((emp: Employee) => emp.id !== employeeToDelete.id);
+                      localStorage.setItem('demo-employees', JSON.stringify(updatedStoredEmployees));
+                      
+                      alert(`✅ Employee Deleted Successfully!\n\n${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                    } else {
+                      // Real mode - call API to delete
+                      const response = await fetch(`/api/bff/users/${employeeToDelete.id}`, {
+                        method: 'DELETE',
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ orgId: orgId })
+                      });
+                      
+                      if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                      }
+                      
+                      // Refresh employee list
+                      await loadInitialData();
+                      
+                      alert(`✅ Employee Deleted Successfully!\n\n${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed from the system.`);
+                    }
+                    
+                    setShowDeleteConfirm(false);
+                    setEmployeeToDelete(null);
+                    setShowActionMenu(null);
+                  } catch (error: unknown) {
+                    console.error('Failed to delete employee:', error);
+                    alert(`❌ Failed to delete employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                  }
+                }}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>

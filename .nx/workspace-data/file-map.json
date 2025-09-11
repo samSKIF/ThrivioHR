@@ -24,28 +24,6 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "web": [
         {
           "file": "apps/web/.env.example",
@@ -249,7 +227,7 @@
         },
         {
           "file": "apps/web/app/directory/users/page.tsx",
-          "hash": "15281896703055715754",
+          "hash": "15346642755077869870",
           "deps": [
             "npm:react",
             "npm:lucide-react"
@@ -515,28 +493,6 @@
         {
           "file": "apps/web/tsconfig.tsbuildinfo",
           "hash": "14698313359158478524"
-        }
-      ],
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
-        },
-        {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
-        },
-        {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
         }
       ],
       "bff": [
@@ -1076,6 +1032,28 @@
           "hash": "5589598467114817326"
         }
       ],
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
       "identity": [
         {
           "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
@@ -1303,6 +1281,28 @@
         {
           "file": "services/identity/tsconfig.json",
           "hash": "63426151987760438"
+        }
+      ],
+      "recognition": [
+        {
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
+        },
+        {
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
+        },
+        {
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ],
       "contracts": [
@@ -240605,6 +240605,10 @@
         "hash": "4297314916659845531"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_094dd6e8f6ccf2fbcbca3d9e80be735099cc9f6d.bin",
+        "hash": "7840162945546846850"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_096bbaec4c4816c03db8fa04d270ec496a9fe843.bin",
         "hash": "13965342555833443091"
       },
@@ -240691,6 +240695,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_1163c8025ba2666b50d8a5bffbbce459b88bc52e.bin",
         "hash": "11892287179631364397"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_11fb1c11e3287d42b33773b5c7bd827cf94e9bae.bin",
+        "hash": "9064657892485058228"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_130f8afb82ba4f0aa244a300f1d74871511cf4af.bin",
@@ -243081,6 +243089,10 @@
         "hash": "17637582817505936504"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_f727415dd8b3810c7b028151fd4376addbc49337.bin",
+        "hash": "1867773000623017279"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_f77a0c6e4732a22e518080b14004b13f9c7710d7.bin",
         "hash": "12468722091193786767"
       },
@@ -243166,7 +243178,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "10522153352096642156"
+        "hash": "2320389960511809764"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -243186,7 +243198,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "6175527347349892139"
+        "hash": "7935843330109060854"
       },
       {
         "file": ".prettierrc",
@@ -244499,6 +244511,14 @@
       {
         "file": "attached_assets/image_1757521825556.png",
         "hash": "3083527949152591711"
+      },
+      {
+        "file": "attached_assets/image_1757523093590.png",
+        "hash": "12763947956925966045"
+      },
+      {
+        "file": "attached_assets/image_1757570033750.png",
+        "hash": "14907637840913715759"
       },
       {
         "file": "attached_assets/screenshot-1754843656563.png",
