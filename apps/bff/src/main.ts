@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 
 // DOTENV: do not override existing env; allow opt-out via DOTENV_DISABLE=true
 (() => {
@@ -37,6 +37,13 @@ export async function createTestApp(): Promise<INestApplication> {
 export async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   
+  // Enable validation globally
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
+  
   // Enable cookie parsing
   const cookieParser = require('cookie-parser');
   app.use(cookieParser());
@@ -65,7 +72,7 @@ export async function bootstrap(): Promise<void> {
     next();
   });
   
-  const port = Number(process.env.PORT || 5000);
+  const port = Number(process.env.PORT || 8000);
 
   // Skip binding when under Jest/test
   const isJest = typeof process.env.JEST_WORKER_ID !== 'undefined' || process.env.NODE_ENV === 'test';

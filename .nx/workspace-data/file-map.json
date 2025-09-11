@@ -24,28 +24,6 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
-      "ledger": [
-        {
-          "file": "services/ledger/project.json",
-          "hash": "4105107935465651668"
-        },
-        {
-          "file": "services/ledger/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/ledger/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/ledger/src/main.ts",
-          "hash": "13158033882914325381"
-        },
-        {
-          "file": "services/ledger/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "bff": [
         {
           "file": "apps/bff/.env.example",
@@ -162,7 +140,7 @@
         },
         {
           "file": "apps/bff/src/main.ts",
-          "hash": "16162714190423710553",
+          "hash": "2018434137761354775",
           "deps": [
             "npm:reflect-metadata",
             "npm:@nestjs/core",
@@ -420,7 +398,7 @@
         },
         {
           "file": "apps/bff/src/modules/identity/dtos/create-user.dto.ts",
-          "hash": "11161124668347295539",
+          "hash": "16774131321194535074",
           "deps": [
             "npm:class-validator"
           ]
@@ -457,7 +435,7 @@
         },
         {
           "file": "apps/bff/src/modules/identity/identity.service.ts",
-          "hash": "2339427037112260466",
+          "hash": "10036230254954488397",
           "deps": [
             "npm:@nestjs/common",
             [
@@ -572,7 +550,7 @@
         },
         {
           "file": "apps/bff/tsconfig.app.json",
-          "hash": "8166016642953694675"
+          "hash": "15914396322889597790"
         },
         {
           "file": "apps/bff/tsconfig.json",
@@ -581,6 +559,28 @@
         {
           "file": "apps/bff/tsconfig.spec.json",
           "hash": "5589598467114817326"
+        }
+      ],
+      "ledger": [
+        {
+          "file": "services/ledger/project.json",
+          "hash": "4105107935465651668"
+        },
+        {
+          "file": "services/ledger/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/ledger/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/ledger/src/main.ts",
+          "hash": "13158033882914325381"
+        },
+        {
+          "file": "services/ledger/tsconfig.json",
+          "hash": "2543962308852854802"
         }
       ],
       "web": [
@@ -786,7 +786,7 @@
         },
         {
           "file": "apps/web/app/directory/users/page.tsx",
-          "hash": "8561340121823776541",
+          "hash": "14380946631440217140",
           "deps": [
             "npm:react",
             "npm:lucide-react"
@@ -1215,7 +1215,7 @@
         },
         {
           "file": "services/identity/src/db/schema/users.ts",
-          "hash": "9776237129755751745",
+          "hash": "15305723866097785939",
           "deps": [
             "npm:drizzle-orm"
           ]
@@ -241109,6 +241109,10 @@
         "hash": "10658947168705320832"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_388b03289cb50d585cf5b8669b20e70159179584.bin",
+        "hash": "6868630726180080862"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_39cd29e488547c2016b1d9bb5c28ae8501d67320.bin",
         "hash": "2058179166009482201"
       },
@@ -241219,6 +241223,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_41c8a7293d68077b09e528a67caf6faa03288db7.bin",
         "hash": "11239282305092863317"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_41d31383e67a2287e2fe698d4b46d10c48153d46.bin",
+        "hash": "6237734461476109877"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_41f0f4432a150c4cb8ccc05b3135dee303c6f125.bin",
@@ -241347,6 +241355,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_5020f1021420e5a1b0c66bf18cb1c717f7742b27.bin",
         "hash": "17056283879958657926"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_50d9a19264c8565300536978a29accbe2156251d.bin",
+        "hash": "9456656915101584717"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_514c8255cadc9cd8172326079135fdc9bdb389c3.bin",
@@ -242117,6 +242129,10 @@
         "hash": "927484044556013404"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_91084a4487d694fe8c37ef8bca8e7fbd587eebfd.bin",
+        "hash": "4452186611127333414"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_9157171b283f5f45241a1f95808776c6b802b386.bin",
         "hash": "12946034333889306687"
       },
@@ -242461,6 +242477,10 @@
         "hash": "4116335793922835407"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_b1658299a61ccaac1ff7fc9e3a5af379f01dfab5.bin",
+        "hash": "1923506758118208473"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_b17d4b344e57c7bd8a2dd46f9630fde7811913bd.bin",
         "hash": "12063505585212060600"
       },
@@ -242753,6 +242773,10 @@
         "hash": "6562375162640525919"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_d3cb96503f8d7bf92126e5ae57d2d9b8e4c72017.bin",
+        "hash": "16629587217419810556"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_d5791deed429f8ea4b929fe13fa32d33c1c2ecdd.bin",
         "hash": "13049216167137649263"
       },
@@ -242763,6 +242787,10 @@
       {
         "file": ".local/state/replit/agent/.agent_state_d606898acb7239d0bd53657d00c4db491b93968b.bin",
         "hash": "12778847446276987598"
+      },
+      {
+        "file": ".local/state/replit/agent/.agent_state_d6c6022870c16f3bc859b090fd3f8b5fd7546ea9.bin",
+        "hash": "932104872123520066"
       },
       {
         "file": ".local/state/replit/agent/.agent_state_d88f2a27bef6859fcc337da9757e016d34992bb3.bin",
@@ -243186,15 +243214,15 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "7601490897488323740"
+        "hash": "10834411085685416378"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
-        "hash": "3688231244080053223"
+        "hash": "15051117918321695029"
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
-        "hash": "699449713051771059"
+        "hash": "12648084421690969294"
       },
       {
         "file": ".local/state/replit/agent/rapid_build_started",
@@ -243206,7 +243234,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "581070507005512200"
+        "hash": "11070832512124689002"
       },
       {
         "file": ".prettierrc",
@@ -243214,7 +243242,7 @@
       },
       {
         "file": ".replit",
-        "hash": "5711929869100659295"
+        "hash": "8257235543211071920"
       },
       {
         "file": ".upm/store.json",
@@ -244539,6 +244567,22 @@
       {
         "file": "attached_assets/image_1757571319568.png",
         "hash": "9946763198716903343"
+      },
+      {
+        "file": "attached_assets/image_1757572548255.png",
+        "hash": "16474689225923258582"
+      },
+      {
+        "file": "attached_assets/image_1757574454294.png",
+        "hash": "5844903283429833602"
+      },
+      {
+        "file": "attached_assets/image_1757575311791.png",
+        "hash": "10392722440781265750"
+      },
+      {
+        "file": "attached_assets/image_1757575587160.png",
+        "hash": "186969542515624919"
       },
       {
         "file": "attached_assets/screenshot-1754843656563.png",

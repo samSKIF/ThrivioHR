@@ -82,13 +82,13 @@ outputType = "webview"
 name = "api-server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd apps/bff && PORT=8000 tsx src/main.ts"
-waitForPort = 8000
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=8000 npx nx serve bff"
+waitForPort = 8000
 
 [[ports]]
 localPort = 3000
@@ -105,7 +105,3 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
-
-[[ports]]
-localPort = 46203
-externalPort = 3001

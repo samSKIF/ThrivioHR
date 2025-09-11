@@ -20,11 +20,29 @@ export class IdentityService {
   }
 
   async createUser(createUserDto: CreateUserDto) {
+    // Safety net: validate required fields before repository call
+    const requiredFields = {
+      givenName: createUserDto.givenName,
+      familyName: createUserDto.familyName,
+      jobTitle: createUserDto.jobTitle,
+      department: createUserDto.department,
+      location: createUserDto.location,
+      hireDate: createUserDto.hireDate,
+    };
+    
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value || (typeof value === 'string' && value.trim() === ''))
+      .map(([field, _]) => field);
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+    
     return this.repository.createUser(
       createUserDto.orgId,
       createUserDto.email,
-      createUserDto.givenName ?? null,
-      createUserDto.familyName ?? null,
+      createUserDto.givenName,
+      createUserDto.familyName,
       createUserDto.jobTitle,
       createUserDto.department,
       createUserDto.location,

@@ -9,12 +9,12 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
-  @IsOptional()
-  givenName?: string;
+  @IsNotEmpty()
+  givenName: string;
 
   @IsString()
-  @IsOptional()
-  familyName?: string;
+  @IsNotEmpty()
+  familyName: string;
 
   @IsString()
   @IsNotEmpty()
