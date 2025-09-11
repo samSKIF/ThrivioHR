@@ -41,18 +41,19 @@ export function normalizeDatestr(v: unknown): string | null {
 export function normalizeRow(input: Record<string, unknown>): NormalizedRow {
   return {
     email: input.email as string ?? null,
-    givenName: input.givenName as string ?? null,
-    familyName: input.familyName as string ?? null,
+    // Map CSV template fields to expected fields
+    givenName: (input.givenName || input.name) as string ?? null,
+    familyName: (input.familyName || input.surname) as string ?? null,
     department: input.department as string ?? null,
-    managerEmail: input.managerEmail as string ?? null,
+    managerEmail: (input.managerEmail || input.manager_email) as string ?? null,
     location: input.location as string ?? null,
-    jobTitle: input.jobTitle as string ?? null,
-    employeeId: input.employeeId as string ?? null,
-    startDate: input.startDate as string ?? null,
-    birthDate: input.birthDate as string ?? null,
+    jobTitle: (input.jobTitle || input.job_title) as string ?? null,
+    employeeId: (input.employeeId || input.employee_id) as string ?? null,
+    startDate: (input.startDate || input.start_date || input.hire_date) as string ?? null,
+    birthDate: (input.birthDate || input.birth_date) as string ?? null,
     nationality: input.nationality ? (input.nationality as string).toUpperCase() : null,
-    gender: normalizeGender(input.gender),
-    phone: input.phone as string ?? null,
+    gender: normalizeGender(input.gender || input.sex),
+    phone: (input.phone || input.phone_number) as string ?? null,
   };
 }
 

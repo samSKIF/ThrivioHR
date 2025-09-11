@@ -564,7 +564,10 @@ export default function EmployeeDirectoryPage() {
               <Download className="w-4 h-4" />
               Export
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/directory/users/mass-upload'}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
               <Upload className="w-4 h-4" />
               Mass Upload
             </button>

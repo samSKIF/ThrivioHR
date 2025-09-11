@@ -57,7 +57,7 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 
 
-const REQUIRED = ['email', 'givenName', 'familyName'];
+const REQUIRED = ['email', 'givenName'];
 // const OPTIONAL = [
 //   'jobTitle','department','managerEmail','location','employeeId','startDate',
 //   'birthDate','nationality','gender','phone'
@@ -204,7 +204,7 @@ export class DirectoryService {
 
     for (const row of parsed.normalized) {
       const reason: string[] = [];
-      if (!row.email || !row.givenName || !row.familyName) {
+      if (!row.email || !row.givenName) {
         out.push({ action: 'invalid', reason: ['Missing required fields'], incoming: row });
         invalid++;
         continue;
@@ -366,7 +366,16 @@ export class DirectoryService {
           const firstName = incoming?.givenName as string | null ?? null;
           const lastName  = incoming?.familyName as string | null ?? null;
 
-          const u = user ?? await this.identity.createUser(payload.orgId, email, firstName || '', lastName || '');
+          const u = user ?? await this.identity.createUser(
+            payload.orgId, 
+            email, 
+            firstName, 
+            lastName, 
+            incoming?.jobTitle as string || '', 
+            deptName || '', 
+            locName || '', 
+            incoming?.hireDate as string || new Date().toISOString().split('T')[0]
+          );
           if (!user) createdUsers++; else updatedUsers++; // if user existed, treat as update via name sync below
 
           if (user) {
@@ -406,7 +415,16 @@ export class DirectoryService {
             // Safety: if planner said update but user disappeared, create now.
             const firstName = incoming?.givenName as string | null ?? null;
             const lastName  = incoming?.familyName as string | null ?? null;
-            const u = await this.identity.createUser(payload.orgId, email, firstName || '', lastName || '');
+            const u = await this.identity.createUser(
+              payload.orgId, 
+              email, 
+              firstName, 
+              lastName, 
+              incoming?.jobTitle as string || '', 
+              deptName || '', 
+              locName || '', 
+              incoming?.hireDate as string || new Date().toISOString().split('T')[0]
+            );
             createdUsers++;
             let membershipLinkedFlag = false;
             let locationCreated = false;
