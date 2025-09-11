@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Search, Download, Upload, Settings, Plus, MoreVertical, User, Building2, Users, TrendingUp } from "lucide-react";
+import { Search, Download, Upload, Settings, Plus, MoreVertical, User, Building2, Users, TrendingUp, MapPin } from "lucide-react";
 import Header from "../../../components/Header";
 
 type Employee = {
@@ -601,13 +601,16 @@ export default function EmployeeDirectoryPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
               <div className="flex-1 pr-4">
-                <p className="text-sm text-gray-600">Subscribed Users</p>
+                <p className="text-sm text-gray-600">Subscription Usage</p>
                 {orgStats.subscriptionLimit ? (
                   <>
                     <p className="text-3xl font-semibold text-gray-900">{orgStats.subscribedUsers}/{orgStats.subscriptionLimit}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mt-3">
+                    <p className="text-xs text-gray-500 mb-3">
+                      {((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100).toFixed(0)}% capacity used • {orgStats.subscriptionLimit - orgStats.subscribedUsers} seats available
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                       <div 
-                        className={`h-3 rounded-full transition-all duration-500 ${
+                        className={`h-2 rounded-full transition-all duration-500 ${
                           (() => {
                             const percentage = (orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100;
                             if (percentage < 30) return 'bg-gradient-to-r from-red-300 to-red-400';
@@ -618,9 +621,10 @@ export default function EmployeeDirectoryPage() {
                         style={{ width: `${Math.min((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100, 100)}%` }}
                       ></div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {((orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100).toFixed(1)}% of subscription used
-                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-xs text-gray-500">Active employees using subscription seats</p>
+                      <p className="text-xs text-gray-500">{(100 - (orgStats.subscribedUsers / orgStats.subscriptionLimit) * 100).toFixed(0)}% capacity remaining</p>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -638,20 +642,23 @@ export default function EmployeeDirectoryPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Organization Structure</p>
-                <div className="flex items-center gap-6 mt-2">
-                  <div className="text-center">
-                    <p className="text-2xl font-semibold text-blue-600">{orgStats.departmentCount}</p>
-                    <p className="text-xs text-gray-500">Departments</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-semibold text-green-600">{locations.length}</p>
-                    <p className="text-xs text-gray-500">Locations</p>
-                  </div>
-                </div>
+                <p className="text-sm text-gray-600">Departments</p>
+                <p className="text-3xl font-semibold text-gray-900">{orgStats.departmentCount}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Locations</p>
+                <p className="text-3xl font-semibold text-gray-900">{locations.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
