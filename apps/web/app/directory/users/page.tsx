@@ -221,12 +221,12 @@ export default function EmployeeDirectoryPage() {
       const users = Array.isArray(employeesData?.users) ? employeesData.users : [];
       setEmployees(users);
       
-      // Calculate stats
+      // Calculate stats - both Team Members and Subscribed Users should count Active + Pending
       const activeEmployees = users.filter((u: Employee) => u.status !== 'inactive').length;
       setOrgStats({
         totalEmployees: activeEmployees,
         subscriptionLimit: subscriptionData?.seatsLimit,
-        subscribedUsers: subscriptionData?.subscribedUsers || activeEmployees,
+        subscribedUsers: activeEmployees, // Always use same count as Team Members
         subscriptionStatus: subscriptionData?.status,
         departmentCount: departmentsData.length
       });

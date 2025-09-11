@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Query, Param, Inject, UseGuards, Req, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, Inject, UseGuards, Req, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { CreateOrgDto } from './dtos/create-org.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -43,5 +43,15 @@ export class IdentityController {
       throw new ForbiddenException('Organization ID is required for this operation');
     }
     return this.identityService.updateUser(id, updateUserDto, orgId);
+  }
+
+  @UseGuards(JwtAuthGuard, PasswordResetGuard)
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string, @Body() body: { orgId: string }, @Req() req: { user: Record<string, unknown> }) {
+    const orgId = req.user?.orgId as string || body.orgId;
+    if (!orgId) {
+      throw new ForbiddenException('Organization ID is required for this operation');
+    }
+    return this.identityService.deleteUser(id, orgId);
   }
 }

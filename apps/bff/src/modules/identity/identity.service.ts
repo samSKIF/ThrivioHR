@@ -157,6 +157,21 @@ export class IdentityService {
     });
   }
 
+  /** Delete user by ID and organization */
+  async deleteUser(userId: string, orgId: string) {
+    // Use direct SQL for user deletion
+    return await this.withPg(async (c) => {
+      const result = await c.query(
+        `DELETE FROM users WHERE id = $1 AND organization_id = $2 RETURNING id`,
+        [userId, orgId]
+      );
+      if (result.rows.length === 0) {
+        throw new Error('User not found or not in the specified organization');
+      }
+      return { success: true, deletedUserId: userId };
+    });
+  }
+
   /**
    * Flexible wrapper to satisfy current controller call sites.
    * Supports:
