@@ -628,9 +628,8 @@ export default function EmployeeDirectoryPage() {
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200/60">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Departments</p>
+                <p className="text-sm text-gray-600">Departments & Sites</p>
                 <p className="text-3xl font-semibold text-gray-900">{orgStats.departmentCount}</p>
-                <p className="text-xs text-gray-500">Try to have minimum</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-blue-600" />
