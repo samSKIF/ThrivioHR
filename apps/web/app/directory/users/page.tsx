@@ -388,12 +388,14 @@ export default function EmployeeDirectoryPage() {
         gender: "", nationality: "", birthDate: "", status: "active", isAdmin: false
       });
 
-      // Show success popup
-      alert(`✅ Employee Created Successfully!\n\n${newEmployee.firstName} ${newEmployee.lastName} has been added to the system.\n\nEmail: ${newEmployee.email}\nJob Title: ${newEmployee.jobTitle}\nDepartment: ${newEmployee.department}\nLocation: ${newEmployee.location}\nHire Date: ${newEmployee.hireDate}`);
+      // Show success dialog with simple message
+      setSuccessMessage("Employee created successfully");
+      setShowSuccessDialog(true);
       
     } catch (error: unknown) {
       console.error('Failed to create employee:', error);
-      alert(`❌ Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setSuccessMessage(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowSuccessDialog(true);
     }
   };
 
@@ -1285,9 +1287,6 @@ export default function EmployeeDirectoryPage() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {successMessage.includes('Failed') ? 'Operation Failed' : 'Employee Deleted Successfully!'}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
                     {successMessage}
                   </p>
                 </div>
@@ -1304,7 +1303,7 @@ export default function EmployeeDirectoryPage() {
                 className={`px-4 py-2 text-sm rounded-md transition-colors ${
                   successMessage.includes('Failed')
                     ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-teal-600 text-white hover:bg-teal-700'
                 }`}
               >
                 OK
