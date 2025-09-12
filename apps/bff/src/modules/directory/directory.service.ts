@@ -58,10 +58,6 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 
 const REQUIRED = ['email', 'givenName'];
-const REQUIRED_ALTERNATIVES = {
-  'givenName': ['givenName', 'name'],
-  'email': ['email']
-};
 // const OPTIONAL = [
 //   'jobTitle','department','managerEmail','location','employeeId','startDate',
 //   'birthDate','nationality','gender','phone'
@@ -111,10 +107,7 @@ export class DirectoryService {
     }
 
     const parsed = parseAndNormalizeCsv(csv);
-    const missingHeaders = REQUIRED.filter(requiredField => {
-      const alternatives = REQUIRED_ALTERNATIVES[requiredField] || [requiredField];
-      return !alternatives.some(alt => parsed.headers.includes(alt));
-    });
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
     
     const preview = parsed.normalized.slice(0, 3);
     const validCount = parsed.normalized.length - parsed.errors.length;
@@ -142,10 +135,7 @@ export class DirectoryService {
     }
 
     const parsed = parseAndNormalizeCsv(csv);
-    const missingHeaders = REQUIRED.filter(requiredField => {
-      const alternatives = REQUIRED_ALTERNATIVES[requiredField] || [requiredField];
-      return !alternatives.some(alt => parsed.headers.includes(alt));
-    });
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
     
     const validRows = parsed.normalized.filter((_, idx) => 
       !parsed.errors.some(e => e.row === idx + 2)
@@ -182,10 +172,7 @@ export class DirectoryService {
     }
 
     const parsed = parseAndNormalizeCsv(csv);
-    const missingHeaders = REQUIRED.filter(requiredField => {
-      const alternatives = REQUIRED_ALTERNATIVES[requiredField] || [requiredField];
-      return !alternatives.some(alt => parsed.headers.includes(alt));
-    });
+    const missingHeaders = REQUIRED.filter(h => !parsed.headers.includes(h));
     if (missingHeaders.length) {
       return {
         overview: {
