@@ -24,28 +24,6 @@
   "nxJsonPlugins": [],
   "fileMap": {
     "projectFileMap": {
-      "recognition": [
-        {
-          "file": "services/recognition/project.json",
-          "hash": "17850321407316770596"
-        },
-        {
-          "file": "services/recognition/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/recognition/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/recognition/src/main.ts",
-          "hash": "5055177238721938925"
-        },
-        {
-          "file": "services/recognition/tsconfig.json",
-          "hash": "2543962308852854802"
-        }
-      ],
       "ledger": [
         {
           "file": "services/ledger/project.json",
@@ -66,772 +44,6 @@
         {
           "file": "services/ledger/tsconfig.json",
           "hash": "2543962308852854802"
-        }
-      ],
-      "bff": [
-        {
-          "file": "apps/bff/.env.example",
-          "hash": "12487864303213782589"
-        },
-        {
-          "file": "apps/bff/jest.config.js",
-          "hash": "6462998887699076184"
-        },
-        {
-          "file": "apps/bff/jest.config.ts",
-          "hash": "6649822039444239650"
-        },
-        {
-          "file": "apps/bff/project.json",
-          "hash": "11858885385160478548"
-        },
-        {
-          "file": "apps/bff/src/app.controller.ts",
-          "hash": "16748480791945745332"
-        },
-        {
-          "file": "apps/bff/src/app.module.ts",
-          "hash": "14995456453841786411",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/config/oidc.config.ts",
-          "hash": "7801212433762337602"
-        },
-        {
-          "file": "apps/bff/src/db/with-org.ts",
-          "hash": "13459423186002220473",
-          "deps": [
-            "npm:drizzle-orm",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/dev/debug-routes.controller.ts",
-          "hash": "6650808617452124806",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/env.ts",
-          "hash": "5150360220966085976"
-        },
-        {
-          "file": "apps/bff/src/graphql/error-format.ts",
-          "hash": "12341661475723924400",
-          "deps": [
-            "npm:graphql"
-          ]
-        },
-        {
-          "file": "apps/bff/src/graphql/graphql.module.ts",
-          "hash": "13082401290705231388",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/graphql",
-            "npm:@nestjs/apollo"
-          ]
-        },
-        {
-          "file": "apps/bff/src/graphql/limits.ts",
-          "hash": "12274988168494700855"
-        },
-        {
-          "file": "apps/bff/src/graphql/resolvers/directory.resolver.ts",
-          "hash": "14979973721647097882",
-          "deps": [
-            "npm:@nestjs/graphql",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/graphql/resolvers/identity.resolver.ts",
-          "hash": "2914879713918325178",
-          "deps": [
-            "npm:@nestjs/graphql",
-            "npm:@nestjs/common",
-            "npm:express"
-          ]
-        },
-        {
-          "file": "apps/bff/src/graphql/schema-loader.ts",
-          "hash": "10135339876382662842"
-        },
-        {
-          "file": "apps/bff/src/graphql/schema.graphql",
-          "hash": "10654038671357650244"
-        },
-        {
-          "file": "apps/bff/src/graphql/types/graphql.context.ts",
-          "hash": "374909083491859749"
-        },
-        {
-          "file": "apps/bff/src/health/health.controller.ts",
-          "hash": "12690984273305394017",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/health/health.module.ts",
-          "hash": "15090231906835751036",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/main.ts",
-          "hash": "2018434137761354775",
-          "deps": [
-            "npm:reflect-metadata",
-            "npm:@nestjs/core",
-            "npm:@nestjs/common",
-            [
-              "npm:dotenv",
-              "dynamic"
-            ],
-            [
-              "npm:cookie-parser",
-              "dynamic"
-            ]
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/auth.controller.ts",
-          "hash": "3440732393498630655",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/auth.module.ts",
-          "hash": "5666692843515879385",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/auth.service.ts",
-          "hash": "6005401275424071374",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:drizzle-orm",
-            "npm:jsonwebtoken",
-            "identity"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/auth.spec.ts",
-          "hash": "8794548160466358128",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common",
-            "npm:@nestjs/testing"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/dto/login.dto.ts",
-          "hash": "2854742384631913038"
-        },
-        {
-          "file": "apps/bff/src/modules/auth/dto/refresh.dto.ts",
-          "hash": "6411783625619925968"
-        },
-        {
-          "file": "apps/bff/src/modules/auth/jwt-auth.guard.ts",
-          "hash": "10726778397826557805",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/graphql",
-            "npm:jsonwebtoken"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/jwt.util.ts",
-          "hash": "762102072492481750",
-          "deps": [
-            "npm:jsonwebtoken"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/logout.controller.ts",
-          "hash": "3118729331641457870",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:express"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/org-scope.guard.ts",
-          "hash": "6216475944266667526"
-        },
-        {
-          "file": "apps/bff/src/modules/auth/password-reset.guard.ts",
-          "hash": "14346891238072184522",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/graphql"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/auth/password.util.ts",
-          "hash": "11824689774911717044"
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/auth.controller.ts",
-          "hash": "7260181599115144283",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/passport"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/auth.service.ts",
-          "hash": "1827216011882536100",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/jwt",
-            "npm:pg",
-            "npm:@node-rs/argon2"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/corporate.controller.ts",
-          "hash": "15749201162566666796",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/passport"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/corporate.module.ts",
-          "hash": "939715969234071898",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/jwt",
-            "npm:@nestjs/passport"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/corporate.service.ts",
-          "hash": "394045672170835839",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:pg"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/corporate/jwt.strategy.ts",
-          "hash": "13117478653457646287",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:@nestjs/passport",
-            "npm:passport-jwt"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/db/db.module.ts",
-          "hash": "10006501301066057958"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/directory.controller.ts",
-          "hash": "4029380713606930676",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/directory/directory.module.ts",
-          "hash": "5331754697189684484"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/directory.service.ts",
-          "hash": "16271086022690124066",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:drizzle-orm",
-            "npm:pg"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/directory/directory.spec.ts",
-          "hash": "3661363001436461761",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common",
-            "npm:@nestjs/testing"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/directory/dtos/import-commit.dto.ts",
-          "hash": "1945415539800006843"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/dtos/import-session.dto.ts",
-          "hash": "776009365502808354"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/dtos/import-validate.dto.ts",
-          "hash": "9637274513233289478"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/compat.ts",
-          "hash": "2418051918735989444",
-          "deps": [
-            "contracts"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/csv.ts",
-          "hash": "16489201998219777070",
-          "deps": [
-            "npm:csv-parse"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/depts_locs.ts",
-          "hash": "9809342991646734952"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/diff.ts",
-          "hash": "2121987013248807408"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/managers.ts",
-          "hash": "7710446039048101503"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/normalizers.ts",
-          "hash": "14872932521983480631"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/overview.ts",
-          "hash": "14328351140787139476"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/token.ts",
-          "hash": "15282088379488517813"
-        },
-        {
-          "file": "apps/bff/src/modules/directory/lib/types.ts",
-          "hash": "11852030889591974979"
-        },
-        {
-          "file": "apps/bff/src/modules/graphql/graphql.e2e.spec.ts",
-          "hash": "9802148010217407775",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common",
-            "npm:@nestjs/testing",
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/directory.controller.ts",
-          "hash": "14450181832491367595",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/dtos/create-org.dto.ts",
-          "hash": "17332081137848347870"
-        },
-        {
-          "file": "apps/bff/src/modules/identity/dtos/create-user.dto.ts",
-          "hash": "3015225892688103753",
-          "deps": [
-            "npm:class-validator"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/dtos/update-user.dto.ts",
-          "hash": "4746262818185850692",
-          "deps": [
-            "npm:class-validator"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/identity.controller.ts",
-          "hash": "7748225950266766876",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/identity.module.ts",
-          "hash": "12932309421489592598",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/identity.repository.ts",
-          "hash": "13011801498321916199",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:drizzle-orm",
-            "contracts"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/identity/identity.service.ts",
-          "hash": "15818445694254529922",
-          "deps": [
-            "npm:@nestjs/common",
-            [
-              "npm:pg",
-              "dynamic"
-            ]
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/sso/oidc/oidc.controller.old.ts",
-          "hash": "10350239355773124714",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:express"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/sso/oidc/oidc.controller.ts",
-          "hash": "16474888273560006278",
-          "deps": [
-            "npm:@nestjs/common",
-            "npm:express"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/sso/oidc/oidc.module.ts",
-          "hash": "10429375989130639360",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/sso/oidc/oidc.service.ts",
-          "hash": "2367383615736763290",
-          "deps": [
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/src/modules/sso/oidc/types.ts",
-          "hash": "11188105181940915950"
-        },
-        {
-          "file": "apps/bff/test.setup.ts",
-          "hash": "7924973349717342075"
-        },
-        {
-          "file": "apps/bff/test/auth.logout.e2e.spec.ts",
-          "hash": "5447989681374929664",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/test/current-user.e2e.spec.ts",
-          "hash": "8662716159293422297",
-          "deps": [
-            "npm:@nestjs/testing",
-            "npm:@nestjs/common",
-            "npm:supertest",
-            "npm:@nestjs/jwt"
-          ]
-        },
-        {
-          "file": "apps/bff/test/me.after-callback.e2e.spec.ts",
-          "hash": "1197024669364029225",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/test/oidc.authorize.e2e.spec.ts",
-          "hash": "14852903196236170322",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/test/oidc.callback.e2e.spec.ts",
-          "hash": "4723294142686529458",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/test/oidc.routes.spec.ts",
-          "hash": "17146273425285210170",
-          "deps": [
-            "npm:supertest",
-            "npm:@nestjs/testing",
-            "npm:@nestjs/common"
-          ]
-        },
-        {
-          "file": "apps/bff/test/oidc.service.spec.ts",
-          "hash": "6283341783824118259",
-          "deps": [
-            "npm:openid-client"
-          ]
-        },
-        {
-          "file": "apps/bff/test/setup-e2e.ts",
-          "hash": "1361341522553738954"
-        },
-        {
-          "file": "apps/bff/tools/plan-employees.ts",
-          "hash": "17455002575869750733"
-        },
-        {
-          "file": "apps/bff/tsconfig.app.json",
-          "hash": "15914396322889597790"
-        },
-        {
-          "file": "apps/bff/tsconfig.json",
-          "hash": "15754235236931352798"
-        },
-        {
-          "file": "apps/bff/tsconfig.spec.json",
-          "hash": "5589598467114817326"
-        }
-      ],
-      "identity": [
-        {
-          "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
-          "hash": "9995049679412742541"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/0000_shocking_leper_queen.sql",
-          "hash": "11486356036310775745"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/0001_ambitious_giant_man.sql",
-          "hash": "13943745886699260150"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/0002_rainy_ricochet.sql",
-          "hash": "9748416948995768584"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/20250821_big3c_local_auth.sql",
-          "hash": "14609538632977439196"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/20250905_add_users_rls.sql",
-          "hash": "18143306002084242407"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/20250907_corporate_management.sql",
-          "hash": "6802603682374586768"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0000_snapshot.json",
-          "hash": "1673585877390318144"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0001_snapshot.json",
-          "hash": "4362580660924215635"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/0002_snapshot.json",
-          "hash": "10311774399560916073"
-        },
-        {
-          "file": "services/identity/drizzle/migrations/meta/_journal.json",
-          "hash": "14464629374985213429"
-        },
-        {
-          "file": "services/identity/jest.config.ts",
-          "hash": "15300988821512552776"
-        },
-        {
-          "file": "services/identity/project.json",
-          "hash": "13232276208306800449"
-        },
-        {
-          "file": "services/identity/src/app.controller.ts",
-          "hash": "14761957324611037072"
-        },
-        {
-          "file": "services/identity/src/app.module.ts",
-          "hash": "4776585564194432820"
-        },
-        {
-          "file": "services/identity/src/db/index.ts",
-          "hash": "15136210484516578895"
-        },
-        {
-          "file": "services/identity/src/db/schema/corporateAdmins.ts",
-          "hash": "7209163839265706584",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/employment_events.ts",
-          "hash": "15092341679682323203"
-        },
-        {
-          "file": "services/identity/src/db/schema/events.ts",
-          "hash": "1597226904823871021",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/identities.ts",
-          "hash": "12687761386328759387"
-        },
-        {
-          "file": "services/identity/src/db/schema/importJobs.ts",
-          "hash": "16593250799676142486",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/index.ts",
-          "hash": "1371965228576365742",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/locations.ts",
-          "hash": "6280621630841283465",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/org_membership.ts",
-          "hash": "18375543450047616586"
-        },
-        {
-          "file": "services/identity/src/db/schema/org_units.ts",
-          "hash": "18325248998587192215",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/organizationDomains.ts",
-          "hash": "10639506862298034846",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/organizationFeatures.ts",
-          "hash": "3583927803467499468",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/organizations.ts",
-          "hash": "6622367977006634272",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/role_bindings.ts",
-          "hash": "12612519209428020030"
-        },
-        {
-          "file": "services/identity/src/db/schema/roles.ts",
-          "hash": "9670906524569723787"
-        },
-        {
-          "file": "services/identity/src/db/schema/sessions.ts",
-          "hash": "3106736526078779507"
-        },
-        {
-          "file": "services/identity/src/db/schema/subscriptions.ts",
-          "hash": "7458578250505417571",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/users.ts",
-          "hash": "14004213033133602983",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/db/schema/walletTransactions.ts",
-          "hash": "5569809690944046987",
-          "deps": [
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/src/main.ts",
-          "hash": "12110202960230799724"
-        },
-        {
-          "file": "services/identity/src/seeds/identity.seed.ts",
-          "hash": "1599845465182442772"
-        },
-        {
-          "file": "services/identity/src/seeds/seed.big3c.ts",
-          "hash": "9152055022483171916",
-          "deps": [
-            "npm:pg"
-          ]
-        },
-        {
-          "file": "services/identity/test/db/cascades.test.ts",
-          "hash": "8455369373978721315"
-        },
-        {
-          "file": "services/identity/test/db/constraints.test.ts",
-          "hash": "3414188754497434856"
-        },
-        {
-          "file": "services/identity/test/db/sessions-index.test.ts",
-          "hash": "17328702381921243069"
-        },
-        {
-          "file": "services/identity/test/helpers.ts",
-          "hash": "17734678534350261779"
-        },
-        {
-          "file": "services/identity/test/jest.setup.db.ts",
-          "hash": "16796094970740578394",
-          "deps": [
-            "npm:pg",
-            "npm:drizzle-orm"
-          ]
-        },
-        {
-          "file": "services/identity/test/schema-import.test.ts",
-          "hash": "5364599584904245307"
-        },
-        {
-          "file": "services/identity/test/setup.ts",
-          "hash": "7175117513073555270"
-        },
-        {
-          "file": "services/identity/tsconfig.jest.json",
-          "hash": "11089798308806373180"
-        },
-        {
-          "file": "services/identity/tsconfig.json",
-          "hash": "63426151987760438"
         }
       ],
       "web": [
@@ -1315,6 +527,257 @@
           "hash": "14698313359158478524"
         }
       ],
+      "recognition": [
+        {
+          "file": "services/recognition/project.json",
+          "hash": "17850321407316770596"
+        },
+        {
+          "file": "services/recognition/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/recognition/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/recognition/src/main.ts",
+          "hash": "5055177238721938925"
+        },
+        {
+          "file": "services/recognition/tsconfig.json",
+          "hash": "2543962308852854802"
+        }
+      ],
+      "identity": [
+        {
+          "file": "services/identity/drizzle/migrations/0000_init_extensions.sql",
+          "hash": "9995049679412742541"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/0000_shocking_leper_queen.sql",
+          "hash": "11486356036310775745"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/0001_ambitious_giant_man.sql",
+          "hash": "13943745886699260150"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/0002_rainy_ricochet.sql",
+          "hash": "9748416948995768584"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/20250821_big3c_local_auth.sql",
+          "hash": "14609538632977439196"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/20250905_add_users_rls.sql",
+          "hash": "18143306002084242407"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/20250907_corporate_management.sql",
+          "hash": "6802603682374586768"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/meta/0000_snapshot.json",
+          "hash": "1673585877390318144"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/meta/0001_snapshot.json",
+          "hash": "4362580660924215635"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/meta/0002_snapshot.json",
+          "hash": "10311774399560916073"
+        },
+        {
+          "file": "services/identity/drizzle/migrations/meta/_journal.json",
+          "hash": "14464629374985213429"
+        },
+        {
+          "file": "services/identity/jest.config.ts",
+          "hash": "15300988821512552776"
+        },
+        {
+          "file": "services/identity/project.json",
+          "hash": "13232276208306800449"
+        },
+        {
+          "file": "services/identity/src/app.controller.ts",
+          "hash": "14761957324611037072"
+        },
+        {
+          "file": "services/identity/src/app.module.ts",
+          "hash": "4776585564194432820"
+        },
+        {
+          "file": "services/identity/src/db/index.ts",
+          "hash": "15136210484516578895"
+        },
+        {
+          "file": "services/identity/src/db/schema/corporateAdmins.ts",
+          "hash": "7209163839265706584",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/employment_events.ts",
+          "hash": "15092341679682323203"
+        },
+        {
+          "file": "services/identity/src/db/schema/events.ts",
+          "hash": "1597226904823871021",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/identities.ts",
+          "hash": "12687761386328759387"
+        },
+        {
+          "file": "services/identity/src/db/schema/importJobs.ts",
+          "hash": "16593250799676142486",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/index.ts",
+          "hash": "1371965228576365742",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/locations.ts",
+          "hash": "6280621630841283465",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/org_membership.ts",
+          "hash": "18375543450047616586"
+        },
+        {
+          "file": "services/identity/src/db/schema/org_units.ts",
+          "hash": "18325248998587192215",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/organizationDomains.ts",
+          "hash": "10639506862298034846",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/organizationFeatures.ts",
+          "hash": "3583927803467499468",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/organizations.ts",
+          "hash": "6622367977006634272",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/role_bindings.ts",
+          "hash": "12612519209428020030"
+        },
+        {
+          "file": "services/identity/src/db/schema/roles.ts",
+          "hash": "9670906524569723787"
+        },
+        {
+          "file": "services/identity/src/db/schema/sessions.ts",
+          "hash": "3106736526078779507"
+        },
+        {
+          "file": "services/identity/src/db/schema/subscriptions.ts",
+          "hash": "7458578250505417571",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/users.ts",
+          "hash": "14004213033133602983",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/db/schema/walletTransactions.ts",
+          "hash": "5569809690944046987",
+          "deps": [
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/src/main.ts",
+          "hash": "12110202960230799724"
+        },
+        {
+          "file": "services/identity/src/seeds/identity.seed.ts",
+          "hash": "1599845465182442772"
+        },
+        {
+          "file": "services/identity/src/seeds/seed.big3c.ts",
+          "hash": "9152055022483171916",
+          "deps": [
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "services/identity/test/db/cascades.test.ts",
+          "hash": "8455369373978721315"
+        },
+        {
+          "file": "services/identity/test/db/constraints.test.ts",
+          "hash": "3414188754497434856"
+        },
+        {
+          "file": "services/identity/test/db/sessions-index.test.ts",
+          "hash": "17328702381921243069"
+        },
+        {
+          "file": "services/identity/test/helpers.ts",
+          "hash": "17734678534350261779"
+        },
+        {
+          "file": "services/identity/test/jest.setup.db.ts",
+          "hash": "16796094970740578394",
+          "deps": [
+            "npm:pg",
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "services/identity/test/schema-import.test.ts",
+          "hash": "5364599584904245307"
+        },
+        {
+          "file": "services/identity/test/setup.ts",
+          "hash": "7175117513073555270"
+        },
+        {
+          "file": "services/identity/tsconfig.jest.json",
+          "hash": "11089798308806373180"
+        },
+        {
+          "file": "services/identity/tsconfig.json",
+          "hash": "63426151987760438"
+        }
+      ],
       "contracts": [
         {
           "file": "packages/contracts/events/.gitkeep",
@@ -1374,6 +837,543 @@
         {
           "file": "packages/contracts/tsconfig.json",
           "hash": "14800935771102366691"
+        }
+      ],
+      "bff": [
+        {
+          "file": "apps/bff/.env.example",
+          "hash": "12487864303213782589"
+        },
+        {
+          "file": "apps/bff/jest.config.js",
+          "hash": "6462998887699076184"
+        },
+        {
+          "file": "apps/bff/jest.config.ts",
+          "hash": "6649822039444239650"
+        },
+        {
+          "file": "apps/bff/project.json",
+          "hash": "11858885385160478548"
+        },
+        {
+          "file": "apps/bff/src/app.controller.ts",
+          "hash": "16748480791945745332"
+        },
+        {
+          "file": "apps/bff/src/app.module.ts",
+          "hash": "14995456453841786411",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/config/oidc.config.ts",
+          "hash": "7801212433762337602"
+        },
+        {
+          "file": "apps/bff/src/db/with-org.ts",
+          "hash": "13459423186002220473",
+          "deps": [
+            "npm:drizzle-orm",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/dev/debug-routes.controller.ts",
+          "hash": "6650808617452124806",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/env.ts",
+          "hash": "5150360220966085976"
+        },
+        {
+          "file": "apps/bff/src/graphql/error-format.ts",
+          "hash": "12341661475723924400",
+          "deps": [
+            "npm:graphql"
+          ]
+        },
+        {
+          "file": "apps/bff/src/graphql/graphql.module.ts",
+          "hash": "13082401290705231388",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/graphql",
+            "npm:@nestjs/apollo"
+          ]
+        },
+        {
+          "file": "apps/bff/src/graphql/limits.ts",
+          "hash": "12274988168494700855"
+        },
+        {
+          "file": "apps/bff/src/graphql/resolvers/directory.resolver.ts",
+          "hash": "14979973721647097882",
+          "deps": [
+            "npm:@nestjs/graphql",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/graphql/resolvers/identity.resolver.ts",
+          "hash": "2914879713918325178",
+          "deps": [
+            "npm:@nestjs/graphql",
+            "npm:@nestjs/common",
+            "npm:express"
+          ]
+        },
+        {
+          "file": "apps/bff/src/graphql/schema-loader.ts",
+          "hash": "10135339876382662842"
+        },
+        {
+          "file": "apps/bff/src/graphql/schema.graphql",
+          "hash": "10654038671357650244"
+        },
+        {
+          "file": "apps/bff/src/graphql/types/graphql.context.ts",
+          "hash": "374909083491859749"
+        },
+        {
+          "file": "apps/bff/src/health/health.controller.ts",
+          "hash": "12690984273305394017",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/health/health.module.ts",
+          "hash": "15090231906835751036",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/main.ts",
+          "hash": "2018434137761354775",
+          "deps": [
+            "npm:reflect-metadata",
+            "npm:@nestjs/core",
+            "npm:@nestjs/common",
+            [
+              "npm:dotenv",
+              "dynamic"
+            ],
+            [
+              "npm:cookie-parser",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/auth.controller.ts",
+          "hash": "3440732393498630655",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/auth.module.ts",
+          "hash": "5666692843515879385",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/auth.service.ts",
+          "hash": "6005401275424071374",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:drizzle-orm",
+            "npm:jsonwebtoken",
+            "identity"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/auth.spec.ts",
+          "hash": "8794548160466358128",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common",
+            "npm:@nestjs/testing"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/dto/login.dto.ts",
+          "hash": "2854742384631913038"
+        },
+        {
+          "file": "apps/bff/src/modules/auth/dto/refresh.dto.ts",
+          "hash": "6411783625619925968"
+        },
+        {
+          "file": "apps/bff/src/modules/auth/jwt-auth.guard.ts",
+          "hash": "10726778397826557805",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/graphql",
+            "npm:jsonwebtoken"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/jwt.util.ts",
+          "hash": "762102072492481750",
+          "deps": [
+            "npm:jsonwebtoken"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/logout.controller.ts",
+          "hash": "3118729331641457870",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:express"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/org-scope.guard.ts",
+          "hash": "6216475944266667526"
+        },
+        {
+          "file": "apps/bff/src/modules/auth/password-reset.guard.ts",
+          "hash": "14346891238072184522",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/graphql"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/auth/password.util.ts",
+          "hash": "11824689774911717044"
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/auth.controller.ts",
+          "hash": "7260181599115144283",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/passport"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/auth.service.ts",
+          "hash": "1827216011882536100",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/jwt",
+            "npm:pg",
+            "npm:@node-rs/argon2"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/corporate.controller.ts",
+          "hash": "15749201162566666796",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/passport"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/corporate.module.ts",
+          "hash": "939715969234071898",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/jwt",
+            "npm:@nestjs/passport"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/corporate.service.ts",
+          "hash": "394045672170835839",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/corporate/jwt.strategy.ts",
+          "hash": "13117478653457646287",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:@nestjs/passport",
+            "npm:passport-jwt"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/db/db.module.ts",
+          "hash": "10006501301066057958"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/directory.controller.ts",
+          "hash": "4029380713606930676",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/directory/directory.module.ts",
+          "hash": "5331754697189684484"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/directory.service.ts",
+          "hash": "16271086022690124066",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:drizzle-orm",
+            "npm:pg"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/directory/directory.spec.ts",
+          "hash": "3661363001436461761",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common",
+            "npm:@nestjs/testing"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/directory/dtos/import-commit.dto.ts",
+          "hash": "1945415539800006843"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/dtos/import-session.dto.ts",
+          "hash": "776009365502808354"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/dtos/import-validate.dto.ts",
+          "hash": "9637274513233289478"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/compat.ts",
+          "hash": "2418051918735989444",
+          "deps": [
+            "contracts"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/csv.ts",
+          "hash": "16489201998219777070",
+          "deps": [
+            "npm:csv-parse"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/depts_locs.ts",
+          "hash": "9809342991646734952"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/diff.ts",
+          "hash": "2121987013248807408"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/managers.ts",
+          "hash": "7710446039048101503"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/normalizers.ts",
+          "hash": "14872932521983480631"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/overview.ts",
+          "hash": "14328351140787139476"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/token.ts",
+          "hash": "15282088379488517813"
+        },
+        {
+          "file": "apps/bff/src/modules/directory/lib/types.ts",
+          "hash": "11852030889591974979"
+        },
+        {
+          "file": "apps/bff/src/modules/graphql/graphql.e2e.spec.ts",
+          "hash": "9802148010217407775",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common",
+            "npm:@nestjs/testing",
+            "npm:drizzle-orm"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/directory.controller.ts",
+          "hash": "14450181832491367595",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/dtos/create-org.dto.ts",
+          "hash": "17332081137848347870"
+        },
+        {
+          "file": "apps/bff/src/modules/identity/dtos/create-user.dto.ts",
+          "hash": "3015225892688103753",
+          "deps": [
+            "npm:class-validator"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/dtos/update-user.dto.ts",
+          "hash": "4746262818185850692",
+          "deps": [
+            "npm:class-validator"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/identity.controller.ts",
+          "hash": "7748225950266766876",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/identity.module.ts",
+          "hash": "3075417651727256722",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/identity.repository.ts",
+          "hash": "13011801498321916199",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:drizzle-orm",
+            "contracts"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/identity/identity.service.ts",
+          "hash": "15818445694254529922",
+          "deps": [
+            "npm:@nestjs/common",
+            [
+              "npm:pg",
+              "dynamic"
+            ]
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/sso/oidc/oidc.controller.old.ts",
+          "hash": "10350239355773124714",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:express"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/sso/oidc/oidc.controller.ts",
+          "hash": "16474888273560006278",
+          "deps": [
+            "npm:@nestjs/common",
+            "npm:express"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/sso/oidc/oidc.module.ts",
+          "hash": "10429375989130639360",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/sso/oidc/oidc.service.ts",
+          "hash": "2367383615736763290",
+          "deps": [
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/src/modules/sso/oidc/types.ts",
+          "hash": "11188105181940915950"
+        },
+        {
+          "file": "apps/bff/test.setup.ts",
+          "hash": "7924973349717342075"
+        },
+        {
+          "file": "apps/bff/test/auth.logout.e2e.spec.ts",
+          "hash": "5447989681374929664",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/test/current-user.e2e.spec.ts",
+          "hash": "8662716159293422297",
+          "deps": [
+            "npm:@nestjs/testing",
+            "npm:@nestjs/common",
+            "npm:supertest",
+            "npm:@nestjs/jwt"
+          ]
+        },
+        {
+          "file": "apps/bff/test/me.after-callback.e2e.spec.ts",
+          "hash": "1197024669364029225",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/test/oidc.authorize.e2e.spec.ts",
+          "hash": "14852903196236170322",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/test/oidc.callback.e2e.spec.ts",
+          "hash": "4723294142686529458",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/test/oidc.routes.spec.ts",
+          "hash": "17146273425285210170",
+          "deps": [
+            "npm:supertest",
+            "npm:@nestjs/testing",
+            "npm:@nestjs/common"
+          ]
+        },
+        {
+          "file": "apps/bff/test/oidc.service.spec.ts",
+          "hash": "6283341783824118259",
+          "deps": [
+            "npm:openid-client"
+          ]
+        },
+        {
+          "file": "apps/bff/test/setup-e2e.ts",
+          "hash": "1361341522553738954"
+        },
+        {
+          "file": "apps/bff/tools/plan-employees.ts",
+          "hash": "17455002575869750733"
+        },
+        {
+          "file": "apps/bff/tsconfig.app.json",
+          "hash": "15914396322889597790"
+        },
+        {
+          "file": "apps/bff/tsconfig.json",
+          "hash": "15754235236931352798"
+        },
+        {
+          "file": "apps/bff/tsconfig.spec.json",
+          "hash": "5589598467114817326"
         }
       ]
     },
@@ -240931,6 +240931,10 @@
         "hash": "3942727223327696753"
       },
       {
+        "file": ".local/state/replit/agent/.agent_state_248bb647db34b70b0fd97b4459a831e2e0d36dd2.bin",
+        "hash": "13629379655038875555"
+      },
+      {
         "file": ".local/state/replit/agent/.agent_state_2497678d1b35b6162a8509fea419d7fa86f8598f.bin",
         "hash": "6171083739144175502"
       },
@@ -243260,7 +243264,7 @@
       },
       {
         "file": ".local/state/replit/agent/.agent_state_main.bin",
-        "hash": "17492470038752304031"
+        "hash": "2487392875112612714"
       },
       {
         "file": ".local/state/replit/agent/.latest.json",
@@ -243268,7 +243272,7 @@
       },
       {
         "file": ".local/state/replit/agent/filesystem/filesystem_state.json",
-        "hash": "142950246485153228"
+        "hash": "1924189465944080837"
       },
       {
         "file": ".local/state/replit/agent/rapid_build_started",
@@ -243280,7 +243284,7 @@
       },
       {
         "file": ".local/state/replit/agent/repl_state.bin",
-        "hash": "14747381430773213966"
+        "hash": "13735043495703703502"
       },
       {
         "file": ".prettierrc",
@@ -244657,6 +244661,10 @@
       {
         "file": "attached_assets/image_1757600382261.png",
         "hash": "16718690053083321012"
+      },
+      {
+        "file": "attached_assets/image_1757668849448.png",
+        "hash": "11986461252860886196"
       },
       {
         "file": "attached_assets/screenshot-1754843656563.png",
