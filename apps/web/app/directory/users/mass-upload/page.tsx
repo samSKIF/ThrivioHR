@@ -73,18 +73,18 @@ export default function MassUploadPage() {
   const downloadTemplate = (format: 'csv' | 'excel') => {
     const templateData = [
       {
-        name: 'John',
-        surname: 'Doe',
         email: 'john.doe@company.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        jobTitle: 'Senior Developer',
         department: 'Engineering',
-        job_title: 'Senior Developer',
+        hireDate: '2024-01-15',
         location: 'New York',
-        phone_number: '+1234567890',
-        manager_email: 'manager@company.com',
-        hire_date: '2024-01-15',
-        birth_date: '1990-05-20',
+        phone: '+1234567890',
+        managerEmail: 'manager@company.com',
+        birthDate: '1990-05-20',
         nationality: 'American',
-        sex: 'Male'
+        gender: 'Male'
       }
     ];
 
@@ -236,21 +236,21 @@ export default function MassUploadPage() {
   };
 
   const requiredFields = [
-    "name (employee's first name)",
-    "email (unique email address)"
+    "email (unique email address)",
+    "firstName (employee's first name)",
+    "jobTitle (employee's role/position)",
+    "department (existing or new department)",
+    "hireDate (YYYY-MM-DD format)"
   ];
 
   const optionalFields = [
-    "surname (last name)",
-    "department (existing or new department)",
-    "job_title (employee's role)",
+    "lastName (employee's last name)",
     "location (office location)",
-    "phone_number (contact number)",
-    "manager_email (direct supervisor's email)",
-    "hire_date (YYYY-MM-DD format)",
-    "birth_date (YYYY-MM-DD format)",
+    "phone (contact number)",
+    "managerEmail (manager's email)",
+    "birthDate (YYYY-MM-DD format)",
     "nationality (employee's nationality)",
-    "sex (Male/Female/Other)"
+    "gender (Male/Female/Other)"
   ];
 
   return (

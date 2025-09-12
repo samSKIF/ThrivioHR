@@ -57,7 +57,7 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 
 
-const REQUIRED = ['email', 'givenName'];
+const REQUIRED = ['email', 'firstName', 'jobTitle', 'department', 'hireDate'];
 // const OPTIONAL = [
 //   'jobTitle','department','managerEmail','location','employeeId','startDate',
 //   'birthDate','nationality','gender','phone'
@@ -204,8 +204,14 @@ export class DirectoryService {
 
     for (const row of parsed.normalized) {
       const reason: string[] = [];
-      if (!row.email || !row.givenName) {
-        out.push({ action: 'invalid', reason: ['Missing required fields'], incoming: row });
+      if (!row.email || !row.givenName || !row.jobTitle || !row.department || !row.hireDate) {
+        const missing = [];
+        if (!row.email) missing.push('email');
+        if (!row.givenName) missing.push('givenName');
+        if (!row.jobTitle) missing.push('jobTitle');
+        if (!row.department) missing.push('department');
+        if (!row.hireDate) missing.push('hireDate');
+        out.push({ action: 'invalid', reason: [`Missing required fields: ${missing.join(', ')}`], incoming: row });
         invalid++;
         continue;
       }
@@ -351,7 +357,7 @@ export class DirectoryService {
 
       const ignoredFields: string[] = [];
       // These fields are not in the users schema yet; mark as ignored:
-      ['jobTitle','employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
+      ['employeeId','startDate','birthDate','nationality','gender','phone','managerEmail']
         .forEach(f => { if (incoming?.[f] != null) ignoredFields.push(f); });
 
       try {

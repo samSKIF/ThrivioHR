@@ -1,0 +1,3 @@
+email,firstName,lastName,location,phone
+missing.fields@company.com,Missing,Fields,Remote,+1234567894
+incomplete.user@company.com,Incomplete,User,Home Office,+1234567895

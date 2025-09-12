@@ -1,0 +1,3 @@
+email,firstName,jobTitle,department,hireDate,location,phone,managerEmail,birthDate,nationality,gender
+alice.johnson@company.com,Alice,Product Designer,Design,2024-03-01,Seattle,+1234567892,manager@company.com,1992-12-10,American,Female
+bob.wilson@company.com,Bob,Data Scientist,Analytics,2024-03-15,Austin,+1234567893,director@company.com,1988-07-25,Canadian,Male

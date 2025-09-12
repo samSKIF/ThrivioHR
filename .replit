@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["jq"]
 
 [workflows]
 runButton = "Project"
@@ -105,6 +106,10 @@ externalPort = 80
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[[ports]]
+localPort = 36805
+externalPort = 3003
 
 [[ports]]
 localPort = 40665
