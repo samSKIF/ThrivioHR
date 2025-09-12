@@ -14,6 +14,7 @@ export * from './walletTransactions';
 export * from './organizationFeatures';
 export * from './organizationDomains';
 export * from './importJobs';  
+export * from './import_sessions';
 export * from './events';
 
 import { organizations } from './organizations';
@@ -32,6 +33,7 @@ import { walletTransactions } from './walletTransactions';
 import { organizationFeatures } from './organizationFeatures';
 import { organizationDomains } from './organizationDomains';
 import { importJobs } from './importJobs';
+import { importSessions } from './import_sessions';
 import { events } from './events';
 
 import type { PgTable } from 'drizzle-orm/pg-core';
@@ -53,5 +55,6 @@ export const allTables: PgTable[] = [
   organizationFeatures,
   organizationDomains,
   importJobs,
+  importSessions,
   events,
 ];

@@ -14422,6 +14422,11 @@
       },
       {
         "source": "bff",
+        "target": "npm:@nestjs/platform-express",
+        "type": "static"
+      },
+      {
+        "source": "bff",
         "target": "npm:openid-client",
         "type": "static"
       }
@@ -32836,5 +32841,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1757704374449
+  "computedAt": 1757705338966
 }
