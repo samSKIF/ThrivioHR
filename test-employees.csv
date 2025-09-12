@@ -1,4 +1,4 @@
-name,surname,email,department,job_title,location,phone_number,manager_email,hire_date,birth_date,nationality,sex
-John,Doe,john.doe@company.com,Engineering,Senior Developer,New York,+1234567890,manager@company.com,2024-01-15,1990-05-20,US,Male
-Jane,Smith,jane.smith@company.com,Marketing,Marketing Manager,San Francisco,+1987654321,director@company.com,2024-02-01,1985-03-10,US,Female
-Bob,Johnson,bob.johnson@company.com,Sales,Sales Rep,Chicago,+1555666777,sales.manager@company.com,2024-03-01,1992-07-25,US,Male
+email,firstName,lastName,jobTitle,department,hireDate,location,phone,managerEmail
+john.doe@company.com,John,Doe,Senior Developer,Engineering,2024-01-15,New York,+1234567890,manager@company.com
+jane.smith@company.com,Jane,Smith,Product Manager,Product,2024-02-01,San Francisco,+1234567891,director@company.com
+mike.jones@company.com,Mike,Jones,Designer,Design,2024-03-10,Remote,+1234567892,manager@company.com
