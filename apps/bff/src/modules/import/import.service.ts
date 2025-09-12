@@ -12,58 +12,95 @@ import {
   ApplyResultRow
 } from './types';
 import * as crypto from 'crypto';
-import { parseAndNormalizeCsv } from '../directory/lib/csv';
-import { collectNewDepartments, collectNewLocations } from '../directory/lib/depts_locs';
-import { buildEmailMap, diagnoseManagers } from '../directory/lib/managers';
-import { computeDiff } from '../directory/lib/diff';
-import { Pool } from 'pg';
+import { DRIZZLE_DB } from '../db/db.module';
+import { importSessions } from '../../../../../services/identity/src/db/schema/import_sessions';
+import { eq, and, gt } from 'drizzle-orm';
+import { FileProcessorService, ParsedFileResult, FileProcessorOptions } from './services/file-processor.service';
+import { ValidationService, DataValidationResult } from './services/validation.service';
+import { PlanningService, PlanningOptions } from './services/planning.service';
 
-const REQUIRED_HEADERS = ['email', 'firstName', 'jobTitle', 'department', 'hireDate'];
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 @Injectable()
 export class ImportService {
-  private readonly pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-  constructor(@Inject(IDENTITY_PORT) private readonly identityPort: IdentityPort) {}
+  constructor(
+    @Inject(IDENTITY_PORT) private readonly identityPort: IdentityPort,
+    @Inject(DRIZZLE_DB) private readonly db: any,
+    private readonly fileProcessor: FileProcessorService,
+    private readonly validationService: ValidationService,
+    private readonly planningService: PlanningService
+  ) {}
 
   /**
-   * Validate CSV format and structure
+   * Process uploaded file and validate structure
+   */
+  processFileUpload(
+    buffer: Buffer,
+    mimetype: string,
+    filename: string,
+    options?: Partial<FileProcessorOptions>
+  ): ParsedFileResult {
+    return this.fileProcessor.processFile(buffer, mimetype, filename, options);
+  }
+
+  /**
+   * Validate CSV format and structure (legacy method for backwards compatibility)
    */
   validateCsv(csv: string): ValidationResult {
-    if (!csv?.trim()) {
-      return {
-        rows: 0, valid: 0, invalid: 0,
-        requiredHeaders: REQUIRED_HEADERS, 
-        missingHeaders: REQUIRED_HEADERS,
-        inferredHeaders: [], 
-        preview: [], 
-        sampleErrors: [{ row: 0, message: 'CSV body is empty' }]
-      };
-    }
-
-    const parsed = parseAndNormalizeCsv(csv);
-    const missingHeaders = REQUIRED_HEADERS.filter(h => !parsed.headers.includes(h));
-    const preview = parsed.normalized.slice(0, 3);
-    const validCount = parsed.normalized.length - parsed.errors.length;
-
-    return {
-      rows: parsed.normalized.length,
-      valid: validCount,
-      invalid: parsed.errors.length,
-      requiredHeaders: REQUIRED_HEADERS,
-      missingHeaders,
-      inferredHeaders: parsed.headers,
-      preview,
-      sampleErrors: parsed.errors.slice(0, 5)
-    };
+    return this.validationService.validateCsvStructure(csv);
   }
 
   /**
-   * Create import plan from CSV
+   * Validate parsed data from file
    */
-  async createImportPlan(csv: string, orgId: string): Promise<CommitResponse> {
-    if (!csv?.trim()) {
+  validateData(fileResult: ParsedFileResult): DataValidationResult {
+    return this.validationService.validateData(
+      fileResult.rows,
+      fileResult.headers,
+      { allowDuplicateEmails: false, strictDateValidation: true }
+    );
+  }
+
+  /**
+   * Create import plan from validated data
+   */
+  async createImportPlan(
+    validationResult: DataValidationResult,
+    orgId: string,
+    options?: Partial<PlanningOptions>
+  ): Promise<CommitResponse> {
+    if (!validationResult.isValid) {
+      return {
+        overview: {
+          creates: 0, updates: 0, skips: 0, duplicates: validationResult.duplicateEmails.length, 
+          invalid: validationResult.invalidRows,
+          newDepartments: [], newLocations: []
+        },
+        records: validationResult.sampleErrors.map(error => ({
+          action: 'invalid' as const,
+          reason: [error.message],
+          incoming: { email: '', givenName: '', familyName: '' }
+        }))
+      };
+    }
+
+    return this.planningService.createImportPlan(validationResult.normalizedData, orgId, options);
+  }
+
+  /**
+   * Create import plan from CSV (legacy method for backwards compatibility)
+   */
+  async createImportPlanFromCsv(csv: string, orgId: string): Promise<CommitResponse> {
+    // Use legacy CSV parsing for backwards compatibility
+    try {
+      const fileResult = this.fileProcessor.processFile(
+        Buffer.from(csv, 'utf-8'),
+        'text/csv',
+        'data.csv'
+      );
+      const validationResult = this.validateData(fileResult);
+      return this.createImportPlan(validationResult, orgId);
+    } catch (error) {
       return {
         overview: {
           creates: 0, updates: 0, skips: 0, duplicates: 0, invalid: 1,
@@ -71,176 +108,73 @@ export class ImportService {
         },
         records: [{
           action: 'invalid',
-          reason: ['CSV body is empty'],
+          reason: [error instanceof Error ? error.message : 'Failed to process CSV'],
           incoming: { email: '', givenName: '', familyName: '' }
         }]
       };
     }
+  }
 
-    const parsed = parseAndNormalizeCsv(csv);
-    const missingHeaders = REQUIRED_HEADERS.filter(h => !parsed.headers.includes(h));
+  /**
+   * Create import session from file upload
+   */
+  async createImportSession(
+    buffer: Buffer,
+    mimetype: string,
+    filename: string,
+    orgId: string,
+    userId: string
+  ): Promise<{ sessionId: string; overview: CommitOverview; validation: DataValidationResult }> {
+    // Process and validate file
+    const fileResult = this.processFileUpload(buffer, mimetype, filename);
+    const validationResult = this.validateData(fileResult);
     
-    if (missingHeaders.length) {
-      return {
-        overview: {
-          creates: 0, updates: 0, skips: 0, duplicates: 0, invalid: 1,
-          newDepartments: [], newLocations: []
-        },
-        records: [{
-          action: 'invalid',
-          reason: [`Missing required headers: ${missingHeaders.join(', ')}`],
-          incoming: { email: '', givenName: '', familyName: '' }
-        }]
-      };
-    }
+    // Create import plan
+    const plan = await this.createImportPlan(validationResult, orgId);
+    
+    // Create session hash from file content
+    const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
+    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
 
-    // Detect CSV duplicates
-    const seen = new Set<string>();
-    const dups = new Set<string>();
-    for (const row of parsed.normalized) {
-      const email = (row.email ?? '').trim().toLowerCase();
-      if (!email) continue;
-      if (seen.has(email)) dups.add(email); 
-      else seen.add(email);
-    }
-
-    // Get existing data
-    const existingDepts = new Set((await this.identityPort.listDistinctDepartments(orgId)).map(d => d.trim().toLowerCase()));
-    const existingLocs = new Set((await this.identityPort.listDistinctLocations(orgId)).map(l => l.trim().toLowerCase()));
-
-    const records: CommitRecord[] = [];
-    let creates = 0, updates = 0, skips = 0, invalid = 0;
-
-    for (const row of parsed.normalized) {
-      const reason: string[] = [];
-      
-      // Validate required fields
-      if (!row.email || !row.givenName || !row.jobTitle || !row.department || !row.hireDate) {
-        const missing = [];
-        if (!row.email) missing.push('email');
-        if (!row.givenName) missing.push('givenName');
-        if (!row.jobTitle) missing.push('jobTitle');
-        if (!row.department) missing.push('department');
-        if (!row.hireDate) missing.push('hireDate');
-        records.push({ 
-          action: 'invalid', 
-          reason: [`Missing required fields: ${missing.join(', ')}`], 
-          incoming: row 
-        });
-        invalid++;
-        continue;
-      }
-
-      if (dups.has((row.email || '').toLowerCase())) {
-        reason.push('Duplicate email in CSV');
-      }
-
-      const currentUser = await this.identityPort.findUserByEmailOrg(row.email!, orgId);
-
-      if (!currentUser) {
-        creates++;
-        records.push({ action: 'create', reason, incoming: row });
-      } else {
-        // Check for changes
-        const diffResult = computeDiff(currentUser, row);
-        const changes = diffResult.changes.map(c => ({ 
-          field: c.field, 
-          from: c.from ?? null, 
-          to: c.to ?? null 
-        }));
-
-        if (changes.length === 0 && !row.managerEmail) {
-          skips++;
-          records.push({ action: 'skip', reason, incoming: row });
-        } else {
-          updates++;
-          records.push({
-            action: 'update',
-            changes: changes.length ? changes : undefined,
-            reason,
-            incoming: row
-          });
-        }
-      }
-    }
-
-    // Calculate new departments and locations
-    const newDepartments = collectNewDepartments(parsed.normalized, existingDepts);
-    const newLocations = collectNewLocations(parsed.normalized, existingLocs);
-
-    // Enhanced manager diagnostics
-    const emailMap = buildEmailMap(parsed.normalized);
-    const resolveManager = async (mEmail: string): Promise<'db'|'csv'|null> => {
-      const key = (mEmail ?? '').trim().toLowerCase();
-      if (!key) return null;
-      
-      const user = await this.identityPort.findUserByEmailOrg(key, orgId);
-      if (user) return 'db';
-      
-      if (emailMap.has(key)) return 'csv';
-      return null;
-    };
-
-    const managerDiag = await diagnoseManagers(parsed.normalized, resolveManager);
-
-    // Enhance records with manager information
-    const enhancedRecords: CommitRecord[] = [];
-    for (const rec of records) {
-      const incomingData = rec.incoming as Record<string, unknown> | undefined;
-      const email = (incomingData?.email as string ?? '').trim().toLowerCase();
-      const mEmail = incomingData?.managerEmail as string | null ?? null;
-      const issues = managerDiag.perRecordIssues.get(email) || [];
-
-      if (mEmail) {
-        const res = await resolveManager(mEmail);
-        if (res === 'db') {
-          issues.push('manager found in database');
-        } else if (res === 'csv') {
-          issues.push('manager will be created from CSV');
-        } else {
-          issues.push('manager not found');
-        }
-      }
-
-      enhancedRecords.push({
-        ...rec,
-        reason: [...(rec.reason ?? []), ...issues],
-      });
-    }
-
-    const overview: CommitOverview = {
-      creates, updates, skips,
-      duplicates: dups.size,
-      invalid,
-      newDepartments,
-      newLocations,
-      managerMissing: managerDiag.managerMissing,
-      managerCycles: managerDiag.managerCycles,
-      managerSelf: managerDiag.managerSelf
-    };
+    const result = await this.db.insert(importSessions).values({
+      orgId,
+      userId,
+      filename,
+      fileSize: buffer.length,
+      csvSha256: fileHash,
+      planJson: JSON.stringify(plan),
+      status: 'pending',
+      expiresAt
+    }).returning({ id: importSessions.id });
 
     return {
-      overview,
-      records: enhancedRecords
+      sessionId: result[0].id,
+      overview: plan.overview,
+      validation: validationResult
     };
   }
 
   /**
-   * Create import session in database
+   * Create import session from CSV string (legacy method)
    */
-  async createImportSession(csv: string, orgId: string, userId: string, filename: string): Promise<{ sessionId: string; overview: CommitOverview }> {
-    const plan = await this.createImportPlan(csv, orgId);
+  async createImportSessionFromCsv(csv: string, orgId: string, userId: string, filename: string): Promise<{ sessionId: string; overview: CommitOverview }> {
+    const plan = await this.createImportPlanFromCsv(csv, orgId);
     const csvSha256 = crypto.createHash('sha256').update(csv, 'utf8').digest('hex');
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
 
-    const result = await this.pool.query(`
-      INSERT INTO import_sessions (org_id, user_id, filename, file_size, csv_sha256, plan_json, status, expires_at)
-      VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)
-      RETURNING id
-    `, [orgId, userId, filename, csv.length, csvSha256, JSON.stringify(plan), expiresAt]);
+    const result = await this.db.insert(importSessions).values({
+      orgId,
+      userId,
+      filename,
+      fileSize: csv.length,
+      csvSha256,
+      planJson: JSON.stringify(plan),
+      status: 'pending',
+      expiresAt
+    }).returning({ id: importSessions.id });
 
     return {
-      sessionId: result.rows[0].id,
+      sessionId: result[0].id,
       overview: plan.overview
     };
   }
@@ -249,26 +183,32 @@ export class ImportService {
    * Get import session by ID
    */
   async getImportSession(sessionId: string, orgId: string): Promise<ImportSessionData | null> {
-    const result = await this.pool.query(`
-      SELECT * FROM import_sessions 
-      WHERE id = $1 AND org_id = $2 AND expires_at > NOW()
-    `, [sessionId, orgId]);
+    const result = await this.db.select()
+      .from(importSessions)
+      .where(
+        and(
+          eq(importSessions.id, sessionId),
+          eq(importSessions.orgId, orgId),
+          gt(importSessions.expiresAt, new Date())
+        )
+      )
+      .limit(1);
 
-    if (result.rows.length === 0) return null;
+    if (result.length === 0) return null;
 
-    const row = result.rows[0];
+    const row = result[0];
     return {
       id: row.id,
-      orgId: row.org_id,
-      userId: row.user_id,
+      orgId: row.orgId,
+      userId: row.userId,
       filename: row.filename,
-      fileSize: row.file_size,
-      csvSha256: row.csv_sha256,
+      fileSize: row.fileSize,
+      csvSha256: row.csvSha256,
       status: row.status,
-      planJson: row.plan_json,
-      expiresAt: new Date(row.expires_at),
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      planJson: row.planJson,
+      expiresAt: row.expiresAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
     };
   }
 
@@ -286,6 +226,20 @@ export class ImportService {
     }
 
     return JSON.parse(session.planJson);
+  }
+
+  /**
+   * Get validation summary for import session
+   */
+  getValidationSummary(validation: DataValidationResult): string {
+    return this.validationService.getValidationSummary(validation);
+  }
+
+  /**
+   * Get planning summary for import plan
+   */
+  getPlanSummary(response: CommitResponse): string {
+    return this.planningService.getPlanSummary(response);
   }
 
   /**
@@ -307,10 +261,9 @@ export class ImportService {
     let departmentsCreated = 0, membershipsLinked = 0, locationsCreated = 0;
 
     // Update session status to committed
-    await this.pool.query(`
-      UPDATE import_sessions SET status = 'committed', updated_at = NOW()
-      WHERE id = $1
-    `, [sessionId]);
+    await this.db.update(importSessions)
+      .set({ status: 'committed', updatedAt: new Date() })
+      .where(eq(importSessions.id, sessionId));
 
     for (const rec of plan.records) {
       const incoming = rec.incoming;
@@ -446,9 +399,12 @@ export class ImportService {
    * Cancel/delete import session
    */
   async cancelImportSession(sessionId: string, orgId: string): Promise<void> {
-    await this.pool.query(`
-      DELETE FROM import_sessions 
-      WHERE id = $1 AND org_id = $2
-    `, [sessionId, orgId]);
+    await this.db.delete(importSessions)
+      .where(
+        and(
+          eq(importSessions.id, sessionId),
+          eq(importSessions.orgId, orgId)
+        )
+      );
   }
 }

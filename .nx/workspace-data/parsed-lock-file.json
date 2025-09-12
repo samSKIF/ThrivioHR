@@ -3465,6 +3465,15 @@
         "hash": "sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA=="
       }
     },
+    "npm:@types/multer": {
+      "type": "npm",
+      "name": "npm:@types/multer",
+      "data": {
+        "version": "2.0.0",
+        "packageName": "@types/multer",
+        "hash": "sha512-C3Z9v9Evij2yST3RSBktxP9STm6OdMc5uR1xF1SGr98uv8dUlAL2hqwrZ3GVB3uyMyiegnscEK6PGtYvNrjTjw=="
+      }
+    },
     "npm:@types/node-fetch": {
       "type": "npm",
       "name": "npm:@types/node-fetch",
@@ -20701,6 +20710,11 @@
     {
       "source": "npm:@types/jsonwebtoken@9.0.7",
       "target": "npm:@types/node",
+      "type": "static"
+    },
+    {
+      "source": "npm:@types/multer",
+      "target": "npm:@types/express",
       "type": "static"
     },
     {

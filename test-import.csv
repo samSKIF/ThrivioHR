@@ -1,0 +1,4 @@
+email,firstName,lastName,jobTitle,department,hireDate,location,managerEmail,phone
+john.doe@company.com,John,Doe,Software Engineer,Engineering,2024-01-15,New York,jane.manager@company.com,+1-555-0123
+jane.smith@company.com,Jane,Smith,Product Manager,Product,2024-02-01,San Francisco,bob.director@company.com,+1-555-0124
+bob.jones@company.com,Bob,,Senior Developer,Engineering,2023-12-01,Remote,,+1-555-0125

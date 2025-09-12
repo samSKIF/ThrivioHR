@@ -67,38 +67,80 @@ export class ImportController {
     if (!body.orgId) {
       throw new BadRequestException('Organization ID is required');
     }
-    return this.importService.createImportPlan(body.csv, body.orgId);
+    return this.importService.createImportPlanFromCsv(body.csv, body.orgId);
   }
 
   /**
    * Upload file and create import session
    */
   @Post('session')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+      files: 1
+    },
+    fileFilter: (req, file, callback) => {
+      const allowedMimes = [
+        'text/csv',
+        'application/csv',
+        'text/plain',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
+      
+      // Check MIME type first
+      if (allowedMimes.includes(file.mimetype)) {
+        callback(null, true);
+        return;
+      }
+      
+      // For application/octet-stream, check file extension
+      if (file.mimetype === 'application/octet-stream' && file.originalname) {
+        const extension = file.originalname.toLowerCase().split('.').pop();
+        if (extension === 'csv' || extension === 'xlsx') {
+          callback(null, true);
+          return;
+        }
+      }
+      
+      callback(new BadRequestException('Only CSV and Excel (.xlsx) files are allowed'), false);
+    }
+  }))
   async createSession(
     @UploadedFile() file: any,
     @Body() body: { orgId: string },
     @Req() req: { user: Record<string, unknown> }
-  ): Promise<ImportSessionResponse> {
+  ): Promise<ImportSessionResponse & { validation: { isValid: boolean; summary: string } }> {
     if (!file) {
       throw new BadRequestException('File is required');
     }
     if (!body.orgId) {
       throw new BadRequestException('Organization ID is required');
     }
+    if (!req.user?.id) {
+      throw new BadRequestException('User authentication required');
+    }
 
-    const csv = file.buffer.toString('utf-8');
-    const result = await this.importService.createImportSession(
-      csv, 
-      body.orgId, 
-      req.user.id as string, 
-      file.originalname
-    );
+    try {
+      const result = await this.importService.createImportSession(
+        file.buffer,
+        file.mimetype,
+        file.originalname,
+        body.orgId,
+        req.user.id as string
+      );
 
-    return {
-      sessionId: result.sessionId,
-      overview: result.overview
-    };
+      return {
+        sessionId: result.sessionId,
+        overview: result.overview,
+        validation: {
+          isValid: result.validation.isValid,
+          summary: this.importService.getValidationSummary(result.validation)
+        }
+      };
+    } catch (error) {
+      throw new BadRequestException(`File processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
@@ -119,7 +161,11 @@ export class ImportController {
       throw new BadRequestException('Filename is required');
     }
 
-    const result = await this.importService.createImportSession(
+    if (!req.user?.id) {
+      throw new BadRequestException('User authentication required');
+    }
+
+    const result = await this.importService.createImportSessionFromCsv(
       body.csv, 
       body.orgId, 
       req.user.id as string, 
@@ -186,25 +232,39 @@ export class ImportController {
       throw new BadRequestException('Only CSV format is currently supported');
     }
 
+    // Template with required and optional fields clearly marked
     const csvHeaders = [
-      'email',
-      'firstName', 
-      'lastName',
-      'jobTitle',
-      'department',
+      // Required fields (marked with *)
+      'email', // * Required
+      'firstName', // * Required (maps to givenName)
+      'lastName', // Optional (maps to familyName)
+      'jobTitle', // * Required
+      'department', // * Required
+      'hireDate', // * Required (YYYY-MM-DD format)
+      // Optional fields
       'location',
-      'hireDate',
       'managerEmail',
       'employeeId',
-      'phone'
+      'phone',
+      'birthDate', // YYYY-MM-DD format
+      'nationality',
+      'gender'
     ];
 
     const sampleData = [
-      'john.doe@company.com,John,Doe,Software Engineer,Engineering,New York,2024-01-15,jane.manager@company.com,EMP001,+1-555-0123',
-      'jane.smith@company.com,Jane,Smith,Product Manager,Product,San Francisco,2024-02-01,bob.director@company.com,EMP002,+1-555-0124'
+      'john.doe@company.com,John,Doe,Software Engineer,Engineering,2024-01-15,New York,jane.manager@company.com,EMP001,+1-555-0123,1990-03-15,American,Male',
+      'jane.smith@company.com,Jane,Smith,Product Manager,Product,2024-02-01,San Francisco,bob.director@company.com,EMP002,+1-555-0124,1985-07-22,Canadian,Female',
+      'bob.jones@company.com,Bob,Jones,Senior Developer,Engineering,2023-12-01,Remote,,EMP003,+1-555-0125,,,,'
     ];
 
-    const content = [csvHeaders.join(','), ...sampleData].join('\n');
+    const content = [
+      '# Employee Import Template',
+      '# Required fields: email, firstName, jobTitle, department, hireDate',
+      '# Optional fields: lastName, location, managerEmail, employeeId, phone, birthDate, nationality, gender',
+      '# Date format: YYYY-MM-DD (e.g., 2024-01-15)',
+      csvHeaders.join(','), 
+      ...sampleData
+    ].join('\n');
 
     return {
       content,
