@@ -70,42 +70,59 @@ export default function MassUploadPage() {
     }
   }
 
-  const downloadTemplate = (format: 'csv' | 'excel') => {
-    const templateData = [
-      {
-        email: 'john.doe@company.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        jobTitle: 'Senior Developer',
-        department: 'Engineering',
-        hireDate: '2024-01-15',
-        location: 'New York',
-        phone: '+1234567890',
-        managerEmail: 'manager@company.com',
-        birthDate: '1990-05-20',
-        nationality: 'American',
-        gender: 'Male'
+  const downloadTemplate = async (format: 'csv' | 'excel') => {
+    try {
+      if (format === 'csv') {
+        // Use the backend template endpoint for CSV
+        const response = await fetch('/api/bff/import/template?format=csv', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to download template');
+        }
+        
+        const templateResult = await response.json();
+        const blob = new Blob([templateResult.content], { type: templateResult.mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = templateResult.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // For Excel, get CSV template and convert to Excel
+        const response = await fetch('/api/bff/import/template?format=csv', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to download template');
+        }
+        
+        const templateResult = await response.json();
+        
+        // Parse CSV content and convert to Excel
+        const lines = templateResult.content.split('\n');
+        const headers = lines[0].split(',');
+        const sampleRows = lines.slice(1).map(line => line.split(','));
+        
+        const templateData = sampleRows.map(row => {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            obj[header] = row[index] || '';
+          });
+          return obj;
+        });
+        
+        const ws = XLSX.utils.json_to_sheet(templateData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+        XLSX.writeFile(wb, 'employee-template.xlsx');
       }
-    ];
-
-    if (format === 'csv') {
-      const headers = Object.keys(templateData[0]).join(',');
-      const csvContent = headers + '\n' + templateData.map(row => 
-        Object.values(row).map(value => `"${value}"`).join(',')
-      ).join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'employee-template.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      const ws = XLSX.utils.json_to_sheet(templateData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-      XLSX.writeFile(wb, 'employee-template.xlsx');
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      alert('Error downloading template: ' + (error as Error).message);
     }
   };
 
@@ -121,42 +138,38 @@ export default function MassUploadPage() {
     try {
       setIsProcessing(true);
       
-      let csvContent: string;
-      
-      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        // Parse Excel file
-        const arrayBuffer = await file.arrayBuffer();
-        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        csvContent = XLSX.utils.sheet_to_csv(worksheet);
-      } else {
-        // Parse CSV file
-        csvContent = await file.text();
+      if (!orgId) {
+        throw new Error('Organization ID not available');
       }
 
-      // Create import session
-      const sessionResponse = await fetch('/api/bff/directory/import/session', {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('orgId', orgId);
+
+      // Create import session using multipart file upload
+      const sessionResponse = await fetch('/api/bff/import/session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ csv: csvContent })
+        body: formData
       });
 
       if (!sessionResponse.ok) {
-        throw new Error('Failed to create import session');
+        const errorText = await sessionResponse.text();
+        throw new Error(`Failed to create import session: ${errorText}`);
       }
 
       const sessionResult = await sessionResponse.json();
-      setSessionToken(sessionResult.token);
+      setSessionToken(sessionResult.sessionId);
       
-      // Get preview data
-      const previewResponse = await fetch(`/api/bff/directory/import/session/preview?token=${sessionResult.token}`, {
+      // Get preview data using the sessionId
+      const previewResponse = await fetch(`/api/bff/import/session/${sessionResult.sessionId}/preview?orgId=${orgId}`, {
         credentials: 'include'
       });
 
       if (!previewResponse.ok) {
-        throw new Error('Failed to get preview data');
+        const errorText = await previewResponse.text();
+        throw new Error(`Failed to get preview data: ${errorText}`);
       }
 
       const preview = await previewResponse.json();
@@ -200,25 +213,26 @@ export default function MassUploadPage() {
   };
 
   const handleProcess = async () => {
-    if (!sessionToken) return;
+    if (!sessionToken || !orgId) return;
     
     try {
       setIsProcessing(true);
       
-      const response = await fetch('/api/bff/directory/import/session/approve', {
+      const response = await fetch(`/api/bff/import/session/${sessionToken}/commit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ token: sessionToken })
+        body: JSON.stringify({ orgId: orgId })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process import');
+        const errorText = await response.text();
+        throw new Error(`Failed to process import: ${errorText}`);
       }
 
       const result = await response.json();
       
-      alert(`Import completed successfully!\n\nCreated: ${result.createdUsers || 0} employees\nUpdated: ${result.updatedUsers || 0} employees\nErrors: ${result.errors || 0}`);
+      alert(`Import completed successfully!\n\nCreated: ${result.createdCount || 0} employees\nUpdated: ${result.updatedCount || 0} employees\nErrors: ${result.errorCount || 0}`);
       
       // Reset form and redirect back to users page
       setSelectedFile(null);
@@ -248,9 +262,7 @@ export default function MassUploadPage() {
     "location (office location)",
     "phone (contact number)",
     "managerEmail (manager's email)",
-    "birthDate (YYYY-MM-DD format)",
-    "nationality (employee's nationality)",
-    "gender (Male/Female/Other)"
+    "employeeId (unique employee identifier)"
   ];
 
   return (
