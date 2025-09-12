@@ -1,14 +1,24 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { DirectoryController } from './directory.controller';
 import { DirectoryService } from './directory.service';
 import { IdentityModule } from '../identity/identity.module';
+import { IdentityRepository } from '../identity/identity.repository';
 import { DbModule } from '../db/db.module';
 import { OrgSqlContext } from '../../db/with-org';
 
 @Module({
-  imports: [IdentityModule, DbModule],
+  imports: [forwardRef(() => IdentityModule), DbModule],
   controllers: [DirectoryController],
-  providers: [DirectoryService, OrgSqlContext],
+  providers: [
+    {
+      provide: DirectoryService,
+      useFactory: (identityRepo: IdentityRepository) => {
+        return new DirectoryService(identityRepo);
+      },
+      inject: [IdentityRepository],
+    },
+    OrgSqlContext
+  ],
   exports: [DirectoryService, OrgSqlContext],
 })
 export class DirectoryModule {}
