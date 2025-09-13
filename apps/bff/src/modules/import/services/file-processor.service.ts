@@ -110,7 +110,7 @@ export class FileProcessorService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException(`Failed to parse CSV file: ${error.message}`);
+      throw new BadRequestException(`Failed to parse CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -192,7 +192,7 @@ export class FileProcessorService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException(`Failed to parse Excel file: ${error.message}`);
+      throw new BadRequestException(`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
