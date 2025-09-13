@@ -117,7 +117,7 @@ export class ImportController {
     if (!body.orgId) {
       throw new BadRequestException('Organization ID is required');
     }
-    if (!req.user?.id) {
+    if (!req.user?.sub) {
       throw new BadRequestException('User authentication required');
     }
 
@@ -127,7 +127,7 @@ export class ImportController {
         file.mimetype,
         file.originalname,
         body.orgId,
-        req.user.id as string
+        req.user.sub as string
       );
 
       return {
@@ -161,14 +161,14 @@ export class ImportController {
       throw new BadRequestException('Filename is required');
     }
 
-    if (!req.user?.id) {
+    if (!req.user?.sub) {
       throw new BadRequestException('User authentication required');
     }
 
     const result = await this.importService.createImportSessionFromCsv(
       body.csv, 
       body.orgId, 
-      req.user.id as string, 
+      req.user.sub as string, 
       body.filename
     );
 
