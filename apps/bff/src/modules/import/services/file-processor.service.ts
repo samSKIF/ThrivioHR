@@ -22,7 +22,14 @@ export class FileProcessorService {
   private readonly defaultOptions: Required<FileProcessorOptions> = {
     maxFileSize: 10 * 1024 * 1024, // 10MB
     maxRows: 10000,
-    supportedTypes: ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+    supportedTypes: [
+      'text/csv', 
+      'application/csv', 
+      'text/plain',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/octet-stream'
+    ]
   };
 
   /**
@@ -48,12 +55,20 @@ export class FileProcessorService {
 
     const fileExtension = this.getFileExtension(filename);
     
-    if (mimetype === 'text/csv' || fileExtension === '.csv') {
+    // Determine file type based on MIME type and extension
+    const isCsvType = mimetype === 'text/csv' || 
+                     mimetype === 'application/csv' || 
+                     mimetype === 'text/plain' ||
+                     fileExtension === '.csv';
+    
+    const isExcelType = mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                       mimetype === 'application/vnd.ms-excel' ||
+                       (mimetype === 'application/octet-stream' && fileExtension === '.xlsx') ||
+                       fileExtension === '.xlsx';
+
+    if (isCsvType) {
       return this.processCsvFile(buffer, opts);
-    } else if (
-      mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-      fileExtension === '.xlsx'
-    ) {
+    } else if (isExcelType) {
       return this.processExcelFile(buffer, opts);
     } else {
       throw new BadRequestException('Unsupported file format. Please upload CSV or Excel (.xlsx) files only.');
